@@ -1281,7 +1281,9 @@ static dns_dbmethods_t sdlzdb_methods = {
 	NULL, /* getsize */
 	NULL, /* setservestalettl */
 	NULL, /* getservestalettl */
-	NULL  /* setgluecachestats */
+	NULL, /* setgluecachestats */
+	NULL, /* settimeouttime */
+	NULL  /* gettimeouttime */
 };
 
 /*
