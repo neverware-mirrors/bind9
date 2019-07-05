@@ -29,12 +29,14 @@
 #include <dns/compress.h>
 #include <dns/dsdigest.h>
 #include <dns/enumtype.h>
+#include <dns/fixedname.h>
 #include <dns/keyflags.h>
 #include <dns/keyvalues.h>
 #include <dns/message.h>
 #include <dns/rcode.h>
 #include <dns/rdata.h>
 #include <dns/rdataclass.h>
+#include <dns/rdataset.h>
 #include <dns/rdatastruct.h>
 #include <dns/rdatatype.h>
 #include <dns/result.h>
@@ -118,10 +120,11 @@
 
 #define CALL_FREESTRUCT source
 
-#define ARGS_ADDLDATA \
-	dns_rdata_t *rdata, dns_additionaldatafunc_t add, void *arg
+#define ARGS_ADDLDATA                                \
+	dns_rdata_t *rdata, const dns_name_t *owner, \
+		dns_additionaldatafunc_t add, void *arg
 
-#define CALL_ADDLDATA rdata, add, arg
+#define CALL_ADDLDATA rdata, owner, add, arg
 
 #define ARGS_DIGEST dns_rdata_t *rdata, dns_digestfunc_t digest, void *arg
 
@@ -1264,8 +1267,8 @@ dns_rdata_freestruct(void *source) {
 }
 
 isc_result_t
-dns_rdata_additionaldata(dns_rdata_t *rdata, dns_additionaldatafunc_t add,
-			 void *arg) {
+dns_rdata_additionaldata(dns_rdata_t *rdata, const dns_name_t *owner,
+			 dns_additionaldatafunc_t add, void *arg) {
 	isc_result_t result = ISC_R_NOTIMPLEMENTED;
 	bool use_default = false;
 
@@ -2181,6 +2184,15 @@ bool
 dns_rdatatype_atparent(dns_rdatatype_t type) {
 	if ((dns_rdatatype_attributes(type) & DNS_RDATATYPEATTR_ATPARENT) != 0)
 	{
+		return (true);
+	}
+	return (false);
+}
+
+bool
+dns_rdatatype_followadditional(dns_rdatatype_t type) {
+	if ((dns_rdatatype_attributes(type) &
+	     DNS_RDATATYPEATTR_FOLLOWADDITIONAL) != 0) {
 		return (true);
 	}
 	return (false);

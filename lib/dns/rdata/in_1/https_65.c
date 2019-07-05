@@ -14,7 +14,7 @@
 #ifndef RDATA_IN_1_HTTPS_65_C
 #define RDATA_IN_1_HTTPS_65_C
 
-#define RRTYPE_HTTPS_ATTRIBUTES 0
+#define RRTYPE_HTTPS_ATTRIBUTES (DNS_RDATATYPEATTR_FOLLOWADDITIONAL)
 
 static inline isc_result_t
 fromtext_in_https(ARGS_FROMTEXT) {
