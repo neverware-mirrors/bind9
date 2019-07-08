@@ -22,8 +22,7 @@ static inline isc_result_t
 fromtext_cds(ARGS_FROMTEXT) {
 	REQUIRE(type == dns_rdatatype_cds);
 
-	return (generic_fromtext_ds(rdclass, type, lexer, origin, options,
-				    target, callbacks));
+	return (generic_fromtext_ds(CALL_FROMTEXT));
 }
 
 static inline isc_result_t

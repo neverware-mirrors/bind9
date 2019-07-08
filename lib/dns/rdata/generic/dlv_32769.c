@@ -22,8 +22,7 @@ static inline isc_result_t
 fromtext_dlv(ARGS_FROMTEXT) {
 	REQUIRE(type == dns_rdatatype_dlv);
 
-	return (generic_fromtext_ds(rdclass, type, lexer, origin, options,
-				    target, callbacks));
+	return (generic_fromtext_ds(CALL_FROMTEXT));
 }
 
 static inline isc_result_t

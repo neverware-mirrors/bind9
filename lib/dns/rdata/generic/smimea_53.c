@@ -18,8 +18,7 @@ static inline isc_result_t
 fromtext_smimea(ARGS_FROMTEXT) {
 	REQUIRE(type == dns_rdatatype_smimea);
 
-	return (generic_fromtext_tlsa(rdclass, type, lexer, origin, options,
-				      target, callbacks));
+	return (generic_fromtext_tlsa(CALL_FROMTEXT));
 }
 
 static inline isc_result_t
