@@ -1313,7 +1313,8 @@ parse_name(char **cmdlinep, dns_message_t *msg, dns_name_t **namep) {
 
 static uint16_t
 parse_rdata(char **cmdlinep, dns_rdataclass_t rdataclass,
-	    dns_rdatatype_t rdatatype, dns_message_t *msg, dns_rdata_t *rdata) {
+	    dns_rdatatype_t rdatatype, bool istimeout, uint32_t ttl,
+	    dns_message_t *msg, dns_rdata_t *rdata) {
 	char *cmdline = *cmdlinep;
 	isc_buffer_t source, *buf = NULL, *newbuf = NULL;
 	isc_region_t r;
@@ -1339,12 +1340,27 @@ parse_rdata(char **cmdlinep, dns_rdataclass_t rdataclass,
 		result = isc_lex_openbuffer(lex, &source);
 		check_result(result, "isc_lex_openbuffer");
 		isc_buffer_allocate(gmctx, &buf, MAXWIRE);
+		if (istimeout) {
+			isc_stdtime_t now;
+
+			isc_stdtime_get(&now);
+			isc_buffer_putuint16(buf, rdatatype);
+			isc_buffer_putuint8(buf, 1);
+			isc_buffer_putuint8(buf, 1);
+			isc_buffer_putuint64(buf, (uint64_t)(now + ttl));
+			isc_buffer_add(buf, 2);
+		}
 		result = dns_rdata_fromtext(NULL, rdataclass, rdatatype, lex,
 					    dns_rootname, 0, gmctx, buf,
 					    &callbacks);
 		isc_lex_destroy(&lex);
 		if (result == ISC_R_SUCCESS) {
 			isc_buffer_usedregion(buf, &r);
+			if (istimeout) {
+				r.base[12] = ((r.length - 14) >> 8) & 0xff;
+				r.base[13] = (r.length - 14) & 0xff;
+				rdatatype = dns_rdatatype_timeout;
+			}
 			isc_buffer_allocate(gmctx, &newbuf, r.length);
 			isc_buffer_putmem(newbuf, r.base, r.length);
 			isc_buffer_usedregion(newbuf, &r);
@@ -1437,8 +1453,8 @@ make_prereq(char *cmdline, bool ispositive, bool isrrset) {
 	dns_rdata_init(rdata);
 
 	if (isrrset && ispositive) {
-		retval = parse_rdata(&cmdline, rdataclass, rdatatype, updatemsg,
-				     rdata);
+		retval = parse_rdata(&cmdline, rdataclass, rdatatype, false, 0,
+				     updatemsg, rdata);
 		if (retval != STATUS_MORE) {
 			goto failure;
 		}
@@ -1810,7 +1826,7 @@ evaluate_class(char *cmdline) {
 }
 
 static uint16_t
-update_addordelete(char *cmdline, bool isdelete) {
+update_addordelete(char *cmdline, bool isdelete, bool istimeout) {
 	isc_result_t result;
 	dns_name_t *name = NULL;
 	uint32_t ttl;
@@ -1938,7 +1954,8 @@ parseclass:
 		}
 	}
 
-	retval = parse_rdata(&cmdline, rdataclass, rdatatype, updatemsg, rdata);
+	retval = parse_rdata(&cmdline, rdataclass, rdatatype, istimeout, ttl,
+			     updatemsg, rdata);
 	if (retval != STATUS_MORE) {
 		goto failure;
 	}
@@ -1956,7 +1973,7 @@ parseclass:
 		}
 	}
 
-	if (!isdelete && checknames) {
+	if (!isdelete && !istimeout && checknames) {
 		dns_fixedname_t fixed;
 		dns_name_t *bad;
 
@@ -1987,9 +2004,9 @@ doneparsing:
 	check_result(result, "dns_message_gettemprdatalist");
 	result = dns_message_gettemprdataset(updatemsg, &rdataset);
 	check_result(result, "dns_message_gettemprdataset");
-	rdatalist->type = rdatatype;
+	rdatalist->type = istimeout ? dns_rdatatype_timeout : rdatatype;
 	rdatalist->rdclass = rdataclass;
-	rdatalist->covers = rdatatype;
+	rdatalist->covers = dns_rdatatype_none;
 	rdatalist->ttl = (dns_ttl_t)ttl;
 	ISC_LIST_APPEND(rdatalist->rdata, rdata, link);
 	dns_rdatalist_tordataset(rdatalist, rdataset);
@@ -2009,7 +2026,7 @@ failure:
 static uint16_t
 evaluate_update(char *cmdline) {
 	char *word;
-	bool isdelete;
+	bool isdelete, istimeout;
 
 	ddebug("evaluate_update()");
 	word = nsu_strsep(&cmdline, " \t\r\n");
@@ -2019,15 +2036,21 @@ evaluate_update(char *cmdline) {
 	}
 	if (strcasecmp(word, "delete") == 0) {
 		isdelete = true;
+		istimeout = false;
 	} else if (strcasecmp(word, "del") == 0) {
 		isdelete = true;
+		istimeout = false;
 	} else if (strcasecmp(word, "add") == 0) {
 		isdelete = false;
+		istimeout = false;
+	} else if (strcasecmp(word, "timeout") == 0) {
+		isdelete = false;
+		istimeout = true;
 	} else {
 		fprintf(stderr, "incorrect operation code: %s\n", word);
 		return (STATUS_SYNTAX);
 	}
-	return (update_addordelete(cmdline, isdelete));
+	return (update_addordelete(cmdline, isdelete, istimeout));
 }
 
 static uint16_t
@@ -2161,13 +2184,16 @@ do_next_command(char *cmdline) {
 		return (evaluate_update(cmdline));
 	}
 	if (strcasecmp(word, "delete") == 0) {
-		return (update_addordelete(cmdline, true));
+		return (update_addordelete(cmdline, true, false));
 	}
 	if (strcasecmp(word, "del") == 0) {
-		return (update_addordelete(cmdline, true));
+		return (update_addordelete(cmdline, true, false));
 	}
 	if (strcasecmp(word, "add") == 0) {
-		return (update_addordelete(cmdline, false));
+		return (update_addordelete(cmdline, false, false));
+	}
+	if (strcasecmp(word, "timeout") == 0) {
+		return (update_addordelete(cmdline, false, true));
 	}
 	if (strcasecmp(word, "server") == 0) {
 		return (evaluate_server(cmdline));
