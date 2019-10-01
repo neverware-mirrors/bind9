@@ -26,7 +26,6 @@
 #include <isc/attributes.h>
 #include <isc/buffer.h>
 #include <isc/commandline.h>
-#include <isc/lib.h>
 #include <isc/mem.h>
 #include <isc/print.h>
 #include <isc/sockaddr.h>
@@ -328,7 +327,6 @@ main(int argc, char *argv[]) {
 		query_array[i].xid = NULL;
 	}
 
-	isc_lib_register();
 	result = dns_lib_init();
 	if (result != ISC_R_SUCCESS) {
 		fprintf(stderr, "dns_lib_init failed: %u\n", result);

@@ -324,7 +324,6 @@ isc_lex_setsourceline
 isc_lex_setsourcename
 isc_lex_setspecials
 isc_lex_ungettoken
-isc_lib_register
 isc_log_categorybyname
 isc_log_closefilelogs
 isc_log_create

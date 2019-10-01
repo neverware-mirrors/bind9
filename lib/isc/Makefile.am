@@ -41,7 +41,6 @@ libisc_la_HEADERS =			\
 	include/isc/iterated_hash.h	\
 	include/isc/lang.h		\
 	include/isc/lex.h		\
-	include/isc/lib.h		\
 	include/isc/likely.h		\
 	include/isc/list.h		\
 	include/isc/log.h		\
@@ -176,7 +175,6 @@ libisc_la_SOURCES =		\
 	httpd.c			\
 	iterated_hash.c		\
 	lex.c			\
-	lib.c			\
 	log.c			\
 	md.c			\
 	mem.c			\
