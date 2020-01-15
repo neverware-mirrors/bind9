@@ -486,7 +486,7 @@ add(int rdclass, const char *classbuf, int type, const char *typebuf,
 
 static void
 sd(int rdclass, const char *classbuf, const char *dirbuf, char filetype) {
-	char buf[TYPECLASSLEN + sizeof("_65535.h")];
+	char buf[TYPECLASSLEN + sizeof("_4294967296.h")];
 	char typebuf[TYPECLASSBUF];
 	int type, n;
 	isc_dir_t dir;
@@ -499,7 +499,7 @@ sd(int rdclass, const char *classbuf, const char *dirbuf, char filetype) {
 		if (sscanf(dir.filename, TYPECLASSFMT, typebuf, &type) != 2) {
 			continue;
 		}
-		if ((type > 65535) || (type < 0)) {
+		if (type < 0) {
 			continue;
 		}
 
@@ -508,6 +508,11 @@ sd(int rdclass, const char *classbuf, const char *dirbuf, char filetype) {
 		INSIST(n > 0 && (unsigned)n < sizeof(buf));
 		if (strcmp(buf, dir.filename) != 0) {
 			continue;
+		}
+		if (type > 65535) {
+			fprintf(stderr, "Error: type value > 65535 (%s)\n",
+				dir.filename);
+			exit(1);
 		}
 		add(rdclass, classbuf, type, typebuf, dirbuf);
 	}
@@ -639,7 +644,7 @@ main(int argc, char **argv) {
 		{
 			continue;
 		}
-		if ((rdclass > 65535) || (rdclass < 0)) {
+		if (rdclass < 0) {
 			continue;
 		}
 
@@ -648,6 +653,11 @@ main(int argc, char **argv) {
 		INSIST(n > 0 && (unsigned)n < sizeof(buf));
 		if (strcmp(buf + 6 + strlen(srcdir), dir.filename) != 0) {
 			continue;
+		}
+		if (rdclass > 65535) {
+			fprintf(stderr, "Error: class value > 65535 (%s)\n",
+				dir.filename);
+			exit(1);
 		}
 		sd(rdclass, classbuf, buf, filetype);
 	}
