@@ -836,7 +836,7 @@ verifyset(vctx_t *vctx, dns_rdataset_t *rdataset, const dns_name_t *name,
 	dns_rdataset_t sigrdataset;
 	dns_rdatasetiter_t *rdsiter = NULL;
 	isc_result_t result;
-	int i;
+	size_t i;
 
 	dns_rdataset_init(&sigrdataset);
 	result = dns_db_allrdatasets(vctx->db, node, vctx->ver, 0, &rdsiter);
@@ -861,7 +861,7 @@ verifyset(vctx_t *vctx, dns_rdataset_t *rdataset, const dns_name_t *name,
 		dns_rdatatype_format(rdataset->type, typebuf, sizeof(typebuf));
 		zoneverify_log_error(vctx, "No signatures for %s/%s", namebuf,
 				     typebuf);
-		for (i = 0; i < 256; i++) {
+		for (i = 0; i < sizeof(set_algorithms); i++) {
 			if (vctx->act_algorithms[i] != 0) {
 				vctx->bad_algorithms[i] = 1;
 			}
