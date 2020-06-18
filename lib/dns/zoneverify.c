@@ -829,7 +829,7 @@ verifynsec3s(const vctx_t *vctx, const dns_name_t *name,
 static isc_result_t
 verifyset(vctx_t *vctx, dns_rdataset_t *rdataset, const dns_name_t *name,
 	  dns_dbnode_t *node, dns_rdataset_t *keyrdataset) {
-	unsigned char set_algorithms[256];
+	unsigned char set_algorithms[256] = { 0 };
 	char namebuf[DNS_NAME_FORMATSIZE];
 	char algbuf[DNS_SECALG_FORMATSIZE];
 	char typebuf[DNS_RDATATYPE_FORMATSIZE];
@@ -870,7 +870,6 @@ verifyset(vctx_t *vctx, dns_rdataset_t *rdataset, const dns_name_t *name,
 		goto done;
 	}
 
-	memset(set_algorithms, 0, sizeof(set_algorithms));
 	for (result = dns_rdataset_first(&sigrdataset); result == ISC_R_SUCCESS;
 	     result = dns_rdataset_next(&sigrdataset))
 	{
@@ -934,7 +933,7 @@ verifynode(vctx_t *vctx, const dns_name_t *name, dns_dbnode_t *node,
 	   bool delegation, dns_rdataset_t *keyrdataset,
 	   dns_rdataset_t *nsecset, dns_rdataset_t *nsec3paramset,
 	   const dns_name_t *nextname, isc_result_t *vresult) {
-	unsigned char types[8192];
+	unsigned char types[8192] = { 0 };
 	unsigned int maxtype = 0;
 	dns_rdataset_t rdataset;
 	dns_rdatasetiter_t *rdsiter = NULL;
@@ -942,7 +941,6 @@ verifynode(vctx_t *vctx, const dns_name_t *name, dns_dbnode_t *node,
 
 	REQUIRE(vresult != NULL || (nsecset == NULL && nsec3paramset == NULL));
 
-	memset(types, 0, sizeof(types));
 	result = dns_db_allrdatasets(vctx->db, node, vctx->ver, 0, &rdsiter);
 	if (result != ISC_R_SUCCESS) {
 		zoneverify_log_error(vctx, "dns_db_allrdatasets(): %s",
