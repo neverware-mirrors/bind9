@@ -85,14 +85,22 @@ struct nsec3_chain_fixed {
 	uint8_t salt_length;
 	uint8_t next_length;
 	uint16_t iterations;
-	/*
-	 * The following non-fixed-length data is stored in memory after the
-	 * fields declared above for each NSEC3 chain element:
-	 *
-	 * unsigned char	salt[salt_length];
-	 * unsigned char	owner[next_length];
-	 * unsigned char	next[next_length];
-	 */
+/*
+ * The following non-fixed-length data is stored in memory after the
+ * fields declared above for each NSEC3 chain element:
+ *
+ * unsigned char	salt[salt_length];
+ * unsigned char	owner[next_length];
+ * unsigned char	next[next_length];
+ */
+
+/* Helper macro used to calculate length of variable-length
+ * data section explained above. */
+#define CHAIN_LENGTH(c)                                \
+	({                                             \
+		struct nsec3_chain_fixed *fc = (c);    \
+		fc->salt_length + 2 * fc->next_length; \
+	})
 };
 
 /*%
@@ -348,8 +356,6 @@ check_no_rrsig(const vctx_t *vctx, const dns_rdataset_t *rdataset,
 static bool
 chain_compare(void *arg1, void *arg2) {
 	struct nsec3_chain_fixed *e1 = arg1, *e2 = arg2;
-	size_t len;
-
 	/*
 	 * Do each element in turn to get a stable sort.
 	 */
@@ -377,8 +383,7 @@ chain_compare(void *arg1, void *arg2) {
 	if (e1->next_length > e2->next_length) {
 		return (false);
 	}
-	len = e1->salt_length + 2 * e1->next_length;
-	if (memcmp(e1 + 1, e2 + 1, len) < 0) {
+	if (memcmp(e1 + 1, e2 + 1, CHAIN_LENGTH(e1)) < 0) {
 		return (true);
 	}
 	return (false);
@@ -386,9 +391,7 @@ chain_compare(void *arg1, void *arg2) {
 
 static bool
 chain_equal(const struct nsec3_chain_fixed *e1,
-	    const struct nsec3_chain_fixed *e2) {
-	size_t len;
-
+	    const struct nsec3_chain_fixed *e2, size_t data_length) {
 	if (e1->hash != e2->hash) {
 		return (false);
 	}
@@ -401,11 +404,8 @@ chain_equal(const struct nsec3_chain_fixed *e1,
 	if (e1->next_length != e2->next_length) {
 		return (false);
 	}
-	len = e1->salt_length + 2 * e1->next_length;
-	if (memcmp(e1 + 1, e2 + 1, len) != 0) {
-		return (false);
-	}
-	return (true);
+
+	return (memcmp(e1 + 1, e2 + 1, data_length) == 0);
 }
 
 static isc_result_t
@@ -1070,19 +1070,6 @@ check_no_nsec(const vctx_t *vctx, const dns_name_t *name, dns_dbnode_t *node) {
 	return (nsec_exists ? ISC_R_FAILURE : ISC_R_SUCCESS);
 }
 
-static bool
-newchain(const struct nsec3_chain_fixed *first,
-	 const struct nsec3_chain_fixed *e) {
-	if (first->hash != e->hash || first->iterations != e->iterations ||
-	    first->salt_length != e->salt_length ||
-	    first->next_length != e->next_length ||
-	    memcmp(first + 1, e + 1, first->salt_length) != 0)
-	{
-		return (true);
-	}
-	return (false);
-}
-
 static void
 free_element(isc_mem_t *mctx, struct nsec3_chain_fixed *e) {
 	size_t len;
@@ -1181,7 +1168,7 @@ verify_nsec3_chains(const vctx_t *vctx, isc_mem_t *mctx) {
 			/*
 			 * Check that they match.
 			 */
-			if (chain_equal(e, f)) {
+			if (chain_equal(e, f, CHAIN_LENGTH(e))) {
 				free_element(mctx, f);
 				f = NULL;
 			} else {
@@ -1204,7 +1191,9 @@ verify_nsec3_chains(const vctx_t *vctx, isc_mem_t *mctx) {
 						isc_heap_delete(
 							vctx->found_chains, 1);
 					}
-					if (f != NULL && chain_equal(e, f)) {
+					if (f != NULL &&
+					    chain_equal(e, f, CHAIN_LENGTH(e)))
+					{
 						free_element(mctx, f);
 						f = NULL;
 						break;
@@ -1220,7 +1209,7 @@ verify_nsec3_chains(const vctx_t *vctx, isc_mem_t *mctx) {
 
 		if (first == NULL) {
 			prev = first = e;
-		} else if (newchain(first, e)) {
+		} else if (!chain_equal(first, e, first->salt_length)) {
 			if (!checklast(mctx, vctx, first, prev)) {
 				result = ISC_R_FAILURE;
 			}
