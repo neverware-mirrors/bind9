@@ -93,15 +93,14 @@ struct nsec3_chain_fixed {
  * unsigned char	owner[next_length];
  * unsigned char	next[next_length];
  */
-
-/* Helper macro used to calculate length of variable-length
- * data section explained above. */
-#define CHAIN_LENGTH(c)                                \
-	({                                             \
-		struct nsec3_chain_fixed *fc = (c);    \
-		fc->salt_length + 2 * fc->next_length; \
-	})
 };
+
+/* Helper function used to calculate length of variable-length
+ * data section in object pointed to by 'chain'. */
+static inline size_t
+chain_length(struct nsec3_chain_fixed *chain) {
+	return (chain->salt_length + 2 * chain->next_length);
+}
 
 /*%
  * Log a zone verification error described by 'fmt' and the variable arguments
@@ -383,7 +382,7 @@ chain_compare(void *arg1, void *arg2) {
 	if (e1->next_length > e2->next_length) {
 		return (false);
 	}
-	if (memcmp(e1 + 1, e2 + 1, CHAIN_LENGTH(e1)) < 0) {
+	if (memcmp(e1 + 1, e2 + 1, chain_length(e1)) < 0) {
 		return (true);
 	}
 	return (false);
@@ -1168,7 +1167,7 @@ verify_nsec3_chains(const vctx_t *vctx, isc_mem_t *mctx) {
 			/*
 			 * Check that they match.
 			 */
-			if (chain_equal(e, f, CHAIN_LENGTH(e))) {
+			if (chain_equal(e, f, chain_length(e))) {
 				free_element(mctx, f);
 				f = NULL;
 			} else {
@@ -1192,7 +1191,7 @@ verify_nsec3_chains(const vctx_t *vctx, isc_mem_t *mctx) {
 							vctx->found_chains, 1);
 					}
 					if (f != NULL &&
-					    chain_equal(e, f, CHAIN_LENGTH(e)))
+					    chain_equal(e, f, chain_length(e)))
 					{
 						free_element(mctx, f);
 						f = NULL;
