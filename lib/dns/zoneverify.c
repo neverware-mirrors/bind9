@@ -85,14 +85,14 @@ struct nsec3_chain_fixed {
 	uint8_t salt_length;
 	uint8_t next_length;
 	uint16_t iterations;
-/*
- * The following non-fixed-length data is stored in memory after the
- * fields declared above for each NSEC3 chain element:
- *
- * unsigned char	salt[salt_length];
- * unsigned char	owner[next_length];
- * unsigned char	next[next_length];
- */
+	/*
+	 * The following non-fixed-length data is stored in memory after the
+	 * fields declared above for each NSEC3 chain element:
+	 *
+	 * unsigned char	salt[salt_length];
+	 * unsigned char	owner[next_length];
+	 * unsigned char	next[next_length];
+	 */
 };
 
 /* Helper function used to calculate length of variable-length
