@@ -232,27 +232,6 @@ print_active(isc__mem_t *ctx, FILE *out);
 
 #endif /* ISC_MEM_TRACKLINES */
 
-static void *
-isc___mem_get(isc_mem_t *ctx, size_t size FLARG);
-static void
-isc___mem_put(isc_mem_t *ctx, void *ptr, size_t size FLARG);
-static void
-isc___mem_putanddetach(isc_mem_t **ctxp, void *ptr, size_t size FLARG);
-static void *
-isc___mem_allocate(isc_mem_t *ctx, size_t size FLARG);
-static void *
-isc___mem_reallocate(isc_mem_t *ctx, void *ptr, size_t size FLARG);
-static char *
-isc___mem_strdup(isc_mem_t *mctx, const char *s FLARG);
-static void
-isc___mem_free(isc_mem_t *ctx, void *ptr FLARG);
-
-static isc_memmethods_t memmethods = {
-	isc___mem_get,	    isc___mem_put,	  isc___mem_putanddetach,
-	isc___mem_allocate, isc___mem_reallocate, isc___mem_strdup,
-	isc___mem_free,
-};
-
 #if ISC_MEM_TRACKLINES
 /*!
  * mctx must be locked.
@@ -782,7 +761,6 @@ mem_create(isc_mem_t **ctxp, unsigned int flags) {
 	ctx->water_arg = NULL;
 	ctx->common.impmagic = MEM_MAGIC;
 	ctx->common.magic = ISCAPI_MCTX_MAGIC;
-	ctx->common.methods = (isc_memmethods_t *)&memmethods;
 	ctx->memalloc = default_memalloc;
 	ctx->memfree = default_memfree;
 	ctx->stats = NULL;
@@ -957,7 +935,7 @@ isc_mem_detach(isc_mem_t **ctxp) {
  */
 
 void
-isc___mem_putanddetach(isc_mem_t **ctxp, void *ptr, size_t size FLARG) {
+isc__mem_putanddetach(isc_mem_t **ctxp, void *ptr, size_t size FLARG) {
 	REQUIRE(ctxp != NULL && VALID_CONTEXT(*ctxp));
 	REQUIRE(ptr != NULL);
 
@@ -1024,7 +1002,7 @@ isc_mem_destroy(isc_mem_t **ctxp) {
 }
 
 void *
-isc___mem_get(isc_mem_t *ctx0, size_t size FLARG) {
+isc__mem_get(isc_mem_t *ctx0, size_t size FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 
 	isc__mem_t *ctx = (isc__mem_t *)ctx0;
@@ -1075,7 +1053,7 @@ isc___mem_get(isc_mem_t *ctx0, size_t size FLARG) {
 }
 
 void
-isc___mem_put(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
+isc__mem_put(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 	REQUIRE(ptr != NULL);
 
@@ -1277,7 +1255,7 @@ mem_allocateunlocked(isc_mem_t *ctx0, size_t size) {
 }
 
 void *
-isc___mem_allocate(isc_mem_t *ctx0, size_t size FLARG) {
+isc__mem_allocate(isc_mem_t *ctx0, size_t size FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 
 	isc__mem_t *ctx = (isc__mem_t *)ctx0;
@@ -1321,7 +1299,7 @@ isc___mem_allocate(isc_mem_t *ctx0, size_t size FLARG) {
 }
 
 void *
-isc___mem_reallocate(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
+isc__mem_reallocate(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 
 	void *new_ptr = NULL;
@@ -1361,7 +1339,7 @@ isc___mem_reallocate(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 }
 
 void
-isc___mem_free(isc_mem_t *ctx0, void *ptr FLARG) {
+isc__mem_free(isc_mem_t *ctx0, void *ptr FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 	REQUIRE(ptr != NULL);
 
@@ -1420,7 +1398,7 @@ isc___mem_free(isc_mem_t *ctx0, void *ptr FLARG) {
  */
 
 char *
-isc___mem_strdup(isc_mem_t *mctx0, const char *s FLARG) {
+isc__mem_strdup(isc_mem_t *mctx0, const char *s FLARG) {
 	REQUIRE(VALID_CONTEXT(mctx0));
 	REQUIRE(s != NULL);
 
@@ -2423,55 +2401,6 @@ error:
 void
 isc_mem_create(isc_mem_t **mctxp) {
 	mem_create(mctxp, isc_mem_defaultflags);
-}
-
-void *
-isc__mem_get(isc_mem_t *mctx, size_t size FLARG) {
-	REQUIRE(ISCAPI_MCTX_VALID(mctx));
-
-	return (mctx->methods->memget(mctx, size FLARG_PASS));
-}
-
-void
-isc__mem_put(isc_mem_t *mctx, void *ptr, size_t size FLARG) {
-	REQUIRE(ISCAPI_MCTX_VALID(mctx));
-
-	mctx->methods->memput(mctx, ptr, size FLARG_PASS);
-}
-
-void
-isc__mem_putanddetach(isc_mem_t **mctxp, void *ptr, size_t size FLARG) {
-	REQUIRE(mctxp != NULL && ISCAPI_MCTX_VALID(*mctxp));
-
-	(*mctxp)->methods->memputanddetach(mctxp, ptr, size FLARG_PASS);
-}
-
-void *
-isc__mem_allocate(isc_mem_t *mctx, size_t size FLARG) {
-	REQUIRE(ISCAPI_MCTX_VALID(mctx));
-
-	return (mctx->methods->memallocate(mctx, size FLARG_PASS));
-}
-
-void *
-isc__mem_reallocate(isc_mem_t *mctx, void *ptr, size_t size FLARG) {
-	REQUIRE(ISCAPI_MCTX_VALID(mctx));
-
-	return (mctx->methods->memreallocate(mctx, ptr, size FLARG_PASS));
-}
-
-char *
-isc__mem_strdup(isc_mem_t *mctx, const char *s FLARG) {
-	REQUIRE(ISCAPI_MCTX_VALID(mctx));
-
-	return (mctx->methods->memstrdup(mctx, s FLARG_PASS));
-}
-
-void
-isc__mem_free(isc_mem_t *mctx, void *ptr FLARG) {
-	REQUIRE(ISCAPI_MCTX_VALID(mctx));
-
-	mctx->methods->memfree(mctx, ptr FLARG_PASS);
 }
 
 void

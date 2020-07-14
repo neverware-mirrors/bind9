@@ -162,19 +162,6 @@ LIBISC_EXTERNAL_DATA extern unsigned int isc_mem_defaultflags;
  * \endcode
  */
 
-/*% memory and memory pool methods */
-typedef struct isc_memmethods {
-	void *(*memget)(isc_mem_t *mctx, size_t size _ISC_MEM_FLARG);
-	void (*memput)(isc_mem_t *mctx, void *ptr, size_t size _ISC_MEM_FLARG);
-	void (*memputanddetach)(isc_mem_t **mctxp, void *ptr,
-				size_t size _ISC_MEM_FLARG);
-	void *(*memallocate)(isc_mem_t *mctx, size_t size _ISC_MEM_FLARG);
-	void *(*memreallocate)(isc_mem_t *mctx, void *ptr,
-			       size_t size _ISC_MEM_FLARG);
-	char *(*memstrdup)(isc_mem_t *mctx, const char *s _ISC_MEM_FLARG);
-	void (*memfree)(isc_mem_t *mctx, void *ptr _ISC_MEM_FLARG);
-} isc_memmethods_t;
-
 /*%
  * This structure is actually just the common prefix of a memory context
  * implementation's version of an isc_mem_t.
@@ -185,9 +172,8 @@ typedef struct isc_memmethods {
  * invariants.
  */
 struct isc_mem {
-	unsigned int	  impmagic;
-	unsigned int	  magic;
-	isc_memmethods_t *methods;
+	unsigned int impmagic;
+	unsigned int magic;
 };
 
 #define ISCAPI_MCTX_MAGIC    ISC_MAGIC('A', 'm', 'c', 'x')
