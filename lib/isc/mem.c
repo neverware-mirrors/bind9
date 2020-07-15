@@ -925,8 +925,9 @@ isc_mem_attach(isc_mem_t *source0, isc_mem_t **targetp) {
 	*targetp = (isc_mem_t *)source;
 }
 
-static void
-mem__detach(isc_mem_t **ctxp) {
+void
+isc_mem_detach(isc_mem_t **ctxp) {
+	REQUIRE(ctxp != NULL && VALID_CONTEXT(*ctxp));
 	isc__mem_t *ctx = (isc__mem_t *)*ctxp;
 	*ctxp = NULL;
 
@@ -934,13 +935,6 @@ mem__detach(isc_mem_t **ctxp) {
 		isc_refcount_destroy(&ctx->references);
 		destroy(ctx);
 	}
-}
-
-void
-isc_mem_detach(isc_mem_t **ctxp) {
-	REQUIRE(ctxp != NULL && VALID_CONTEXT(*ctxp));
-
-	mem__detach(ctxp);
 }
 
 /*
@@ -958,6 +952,9 @@ isc__mem_putanddetach(isc_mem_t **ctxp, void *ptr, size_t size FLARG) {
 	REQUIRE(ctxp != NULL && VALID_CONTEXT(*ctxp));
 	REQUIRE(ptr != NULL);
 
+	isc__mem_t *ctx = (isc__mem_t *)*ctxp;
+	*ctxp = NULL;
+
 #if USE_ALLOCATOR_CUSTOM
 
 	if (ISC_UNLIKELY((isc_mem_debugging &
@@ -973,21 +970,19 @@ isc__mem_putanddetach(isc_mem_t **ctxp, void *ptr, size_t size FLARG) {
 		}
 		isc__mem_free((isc_mem_t *)ctx, ptr FLARG_PASS);
 
-		goto destroy;
-	}
-
-	MCTXLOCK(ctx);
-
-	DELETE_TRACE(ctx, ptr, size, file, line);
-
-	if ((ctx->flags & ISC_MEMFLAG_INTERNAL) != 0) {
-		mem_putunlocked(ctx, ptr, size);
 	} else {
-		mem_putstats(ctx, ptr, size);
-		mem_put(ctx, ptr, size);
+		MCTXLOCK(ctx);
+
+		DELETE_TRACE(ctx, ptr, size, file, line);
+
+		if ((ctx->flags & ISC_MEMFLAG_INTERNAL) != 0) {
+			mem_putunlocked(ctx, ptr, size);
+		} else {
+			mem_putstats(ctx, ptr, size);
+			mem_put(ctx, ptr, size);
+		}
+		MCTXUNLOCK(ctx);
 	}
-	MCTXUNLOCK(ctx);
-destroy:
 #elif defined(USE_ALLOCATOR_JEMALLOC)
 	sdallocx(ptr, size, 0);
 #elif defined(USE_ALLOCATOR_TCMALLOC)
@@ -996,8 +991,10 @@ destroy:
 	UNUSED(size);
 	default_memfree(ptr);
 #endif
-
-	mem__detach(ctxp);
+	if (isc_refcount_decrement(&ctx->references) == 1) {
+		isc_refcount_destroy(&ctx->references);
+		destroy(ctx);
+	}
 }
 
 void
@@ -1160,7 +1157,6 @@ isc__mem_put(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 #endif
 }
 
-#if USE_ALLOCATOR_CUSTOM
 void
 isc_mem_waterack(isc_mem_t *ctx0, int flag) {
 	REQUIRE(VALID_CONTEXT(ctx0));
@@ -1175,7 +1171,6 @@ isc_mem_waterack(isc_mem_t *ctx0, int flag) {
 	}
 	MCTXUNLOCK(ctx);
 }
-#endif
 
 #if ISC_MEM_TRACKLINES
 static void
@@ -1903,9 +1898,6 @@ isc__mempool_get(isc_mempool_t *mpctx0 FLARG) {
 
 	isc__mempool_t *mpctx = (isc__mempool_t *)mpctx0;
 	element *item;
-	isc__mem_t *mctx;
-
-	mctx = mpctx->mctx;
 
 	if (mpctx->lock != NULL) {
 		LOCK(mpctx->lock);
@@ -1920,6 +1912,7 @@ isc__mempool_get(isc_mempool_t *mpctx0 FLARG) {
 	}
 
 #if USE_ALLOCATOR_CUSTOM
+	isc__mem_t *mctx = mpctx->mctx;
 	if (ISC_UNLIKELY(mpctx->items == NULL)) {
 		/*
 		 * We need to dip into the well.  Lock the memory context

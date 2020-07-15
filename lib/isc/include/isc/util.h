@@ -210,6 +210,10 @@
 #define __has_feature(x) 0
 #endif /* if !defined(__has_feature) */
 
+#if !defined(__has_builtin)
+#define __has_builtin(x) 0
+#endif /* if !defined(__has_attribute) */
+
 /* GCC defines __SANITIZE_ADDRESS__, so reuse the macro for clang */
 #if __has_feature(address_sanitizer)
 #define __SANITIZE_ADDRESS__ 1
