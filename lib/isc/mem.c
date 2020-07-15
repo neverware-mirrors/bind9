@@ -984,6 +984,9 @@ isc__mem_putanddetach(isc_mem_t **ctxp, void *ptr, size_t size FLARG) {
 		MCTXUNLOCK(ctx);
 	}
 #elif defined(USE_ALLOCATOR_JEMALLOC)
+	if (size == 0) {
+		size = ALIGNMENT_SIZE;
+	}
 	sdallocx(ptr, size, 0);
 #elif defined(USE_ALLOCATOR_TCMALLOC)
 	tc_free_sized(ptr, size);
@@ -1149,6 +1152,9 @@ isc__mem_put(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 		(ctx->water)(ctx->water_arg, ISC_MEM_LOWATER);
 	}
 #elif defined(USE_ALLOCATOR_JEMALLOC)
+	if (size == 0) {
+		size = ALIGNMENT_SIZE;
+	}
 	sdallocx(ptr, size, 0);
 #elif defined(USE_ALLOCATOR_TCMALLOC)
 	tc_free_sized(ptr, size);
