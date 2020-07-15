@@ -598,6 +598,9 @@ isc__free(void *ptr _ISC_MEM_FLARG);
 char *
 isc__strdup(const char *str _ISC_MEM_FLARG);
 
+isc_mem_t *
+isc_get_default_mctx(void);
+
 ISC_LANG_ENDDECLS
 
 #endif /* ISC_MEM_H */

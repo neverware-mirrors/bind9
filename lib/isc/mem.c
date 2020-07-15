@@ -1024,10 +1024,10 @@ isc_mem_destroy(isc_mem_t **ctxp) {
 void *
 isc__mem_get(isc_mem_t *ctx0, size_t size FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
+	void *ptr = NULL;
 
 #if USE_ALLOCATOR_CUSTOM
 	isc__mem_t *ctx = (isc__mem_t *)ctx0;
-	void *ptr;
 	bool call_water = false;
 
 	if (ISC_UNLIKELY((isc_mem_debugging &
@@ -1068,29 +1068,30 @@ isc__mem_get(isc_mem_t *ctx0, size_t size FLARG) {
 	if (call_water && (ctx->water != NULL)) {
 		(ctx->water)(ctx->water_arg, ISC_MEM_HIWATER);
 	}
-	return (ptr);
 #elif USE_ALLOCATOR_JEMALLOC
-	/* FIXME: Behavior is undefined if size is 0. */
-	void *ptr = mallocx(size, 0);
+	if (size == 0) {
+		size = ALIGNMENT_SIZE;
+	}
+
+	ptr = mallocx(size, MALLOCX_ALIGN(ALIGNMENT_SIZE));
 	if (ptr == NULL && size != 0) {
 		char strbuf[ISC_STRERRORSIZE];
 		strerror_r(errno, strbuf, sizeof(strbuf));
 		isc_error_fatal(__FILE__, __LINE__,
 				"mallocx(%zu, 0) failed: %s", size, strbuf);
 	}
-	return (ptr);
 #elif defined(USE_ALLOCATOR_TCMALLOC)
-	void *ptr = tc_malloc(size);
+	ptr = tc_malloc(size);
 	if (ptr == NULL && size != 0) {
 		char strbuf[ISC_STRERRORSIZE];
 		strerror_r(errno, strbuf, sizeof(strbuf));
 		isc_error_fatal(__FILE__, __LINE__, "tc_malloc(%zu) failed: %s",
 				size, strbuf);
 	}
-	return (ptr);
 #elif defined(USE_ALLOCATOR_SYSTEM)
-	return (default_memalloc(size));
+	ptr = default_memalloc(size);
 #endif
+	return (ptr);
 }
 
 void
@@ -1309,6 +1310,7 @@ mem_allocateunlocked(isc_mem_t *ctx0, size_t size) {
 void *
 isc__mem_allocate(isc_mem_t *ctx0, size_t size FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
+	void *ptr = NULL;
 
 #if USE_ALLOCATOR_CUSTOM
 	isc__mem_t *ctx = (isc__mem_t *)ctx0;
@@ -1348,37 +1350,40 @@ isc__mem_allocate(isc_mem_t *ctx0, size_t size FLARG) {
 		(ctx->water)(ctx->water_arg, ISC_MEM_HIWATER);
 	}
 
-	return (si);
+	ptr = si;
 #elif USE_ALLOCATOR_JEMALLOC
-	void *ptr = mallocx(size, 0);
+	if (size == 0U) {
+		size = ALIGNMENT_SIZE;
+	}
+	ptr = mallocx(size, MALLOCX_ALIGN(ALIGNMENT_SIZE));
 	if (ptr == NULL && size != 0) {
 		char strbuf[ISC_STRERRORSIZE];
 		strerror_r(errno, strbuf, sizeof(strbuf));
 		isc_error_fatal(__FILE__, __LINE__,
 				"mallocx(%zu, 0) failed: %s", size, strbuf);
 	}
-	return (ptr);
 #elif USE_ALLOCATOR_TCMALLOC
-	void *ptr = tc_malloc(size);
+	ptr = tc_malloc(size);
 	if (ptr == NULL && size != 0) {
 		char strbuf[ISC_STRERRORSIZE];
 		strerror_r(errno, strbuf, sizeof(strbuf));
 		isc_error_fatal(__FILE__, __LINE__, "tc_malloc(%zu) failed: %s",
 				size, strbuf);
 	}
-	return (ptr);
 #else
-	return (default_memalloc(size));
+	ptr = default_memalloc(size);
 #endif
+	return (ptr);
 }
 
 void *
 isc__mem_callocate(isc_mem_t *ctx0, size_t num, size_t size FLARG) {
+	void *ptr = NULL;
 #if USE_ALLOCATOR_CUSTOM
 	size_t numsize;
 
 	ISC_MUL_OVERFLOW(num, size, &numsize);
-	void *ptr = isc__mem_allocate(ctx0, numsize FLARG_PASS);
+	ptr = isc__mem_allocate(ctx0, numsize FLARG_PASS);
 	memset(ptr, 0, numsize);
 	return (ptr);
 #elif USE_ALLOCATOR_JEMALLOC
@@ -1387,8 +1392,12 @@ isc__mem_callocate(isc_mem_t *ctx0, size_t num, size_t size FLARG) {
 	size_t numsize;
 
 	ISC_MUL_OVERFLOW(num, size, &numsize);
-	void *ptr = mallocx(numsize, MALLOCX_ZERO);
 
+	if (numsize == 0U) {
+		numsize = ALIGNMENT_SIZE;
+	}
+
+	ptr = mallocx(numsize, MALLOCX_ZERO | MALLOCX_ALIGN(ALIGNMENT_SIZE));
 	if (ptr == NULL && size != 0) {
 		char strbuf[ISC_STRERRORSIZE];
 		strerror_r(errno, strbuf, sizeof(strbuf));
@@ -1397,11 +1406,10 @@ isc__mem_callocate(isc_mem_t *ctx0, size_t num, size_t size FLARG) {
 				numsize, strbuf);
 	}
 
-	return (ptr);
 #elif USE_ALLOCATOR_TCMALLOC
 	UNUSED(ctx0);
 
-	void *ptr = tc_calloc(num, size);
+	ptr = tc_calloc(num, size);
 	if (ptr == NULL && size != 0) {
 		char strbuf[ISC_STRERRORSIZE];
 		strerror_r(errno, strbuf, sizeof(strbuf));
@@ -1409,12 +1417,10 @@ isc__mem_callocate(isc_mem_t *ctx0, size_t num, size_t size FLARG) {
 				"tc_calloc(%zu, %zu) failed: %s", num, size,
 				strbuf);
 	}
-
-	return (ptr);
 #else
 	UNUSED(ctx0);
 
-	void *ptr = calloc(num, size);
+	ptr = calloc(num, size);
 
 	if (ptr == NULL && size != 0) {
 		char strbuf[ISC_STRERRORSIZE];
@@ -1422,9 +1428,8 @@ isc__mem_callocate(isc_mem_t *ctx0, size_t num, size_t size FLARG) {
 		isc_error_fatal(__FILE__, __LINE__, "calloc failed: %s",
 				strbuf);
 	}
-
-	return (ptr);
 #endif
+	return (ptr);
 }
 
 void *
@@ -1440,9 +1445,9 @@ isc__mem_cget(isc_mem_t *ctx0, size_t num, size_t size FLARG) {
 void *
 isc__mem_reallocate(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 	REQUIRE(VALID_CONTEXT(ctx0));
+	void *new_ptr = NULL;
 
 #if USE_ALLOCATOR_CUSTOM
-	void *new_ptr = NULL;
 	size_t oldsize, copysize;
 
 	/*
@@ -1478,7 +1483,11 @@ isc__mem_reallocate(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 	return (new_ptr);
 #elif USE_ALLOCATOR_JEMALLOC
 	if (size > 0U) {
-		void *new_ptr = rallocx(ptr, size, 0);
+		if (ptr == NULL) {
+			new_ptr = mallocx(size, MALLOCX_ALIGN(ALIGNMENT_SIZE));
+		} else {
+			new_ptr = rallocx(ptr, size, MALLOCX_ALIGN(ALIGNMENT_SIZE));
+		}
 		if (new_ptr == NULL && size != 0) {
 			char strbuf[ISC_STRERRORSIZE];
 			strerror_r(errno, strbuf, sizeof(strbuf));
@@ -1486,32 +1495,37 @@ isc__mem_reallocate(isc_mem_t *ctx0, void *ptr, size_t size FLARG) {
 					"rallocx(%p, %zu, 0) failed: %s", ptr,
 					size, strbuf);
 		}
-		return (new_ptr);
-	} else {
+	} else if (ptr != NULL) {
 		dallocx(ptr, 0);
-		return (NULL);
 	}
 #elif USE_ALLOCATOR_TCMALLOC
-	void *new_ptr = tc_realloc(ptr, size);
-	if (new_ptr == NULL && size != 0) {
-		char strbuf[ISC_STRERRORSIZE];
-		strerror_r(errno, strbuf, sizeof(strbuf));
-		isc_error_fatal(__FILE__, __LINE__,
-				"tc_realloc(%p, %zu) failed: %s", ptr, size,
-				strbuf);
+	if (size > 0U) {
+		new_ptr = tc_realloc(ptr, size);
+		if (new_ptr == NULL && size != 0) {
+			char strbuf[ISC_STRERRORSIZE];
+			strerror_r(errno, strbuf, sizeof(strbuf));
+			isc_error_fatal(__FILE__, __LINE__,
+					"tc_realloc(%p, %zu) failed: %s", ptr, size,
+					strbuf);
+		}
+	} else if (ptr != NULL) {
+		tc_free(ptr);
 	}
-	return (new_ptr);
 #else
-	void *new_ptr = realloc(ptr, size);
-	if (new_ptr == NULL && size != 0) {
-		char strbuf[ISC_STRERRORSIZE];
-		strerror_r(errno, strbuf, sizeof(strbuf));
-		isc_error_fatal(__FILE__, __LINE__,
-				"realloc(%p, %zu) failed: %s", ptr, size,
-				strbuf);
+	if (size > 0U) {
+		new_ptr = realloc(ptr, size);
+		if (new_ptr == NULL && size != 0) {
+			char strbuf[ISC_STRERRORSIZE];
+			strerror_r(errno, strbuf, sizeof(strbuf));
+			isc_error_fatal(__FILE__, __LINE__,
+					"realloc(%p, %zu) failed: %s", ptr, size,
+					strbuf);
+		}
+	} else {
+		free(ptr);
 	}
-	return (new_ptr);
 #endif
+	return (new_ptr);
 }
 
 void
@@ -2607,21 +2621,25 @@ LIBISC_EXTERNAL_DATA isc_mem_t *isc__mem_mctx = NULL;
 
 void *
 isc__malloc(size_t size FLARG) {
+	REQUIRE(isc__mem_mctx != NULL);
 	return (isc__mem_allocate(isc__mem_mctx, size FLARG_PASS));
 }
 
 void *
 isc__calloc(size_t num, size_t size FLARG) {
+	REQUIRE(isc__mem_mctx != NULL);
 	return (isc__mem_callocate(isc__mem_mctx, num, size FLARG_PASS));
 }
 
 void *
 isc__realloc(void *ptr, size_t size FLARG) {
+	REQUIRE(isc__mem_mctx != NULL);
 	return (isc__mem_reallocate(isc__mem_mctx, ptr, size FLARG_PASS));
 }
 
 void
 isc__free(void *ptr FLARG) {
+	REQUIRE(isc__mem_mctx != NULL);
 	/*
 	 * The free function causes the space pointed to by ptr to be
 	 * deallocated, that is, made available for further allocation.  If ptr
@@ -2644,5 +2662,12 @@ isc__free(void *ptr FLARG) {
 
 char *
 isc__strdup(const char *s1 FLARG) {
+	REQUIRE(isc__mem_mctx != NULL);
 	return (isc__mem_strdup(isc__mem_mctx, s1 FLARG_PASS));
+}
+
+isc_mem_t *
+isc_get_default_mctx(void) {
+	REQUIRE(isc__mem_mctx != NULL);
+	return ((isc_mem_t *)isc__mem_mctx);
 }
