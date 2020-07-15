@@ -220,6 +220,7 @@ libisc_la_SOURCES =		\
 
 libisc_la_CPPFLAGS =		\
 	$(AM_CPPFLAGS)		\
+	$(ALLOCATOR_CFLAGS)	\
 	$(LIBISC_CFLAGS)	\
 	$(LIBUV_CFLAGS)		\
 	$(OPENSSL_CFLAGS)	\
@@ -229,6 +230,7 @@ libisc_la_LDFLAGS =		\
 	$(libisc_VERSION_INFO)
 
 libisc_la_LIBADD =		\
+	$(ALLOCATOR_LIBS)	\
 	$(LIBLTDL_LIBS)		\
 	$(LIBUV_LIBS)		\
 	$(OPENSSL_LIBS)		\
