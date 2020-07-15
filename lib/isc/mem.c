@@ -51,13 +51,6 @@
 
 #include "mem_p.h"
 
-#if defined(USE_ALLOCATOR_SYSTEM) || defined(USE_ALLOCATOR_JEMALLOC) || \
-	defined(USE_ALLOCATOR_TCMALLOC)
-#define USE_ALLOCATOR_CUSTOM 0
-#else
-#define USE_ALLOCATOR_CUSTOM 1
-#endif
-
 #define MCTXLOCK(m)   LOCK(&m->lock)
 #define MCTXUNLOCK(m) UNLOCK(&m->lock)
 
@@ -1640,7 +1633,7 @@ size_t
 isc_mem_inuse(isc_mem_t *ctx0) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 
-	size_t inuse;
+	size_t inuse = 0;
 
 #if USE_ALLOCATOR_CUSTOM
 	isc__mem_t *ctx = (isc__mem_t *)ctx0;

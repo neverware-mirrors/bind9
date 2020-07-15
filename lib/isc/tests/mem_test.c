@@ -174,6 +174,9 @@ isc_mem_test(void **state) {
 	isc_mempool_destroy(&mp1);
 }
 
+#if !defined(USE_ALLOCATOR_SYSTEM) && !defined(USE_ALLOCATOR_JEMALLOC) && \
+	!defined(USE_ALLOCATOR_TCMALLOC)
+
 /* test TotalUse calculation */
 static void
 isc_mem_total_test(void **state) {
@@ -250,6 +253,8 @@ isc_mem_inuse_test(void **state) {
 	assert_true(after < meanwhile);
 	assert_int_equal(after, before);
 }
+
+#endif
 
 #if ISC_MEM_TRACKLINES
 
@@ -522,11 +527,13 @@ main(void) {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test_setup_teardown(isc_mem_test, _setup,
 						_teardown),
+#if !defined(USE_ALLOCATOR_SYSTEM) && !defined(USE_ALLOCATOR_JEMALLOC) && \
+	!defined(USE_ALLOCATOR_TCMALLOC)
 		cmocka_unit_test_setup_teardown(isc_mem_total_test, _setup,
 						_teardown),
 		cmocka_unit_test_setup_teardown(isc_mem_inuse_test, _setup,
 						_teardown),
-
+#endif
 #if !defined(__SANITIZE_THREAD__)
 		cmocka_unit_test_setup_teardown(isc_mem_benchmark, _setup,
 						_teardown),
