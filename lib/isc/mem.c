@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <isc/bind9.h>
 #include <isc/hash.h>
@@ -72,7 +73,7 @@ LIBISC_EXTERNAL_DATA unsigned int isc_mem_defaultflags = ISC_MEMFLAG_DEFAULT;
 
 #define DEF_MAX_SIZE	  1100
 #define DEF_MEM_TARGET	  4096
-#define ALIGNMENT_SIZE	  8U /*%< must be a power of 2 */
+#define ALIGNMENT_SIZE	  sizeof(void *) /*%< must be a power of 2 */
 #define NUM_BASIC_BLOCKS  64 /*%< must be > 1 */
 #define TABLE_INCREMENT	  1024
 #define DEBUG_TABLE_COUNT 512U
@@ -216,6 +217,7 @@ struct isc__mempool {
 #if ISC_MEMPOOL_NAMES
 	char name[16]; /*%< printed name in stats reports */
 #endif		       /* if ISC_MEMPOOL_NAMES */
+	element *pages;
 };
 
 /*
@@ -340,15 +342,6 @@ delete_trace_entry(isc__mem_t *mctx, const void *ptr, size_t size,
 }
 #endif /* ISC_MEM_TRACKLINES */
 
-#if USE_ALLOCATOR_CUSTOM
-static inline size_t
-rmsize(size_t size) {
-	/*
-	 * round down to ALIGNMENT_SIZE
-	 */
-	return (size & (~(ALIGNMENT_SIZE - 1)));
-}
-
 static inline size_t
 quantize(size_t size) {
 	/*!
@@ -361,6 +354,15 @@ quantize(size_t size) {
 		return (ALIGNMENT_SIZE);
 	}
 	return ((size + ALIGNMENT_SIZE - 1) & (~(ALIGNMENT_SIZE - 1)));
+}
+
+#if USE_ALLOCATOR_CUSTOM
+static inline size_t
+rmsize(size_t size) {
+	/*
+	 * round down to ALIGNMENT_SIZE
+	 */
+	return (size & (~(ALIGNMENT_SIZE - 1)));
 }
 
 static inline void
@@ -1638,8 +1640,10 @@ size_t
 isc_mem_inuse(isc_mem_t *ctx0) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 
-	isc__mem_t *ctx = (isc__mem_t *)ctx0;
 	size_t inuse;
+
+#if USE_ALLOCATOR_CUSTOM
+	isc__mem_t *ctx = (isc__mem_t *)ctx0;
 
 	MCTXLOCK(ctx);
 
@@ -1647,6 +1651,10 @@ isc_mem_inuse(isc_mem_t *ctx0) {
 
 	MCTXUNLOCK(ctx);
 
+#elif USE_ALLOCATOR_JEMALLOC
+	size_t len = sizeof(inuse);
+	mallctl("stats.active", &inuse, &len, NULL, 0);
+#endif
 	return (inuse);
 }
 
@@ -1670,14 +1678,19 @@ size_t
 isc_mem_total(isc_mem_t *ctx0) {
 	REQUIRE(VALID_CONTEXT(ctx0));
 
+	size_t total = 0;
+#if USE_ALLOCATOR_CUSTOM
 	isc__mem_t *ctx = (isc__mem_t *)ctx0;
-	size_t total;
 
 	MCTXLOCK(ctx);
 
 	total = ctx->total;
 
 	MCTXUNLOCK(ctx);
+#elif USE_ALLOCATOR_JEMALLOC
+	size_t len = sizeof(total);
+	mallctl("stats.allocated", &total, &len, NULL, 0);
+#endif
 
 	return (total);
 }
@@ -1771,6 +1784,7 @@ isc_mempool_create(isc_mem_t *mctx0, size_t size, isc_mempool_t **mpctxp) {
 
 	isc__mem_t *mctx = (isc__mem_t *)mctx0;
 	isc__mempool_t *mpctx;
+	size_t pagesize = sysconf(_SC_PAGESIZE);
 
 	/*
 	 * Allocate space for this pool, initialize values, and if all works
@@ -1788,17 +1802,19 @@ isc_mempool_create(isc_mem_t *mctx0, size_t size, isc_mempool_t **mpctxp) {
 	if (size < sizeof(element)) {
 		size = sizeof(element);
 	}
+	size = quantize(size);
 	mpctx->size = size;
 	mpctx->maxalloc = UINT_MAX;
 	mpctx->allocated = 0;
 	mpctx->freecount = 0;
-	mpctx->freemax = 1;
-	mpctx->fillcount = 1;
+	mpctx->freemax = UINT_MAX;
+	mpctx->fillcount = pagesize / size;
 	mpctx->gets = 0;
 #if ISC_MEMPOOL_NAMES
 	mpctx->name[0] = 0;
 #endif /* if ISC_MEMPOOL_NAMES */
 	mpctx->items = NULL;
+	mpctx->pages = NULL;
 
 	*mpctxp = (isc_mempool_t *)mpctx;
 
@@ -1879,6 +1895,14 @@ isc_mempool_destroy(isc_mempool_t **mpctxp) {
 		}
 	}
 	MCTXUNLOCK(mctx);
+#else
+	while (mpctx->pages != NULL) {
+		element *page;
+		page = mpctx->pages;
+		mpctx->pages = page->next;
+		isc_mem_put((isc_mem_t *)mpctx->mctx, page, mpctx->fillcount * mpctx->size);
+		mpctx->freecount -= mpctx->fillcount - 1;
+	}
 #endif
 	/*
 	 * Remove our linked list entry from the memory context.
@@ -1958,6 +1982,21 @@ isc__mempool_get(isc_mempool_t *mpctx0 FLARG) {
 		MCTXUNLOCK(mctx);
 	}
 
+#else
+	element *page = NULL;
+	if (ISC_UNLIKELY(mpctx->items == NULL)) {
+		page = isc__mem_get((isc_mem_t *)mpctx->mctx, mpctx->fillcount * mpctx->size FLARG_PASS);
+		page->next = mpctx->pages;
+		mpctx->pages = page;
+		item = (element *)((uintptr_t)page + mpctx->size);
+		for (size_t i = 1; i < mpctx->fillcount; i++) {
+			item->next = mpctx->items;
+			mpctx->items = item;
+			item = (element *)((uintptr_t)item + mpctx->size);
+		}
+		mpctx->freecount += mpctx->fillcount - 1;
+	}
+#endif
 	/*
 	 * If we didn't get any items, return NULL.
 	 */
@@ -1969,9 +2008,6 @@ isc__mempool_get(isc_mempool_t *mpctx0 FLARG) {
 	mpctx->items = item->next;
 	INSIST(mpctx->freecount > 0);
 	mpctx->freecount--;
-#else
-	item = default_memalloc(mpctx->size);
-#endif
 	mpctx->gets++;
 	mpctx->allocated++;
 
@@ -2016,7 +2052,6 @@ isc__mempool_put(isc_mempool_t *mpctx0, void *mem FLARG) {
 #endif /* ISC_MEM_TRACKLINES */
 
 #if USE_ALLOCATOR_CUSTOM
-	element *item;
 	/*
 	 * If our free list is full, return this to the mctx directly.
 	 */
@@ -2035,7 +2070,8 @@ isc__mempool_put(isc_mempool_t *mpctx0, void *mem FLARG) {
 		}
 		return;
 	}
-
+#endif
+	element *item;
 	/*
 	 * Otherwise, attach it to our free list and bump the counter.
 	 */
@@ -2043,9 +2079,7 @@ isc__mempool_put(isc_mempool_t *mpctx0, void *mem FLARG) {
 	item = (element *)mem;
 	item->next = mpctx->items;
 	mpctx->items = item;
-#else
-	free(mem);
-#endif
+
 	if (mpctx->lock != NULL) {
 		UNLOCK(mpctx->lock);
 	}
@@ -2065,7 +2099,11 @@ isc_mempool_setfreemax(isc_mempool_t *mpctx0, unsigned int limit) {
 		LOCK(mpctx->lock);
 	}
 
-	mpctx->freemax = limit;
+	if (limit < mpctx->maxalloc) {
+		mpctx->freemax = mpctx->maxalloc;
+	} else {
+		mpctx->freemax = limit;
+	}
 
 	if (mpctx->lock != NULL) {
 		UNLOCK(mpctx->lock);
@@ -2124,6 +2162,7 @@ isc_mempool_setmaxalloc(isc_mempool_t *mpctx0, unsigned int limit) {
 	}
 
 	mpctx->maxalloc = limit;
+	mpctx->freemax = limit;
 
 	if (mpctx->lock != NULL) {
 		UNLOCK(mpctx->lock);
@@ -2176,11 +2215,15 @@ isc_mempool_setfillcount(isc_mempool_t *mpctx0, unsigned int limit) {
 	REQUIRE(limit > 0);
 
 	isc__mempool_t *mpctx = (isc__mempool_t *)mpctx0;
+	size_t pagesize = sysconf(_SC_PAGESIZE);
 
 	if (mpctx->lock != NULL) {
 		LOCK(mpctx->lock);
 	}
 
+	if (limit < (pagesize / mpctx->size)) {
+		limit = (pagesize / mpctx->size) - 1;
+	}
 	mpctx->fillcount = limit;
 
 	if (mpctx->lock != NULL) {
