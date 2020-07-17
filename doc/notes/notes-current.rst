@@ -29,6 +29,8 @@ New Features
   IPv6-only link, using DNS64/NAT64 or 464XLAT for IPv4aaS (IPv4 as a
   Service). [GL #1154]
 
+- Add support for HTTPS and SVCB records types. [GL #1132]
+
 Removed Features
 ~~~~~~~~~~~~~~~~
 

@@ -1,3 +1,6 @@
+5547.	[protocol]	Add support for HTTPS and SVCB records types.
+			[GL #1132]
+
 5546.	[placeholder]
 
 5545.	[func]		Restore reading of incoming queries by multiple netmgr
