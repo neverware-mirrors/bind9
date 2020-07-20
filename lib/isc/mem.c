@@ -951,6 +951,7 @@ isc__mem_putanddetach(isc_mem_t **ctxp, void *ptr, size_t size FLARG) {
 	*ctxp = NULL;
 
 #if USE_ALLOCATOR_CUSTOM
+	isc__mem_t *ctx = (isc__mem_t *)*ctxp;
 
 	if (ISC_UNLIKELY((isc_mem_debugging &
 			  (ISC_MEM_DEBUGSIZE | ISC_MEM_DEBUGCTX)) != 0))
@@ -2038,9 +2039,9 @@ isc__mempool_put(isc_mempool_t *mpctx0, void *mem FLARG) {
 
 #if ISC_MEM_TRACKLINES
 	if (ISC_UNLIKELY((isc_mem_debugging & TRACE_OR_RECORD) != 0)) {
-		MCTXLOCK(mctx);
-		DELETE_TRACE(mctx, mem, mpctx->size, file, line);
-		MCTXUNLOCK(mctx);
+		MCTXLOCK(mpctx->mctx);
+		DELETE_TRACE(mpctx->mctx, mem, mpctx->size, file, line);
+		MCTXUNLOCK(mpctx->mctx);
 	}
 #endif /* ISC_MEM_TRACKLINES */
 
