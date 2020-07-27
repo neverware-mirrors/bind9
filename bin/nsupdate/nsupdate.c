@@ -2039,7 +2039,7 @@ doneparsing:
 	rdatalist->type = istimeout ? dns_rdatatype_timeout : rdatatype;
 	rdatalist->rdclass = rdataclass;
 	rdatalist->covers = dns_rdatatype_none;
-	rdatalist->ttl = istimeout? (dns_ttl_t)0 : (dns_ttl_t)ttl;
+	rdatalist->ttl = istimeout ? (dns_ttl_t)0 : (dns_ttl_t)ttl;
 	ISC_LIST_APPEND(rdatalist->rdata, rdata, link);
 	dns_rdatalist_tordataset(rdatalist, rdataset);
 	ISC_LIST_INIT(name->list);
