@@ -280,7 +280,7 @@ stages:
   artifacts:
     untracked: true
     expire_in: "1 day"
-    when: on_failure
+    when: always
 
 .system_test_tsan: &system_test_tsan_job
   <<: *system_test_common
