@@ -187,7 +187,7 @@ print_lock(const char *operation, isc_rwlock_t *rwl, isc_rwlocktype_t type) {
 		atomic_load_acquire(&rwl->cnt_and_flag), rwl->readers_waiting,
 		atomic_load_acquire(&rwl->write_granted), rwl->write_quota);
 }
-#endif			/* ISC_RWLOCK_TRACE */
+#endif /* ISC_RWLOCK_TRACE */
 
 isc_result_t
 isc_rwlock_init(isc_rwlock_t *rwl, unsigned int read_quota,

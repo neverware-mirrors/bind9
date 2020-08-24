@@ -522,8 +522,8 @@ dns_adb_marklame(dns_adb_t *adb, dns_adbaddrinfo_t *addr,
  * Adjusting the scaling factors is fine, as long as they all remain
  * unique values.)
  */
-#define DNS_ADB_RTTADJDEFAULT 7	 /*%< default scale */
-#define DNS_ADB_RTTADJREPLACE 0	 /*%< replace with our rtt */
+#define DNS_ADB_RTTADJDEFAULT 7 /*%< default scale */
+#define DNS_ADB_RTTADJREPLACE 0 /*%< replace with our rtt */
 #define DNS_ADB_RTTADJAGE     10 /*%< age this rtt */
 
 void

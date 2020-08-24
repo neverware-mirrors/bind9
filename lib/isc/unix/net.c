@@ -101,7 +101,7 @@ static isc_once_t once_ipv6pktinfo = ISC_ONCE_INIT;
 #ifndef ISC_CMSG_IP_TOS
 #ifdef __APPLE__
 #define ISC_CMSG_IP_TOS 0 /* As of 10.8.2. */
-#else			  /* ! __APPLE__ */
+#else /* ! __APPLE__ */
 #define ISC_CMSG_IP_TOS 1
 #endif /* ! __APPLE__ */
 #endif /* ! ISC_CMSG_IP_TOS */
@@ -236,7 +236,7 @@ try_ipv6only(void) {
 #ifndef IPV6_V6ONLY
 	ipv6only_result = ISC_R_NOTFOUND;
 	return;
-#else  /* ifndef IPV6_V6ONLY */
+#else /* ifndef IPV6_V6ONLY */
 	/* check for TCP sockets */
 	s = socket(PF_INET6, SOCK_STREAM, 0);
 	if (s == -1) {
@@ -311,7 +311,7 @@ try_ipv6pktinfo(void) {
 
 #ifdef IPV6_RECVPKTINFO
 	optname = IPV6_RECVPKTINFO;
-#else  /* ifdef IPV6_RECVPKTINFO */
+#else /* ifdef IPV6_RECVPKTINFO */
 	optname = IPV6_PKTINFO;
 #endif /* ifdef IPV6_RECVPKTINFO */
 	on = 1;
@@ -363,7 +363,7 @@ static inline socklen_t
 cmsg_len(socklen_t len) {
 #ifdef CMSG_LEN
 	return (CMSG_LEN(len));
-#else  /* ifdef CMSG_LEN */
+#else /* ifdef CMSG_LEN */
 	socklen_t hdrlen;
 
 	/*
@@ -379,7 +379,7 @@ static inline socklen_t
 cmsg_space(socklen_t len) {
 #ifdef CMSG_SPACE
 	return (CMSG_SPACE(len));
-#else  /* ifdef CMSG_SPACE */
+#else /* ifdef CMSG_SPACE */
 	struct msghdr msg;
 	struct cmsghdr *cmsgp;
 	/*
@@ -416,7 +416,7 @@ make_nonblock(int fd) {
 	int on = 1;
 
 	ret = ioctl(fd, FIONBIO, (char *)&on);
-#else  /* ifdef USE_FIONBIO_IOCTL */
+#else /* ifdef USE_FIONBIO_IOCTL */
 	flags = fcntl(fd, F_GETFL, 0);
 	flags |= O_NONBLOCK;
 	ret = fcntl(fd, F_SETFL, flags);
@@ -427,7 +427,7 @@ make_nonblock(int fd) {
 		UNEXPECTED_ERROR(__FILE__, __LINE__,
 #ifdef USE_FIONBIO_IOCTL
 				 "ioctl(%d, FIONBIO, &on): %s", fd,
-#else  /* ifdef USE_FIONBIO_IOCTL */
+#else /* ifdef USE_FIONBIO_IOCTL */
 				 "fcntl(%d, F_SETFL, %d): %s", fd, flags,
 #endif /* ifdef USE_FIONBIO_IOCTL */
 				 strbuf);
@@ -583,7 +583,7 @@ try_dscp_v4(void) {
 	hints.ai_protocol = IPPROTO_UDP;
 #ifdef AI_NUMERICHOST
 	hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
-#else  /* ifdef AI_NUMERICHOST */
+#else /* ifdef AI_NUMERICHOST */
 	hints.ai_flags = AI_PASSIVE;
 #endif /* ifdef AI_NUMERICHOST */
 
@@ -645,7 +645,7 @@ try_dscp_v6(void) {
 	hints.ai_protocol = IPPROTO_UDP;
 #ifdef AI_NUMERICHOST
 	hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
-#else  /* ifdef AI_NUMERICHOST */
+#else /* ifdef AI_NUMERICHOST */
 	hints.ai_flags = AI_PASSIVE;
 #endif /* ifdef AI_NUMERICHOST */
 
@@ -740,7 +740,7 @@ getudpportrange_sysctl(int af, in_port_t *low, in_port_t *high) {
 
 	return (ISC_R_SUCCESS);
 }
-#else  /* !HAVE_SYSCTLBYNAME */
+#else /* !HAVE_SYSCTLBYNAME */
 static isc_result_t
 getudpportrange_sysctl(int af, in_port_t *low, in_port_t *high) {
 	int mib_lo4[4] = SYSCTL_V4PORTRANGE_LOW;
@@ -814,7 +814,7 @@ isc_net_getudpportrange(int af, in_port_t *low, in_port_t *high) {
 		}
 		fclose(fp);
 	}
-#else  /* if defined(USE_SYSCTL_PORTRANGE) */
+#else /* if defined(USE_SYSCTL_PORTRANGE) */
 	UNUSED(af);
 #endif /* if defined(USE_SYSCTL_PORTRANGE) */
 

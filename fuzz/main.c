@@ -136,7 +136,7 @@ main(int argc, char **argv) {
 
 #ifdef __AFL_LOOP
 	while (__AFL_LOOP(10000)) { /* only works with afl-clang-fast */
-#else  /* ifdef __AFL_LOOP */
+#else /* ifdef __AFL_LOOP */
 	{
 #endif /* ifdef __AFL_LOOP */
 		ret = fread(buf, 1, sizeof(buf), stdin);

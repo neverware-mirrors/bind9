@@ -584,7 +584,7 @@ dst_key_fromnamedfile(const char *filename, const char *dirname, int type,
 	if (filename[0] == '/') {
 		dirname = NULL;
 	}
-#else  /* WIN32 */
+#else /* WIN32 */
 	if (filename[0] == '/' || filename[0] == '\\') {
 		dirname = NULL;
 	}

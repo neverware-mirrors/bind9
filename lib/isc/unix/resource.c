@@ -46,28 +46,28 @@ resource2rlim(isc_resource_t resource, int *rlim_resource) {
 	case isc_resource_lockedmemory:
 #ifdef RLIMIT_MEMLOCK
 		*rlim_resource = RLIMIT_MEMLOCK;
-#else  /* ifdef RLIMIT_MEMLOCK */
+#else /* ifdef RLIMIT_MEMLOCK */
 		result = ISC_R_NOTIMPLEMENTED;
 #endif /* ifdef RLIMIT_MEMLOCK */
 		break;
 	case isc_resource_openfiles:
 #ifdef RLIMIT_NOFILE
 		*rlim_resource = RLIMIT_NOFILE;
-#else  /* ifdef RLIMIT_NOFILE */
+#else /* ifdef RLIMIT_NOFILE */
 		result = ISC_R_NOTIMPLEMENTED;
 #endif /* ifdef RLIMIT_NOFILE */
 		break;
 	case isc_resource_processes:
 #ifdef RLIMIT_NPROC
 		*rlim_resource = RLIMIT_NPROC;
-#else  /* ifdef RLIMIT_NPROC */
+#else /* ifdef RLIMIT_NPROC */
 		result = ISC_R_NOTIMPLEMENTED;
 #endif /* ifdef RLIMIT_NPROC */
 		break;
 	case isc_resource_residentsize:
 #ifdef RLIMIT_RSS
 		*rlim_resource = RLIMIT_RSS;
-#else  /* ifdef RLIMIT_RSS */
+#else /* ifdef RLIMIT_RSS */
 		result = ISC_R_NOTIMPLEMENTED;
 #endif /* ifdef RLIMIT_RSS */
 		break;

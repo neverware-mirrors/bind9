@@ -152,10 +152,10 @@ typedef struct sdlz_rdatasetiter {
 #define VALID_SDLZNODE(sdlzn)	VALID_SDLZLOOKUP(sdlzn)
 
 /* These values are taken from RFC 1537 */
-#define SDLZ_DEFAULT_REFRESH 28800U  /* 8 hours */
-#define SDLZ_DEFAULT_RETRY   7200U   /* 2 hours */
+#define SDLZ_DEFAULT_REFRESH 28800U /* 8 hours */
+#define SDLZ_DEFAULT_RETRY   7200U /* 2 hours */
 #define SDLZ_DEFAULT_EXPIRE  604800U /* 7 days */
-#define SDLZ_DEFAULT_MINIMUM 86400U  /* 1 day */
+#define SDLZ_DEFAULT_MINIMUM 86400U /* 1 day */
 
 /* This is a reasonable value */
 #define SDLZ_DEFAULT_TTL (60 * 60 * 24)

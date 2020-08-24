@@ -149,7 +149,7 @@ ns_plugin_expandpath_test(void **state) {
 			.result = ISC_R_SUCCESS,
 #ifndef WIN32
 			.output = NAMED_PLUGINDIR "/foo.so",
-#else  /* ifndef WIN32 */
+#else /* ifndef WIN32 */
 			.output = "foo.so",
 #endif /* ifndef WIN32 */
 		},

@@ -112,7 +112,7 @@ isc_uv__cloexec(int fd, int set) {
 	do {
 		r = ioctl(fd, set ? FIOCLEX : FIONCLEX);
 	} while (r == -1 && errno == EINTR);
-#else  /* FIOCLEX/FIONCLEX unsupported */
+#else /* FIOCLEX/FIONCLEX unsupported */
 	int flags;
 
 	do {

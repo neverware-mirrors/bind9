@@ -117,7 +117,7 @@ isc_random_initialize(void) {
 	 * find a crash or a hang.  The seed array must be non-zero else
 	 * xoshiro128starstar will generate an infinite series of zeroes.
 	 */
-#else  /* if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION */
+#else /* if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION */
 	isc_entropy_get(useed, sizeof(useed));
 #endif /* if FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION */
 	memmove(seed, useed, sizeof(seed));
@@ -178,7 +178,7 @@ isc_random_uniform(uint32_t upper_bound) {
 
 #if (ULONG_MAX > 0xffffffffUL)
 	min = 0x100000000UL % upper_bound;
-#else  /* if (ULONG_MAX > 0xffffffffUL) */
+#else /* if (ULONG_MAX > 0xffffffffUL) */
 	/* Calculate (2**32 % upper_bound) avoiding 64-bit math */
 	if (upper_bound > 0x80000000) {
 		min = 1 + ~upper_bound; /* 2**32 - upper_bound */

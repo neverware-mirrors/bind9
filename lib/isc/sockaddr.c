@@ -335,7 +335,7 @@ isc_sockaddr_pf(const isc_sockaddr_t *sockaddr) {
 	 * Assume that PF_xxx == AF_xxx for all AF and PF.
 	 */
 	return (sockaddr->type.sa.sa_family);
-#else  /* if (AF_INET == PF_INET && AF_INET6 == PF_INET6) */
+#else /* if (AF_INET == PF_INET && AF_INET6 == PF_INET6) */
 	switch (sockaddr->type.sa.sa_family) {
 	case AF_INET:
 		return (PF_INET);
@@ -475,7 +475,7 @@ isc_sockaddr_frompath(isc_sockaddr_t *sockaddr, const char *path) {
 	strlcpy(sockaddr->type.sunix.sun_path, path,
 		sizeof(sockaddr->type.sunix.sun_path));
 	return (ISC_R_SUCCESS);
-#else  /* ifndef _WIN32 */
+#else /* ifndef _WIN32 */
 	UNUSED(sockaddr);
 	UNUSED(path);
 	return (ISC_R_NOTIMPLEMENTED);

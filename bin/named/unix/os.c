@@ -399,7 +399,7 @@ named_os_chroot(const char *root) {
 			strerror_r(errno, strbuf, sizeof(strbuf));
 			named_main_earlyfatal("chroot(): %s", strbuf);
 		}
-#else  /* ifdef HAVE_CHROOT */
+#else /* ifdef HAVE_CHROOT */
 		named_main_earlyfatal("chroot(): disabled");
 #endif /* ifdef HAVE_CHROOT */
 		if (chdir("/") < 0) {

@@ -114,7 +114,7 @@ default_callback(const char *file, int line, isc_assertiontype_t type,
 		for (int i = 0; i < nframes; i++) {
 			fprintf(stderr, "%s\n", strs[i]);
 		}
-#else  /* HAVE_BACKTRACE_SYMBOLS */
+#else /* HAVE_BACKTRACE_SYMBOLS */
 		for (int i = 0; i < nframes; i++) {
 			fprintf(stderr, "#%d %p in ??\n", i, tracebuf[i]);
 		}

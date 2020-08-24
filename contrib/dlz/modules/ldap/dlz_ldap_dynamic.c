@@ -86,17 +86,17 @@
 typedef struct {
 #if PTHREADS
 	db_list_t *db; /*%< handle to a list of DB */
-#else		       /* if PTHREADS */
+#else /* if PTHREADS */
 	dbinstance_t *db; /*%< handle to db */
-#endif		       /* if PTHREADS */
-	int method;    /*%< security authentication
-			* method */
-	char *user;    /*%< who is authenticating */
-	char *cred;    /*%< password for simple
-			* authentication method */
-	int protocol;  /*%< LDAP communication
-			* protocol version */
-	char *hosts;   /*%< LDAP server hosts */
+#endif /* if PTHREADS */
+	int method;   /*%< security authentication
+		       * method */
+	char *user;   /*%< who is authenticating */
+	char *cred;   /*%< password for simple
+		       * authentication method */
+	int protocol; /*%< LDAP communication
+		       * protocol version */
+	char *hosts;  /*%< LDAP server hosts */
 
 	/* Helper functions from the dlz_dlopen driver */
 	log_t *log;
@@ -110,7 +110,7 @@ typedef struct {
 #if DLZ_DLOPEN_VERSION < 3
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name);
-#else  /* if DLZ_DLOPEN_VERSION < 3 */
+#else /* if DLZ_DLOPEN_VERSION < 3 */
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 	       dns_clientinfo_t *clientinfo);
@@ -559,7 +559,7 @@ ldap_get_results(const char *zone, const char *record, const char *client,
 #if PTHREADS
 	/* find an available DBI from the list */
 	dbi = ldap_find_avail_conn(db);
-#else  /* PTHREADS */
+#else /* PTHREADS */
 	/*
 	 * only 1 DBI - no need to lock instance lock either
 	 * only 1 thread in the whole process, no possible contention.
@@ -839,7 +839,7 @@ dlz_allowzonexfr(void *dbdata, const char *name, const char *client) {
 	/* check to see if we are authoritative for the zone first */
 #if DLZ_DLOPEN_VERSION < 3
 	result = dlz_findzonedb(dbdata, name);
-#else  /* if DLZ_DLOPEN_VERSION < 3 */
+#else /* if DLZ_DLOPEN_VERSION < 3 */
 	result = dlz_findzonedb(dbdata, name, NULL, NULL);
 #endif /* if DLZ_DLOPEN_VERSION < 3 */
 	if (result != ISC_R_SUCCESS) {
@@ -864,7 +864,7 @@ dlz_authority(const char *zone, void *dbdata, dns_sdlzlookup_t *lookup) {
 #if DLZ_DLOPEN_VERSION < 3
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name)
-#else  /* if DLZ_DLOPEN_VERSION < 3 */
+#else /* if DLZ_DLOPEN_VERSION < 3 */
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 	       dns_clientinfo_t *clientinfo)
@@ -881,7 +881,7 @@ dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup)
-#else  /* if DLZ_DLOPEN_VERSION == 1 */
+#else /* if DLZ_DLOPEN_VERSION == 1 */
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup, dns_clientinfomethods_t *methods,
@@ -940,7 +940,7 @@ dlz_create(const char *dlzname, unsigned int argc, char *argv[], void **dbdata,
 #if PTHREADS
 	/* if debugging, let user know we are multithreaded. */
 	ldap->log(ISC_LOG_DEBUG(1), "LDAP driver running multithreaded");
-#else  /* PTHREADS */
+#else /* PTHREADS */
 	/* if debugging, let user know we are single threaded. */
 	ldap->log(ISC_LOG_DEBUG(1), "LDAP driver running single threaded");
 #endif /* PTHREADS */
@@ -1109,7 +1109,7 @@ dlz_create(const char *dlzname, unsigned int argc, char *argv[], void **dbdata,
 		/* when multithreaded, build a list of DBI's */
 		DLZ_LINK_INIT(dbi, link);
 		DLZ_LIST_APPEND(*(ldap->db), dbi, link);
-#else  /* if PTHREADS */
+#else /* if PTHREADS */
 	/*
 	 * when single threaded, hold onto the one connection
 	 * instance.
@@ -1137,7 +1137,7 @@ dlz_create(const char *dlzname, unsigned int argc, char *argv[], void **dbdata,
 				  "LDAP driver could not allocate memory "
 				  "for connection number %u",
 				  i + 1);
-#else  /* if PTHREADS */
+#else /* if PTHREADS */
 		ldap->log(ISC_LOG_ERROR, "LDAP driver could not allocate "
 					 "memory "
 					 "for connection");
@@ -1159,7 +1159,7 @@ dlz_create(const char *dlzname, unsigned int argc, char *argv[], void **dbdata,
 				  "LDAP driver could not bind "
 				  "connection number %u to server.",
 				  i + 1);
-#else  /* if PTHREADS */
+#else /* if PTHREADS */
 		ldap->log(ISC_LOG_ERROR, "LDAP driver could not "
 					 "bind connection to server.");
 #endif /* if PTHREADS */
@@ -1201,7 +1201,7 @@ dlz_destroy(void *dbdata) {
 		if (db->db != NULL) {
 			ldap_destroy_dblist((db_list_t *)(db->db));
 		}
-#else  /* PTHREADS */
+#else /* PTHREADS */
 		if (db->db->dbconn != NULL) {
 			ldap_unbind_s((LDAP *)(db->db->dbconn));
 		}
@@ -1231,7 +1231,7 @@ dlz_version(unsigned int *flags) {
 	*flags |= DNS_SDLZFLAG_RELATIVERDATA;
 #if PTHREADS
 	*flags |= DNS_SDLZFLAG_THREADSAFE;
-#else  /* if PTHREADS */
+#else /* if PTHREADS */
 	*flags &= ~DNS_SDLZFLAG_THREADSAFE;
 #endif /* if PTHREADS */
 	return (DLZ_DLOPEN_VERSION);

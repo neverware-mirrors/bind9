@@ -83,7 +83,7 @@ struct isc_appctx {
 	atomic_bool blocked;
 #ifdef WIN32
 	HANDLE hEvents[NUM_EVENTS];
-#else  /* WIN32 */
+#else /* WIN32 */
 	isc_mutex_t readylock;
 	isc_condition_t ready;
 #endif /* WIN32 */
@@ -289,7 +289,7 @@ isc_app_ctxrun(isc_appctx_t *ctx) {
 				break;
 			}
 		}
-#else  /* WIN32 */
+#else /* WIN32 */
 		if (isc_bind9) {
 			sigset_t sset;
 			int sig;
@@ -387,7 +387,7 @@ isc_app_ctxshutdown(isc_appctx_t *ctx) {
 	{
 #ifdef WIN32
 		SetEvent(ctx->hEvents[SHUTDOWN_EVENT]);
-#else  /* WIN32 */
+#else /* WIN32 */
 		if (isc_bind9 && ctx != &isc_g_appctx) {
 			/* BIND9 internal, but using multiple contexts */
 			atomic_store_release(&ctx->want_shutdown, true);
@@ -427,7 +427,7 @@ isc_app_ctxsuspend(isc_appctx_t *ctx) {
 	if (!atomic_load_acquire(&ctx->shutdown_requested)) {
 #ifdef WIN32
 		SetEvent(ctx->hEvents[RELOAD_EVENT]);
-#else  /* WIN32 */
+#else /* WIN32 */
 		if (isc_bind9 && ctx != &isc_g_appctx) {
 			/* BIND9 internal, but using multiple contexts */
 			atomic_store_release(&ctx->want_reload, true);
@@ -479,7 +479,7 @@ isc_app_block(void) {
 
 #ifdef WIN32
 	blockedthread = GetCurrentThread();
-#else  /* WIN32 */
+#else /* WIN32 */
 	sigset_t sset;
 	blockedthread = pthread_self();
 	RUNTIME_CHECK(sigemptyset(&sset) == 0 &&
@@ -497,7 +497,7 @@ isc_app_unblock(void) {
 
 #ifdef WIN32
 	REQUIRE(blockedthread == GetCurrentThread());
-#else  /* WIN32 */
+#else /* WIN32 */
 	REQUIRE(blockedthread == pthread_self());
 
 	sigset_t sset;

@@ -84,7 +84,7 @@ typedef struct isc_socketmgr   isc_socketmgr_t;	     /*%< Socket Manager */
 typedef struct isc_stats       isc_stats_t;	     /*%< Statistics */
 #if defined(_WIN32) && !defined(_WIN64)
 typedef int_fast32_t isc_statscounter_t; /*%< Statistics Counter */
-#else  /* if defined(_WIN32) && !defined(_WIN64) */
+#else /* if defined(_WIN32) && !defined(_WIN64) */
 typedef int_fast64_t isc_statscounter_t;
 #endif /* if defined(_WIN32) && !defined(_WIN64) */
 typedef struct isc_symtab isc_symtab_t;		/*%< Symbol Table */

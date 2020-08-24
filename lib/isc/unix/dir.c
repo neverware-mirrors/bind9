@@ -187,7 +187,7 @@ isc_dir_chroot(const char *dirname) {
 	}
 
 	return (ISC_R_SUCCESS);
-#else  /* ifdef HAVE_CHROOT */
+#else /* ifdef HAVE_CHROOT */
 	return (ISC_R_NOTIMPLEMENTED);
 #endif /* ifdef HAVE_CHROOT */
 }

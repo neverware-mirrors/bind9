@@ -207,10 +207,10 @@ typedef struct rdatasetheader {
 	dns_trust_t trust;
 	struct noqname *noqname;
 	struct noqname *closest;
-	unsigned int is_mmapped : 1;
+	unsigned int is_mmapped	      : 1;
 	unsigned int next_is_relative : 1;
 	unsigned int node_is_relative : 1;
-	unsigned int resign_lsb : 1;
+	unsigned int resign_lsb	      : 1;
 	/*%<
 	 * We don't use the LIST macros, because the LIST structure has
 	 * both head and tail pointers, and is doubly linked.
@@ -360,7 +360,7 @@ typedef ISC_LIST(dns_rbtnode_t) rbtnodelist_t;
 #else /* if DNS_RBTDB_CACHE_NODE_LOCK_COUNT <= 1 */
 #define DEFAULT_CACHE_NODE_LOCK_COUNT DNS_RBTDB_CACHE_NODE_LOCK_COUNT
 #endif /* if DNS_RBTDB_CACHE_NODE_LOCK_COUNT <= 1 */
-#else  /* ifdef DNS_RBTDB_CACHE_NODE_LOCK_COUNT */
+#else /* ifdef DNS_RBTDB_CACHE_NODE_LOCK_COUNT */
 #define DEFAULT_CACHE_NODE_LOCK_COUNT 97
 #endif /* DNS_RBTDB_CACHE_NODE_LOCK_COUNT */
 
@@ -1475,7 +1475,7 @@ init_rdataset(dns_rbtdb_t *rbtdb, rdatasetheader_t *h) {
 	if (IS_CACHE(rbtdb) && rbtdb->common.rdclass == dns_rdataclass_in) {
 		fprintf(stderr, "initialized header: %p\n", h);
 	}
-#else  /* if TRACE_HEADER */
+#else /* if TRACE_HEADER */
 	UNUSED(rbtdb);
 #endif /* if TRACE_HEADER */
 }
@@ -9901,7 +9901,7 @@ rdataset_getownercase(const dns_rdataset_t *rdataset, dns_name_t *name) {
 			name->ndata[i] |= 0x20; /* set the lower case bit */
 		}
 	}
-#else  /* if 0 */
+#else /* if 0 */
 
 	if (ISC_LIKELY(CASEFULLYLOWER(header))) {
 		unsigned char *bp, *be;

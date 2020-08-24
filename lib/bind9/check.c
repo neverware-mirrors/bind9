@@ -2350,10 +2350,9 @@ check_zoneconf(const cfg_obj_t *zconfig, const cfg_obj_t *voptions,
 		zname = dns_fixedname_name(&fixedname);
 		dns_name_format(zname, namebuf, sizeof(namebuf));
 		tresult = nameexist(zconfig, namebuf,
-				    ztype == CFG_ZONE_HINT
-					    ? 1
-					    : ztype == CFG_ZONE_REDIRECT ? 2
-									 : 3,
+				    ztype == CFG_ZONE_HINT	 ? 1
+				    : ztype == CFG_ZONE_REDIRECT ? 2
+								 : 3,
 				    symtab,
 				    "zone '%s': already exists "
 				    "previous definition: %s:%u",
@@ -2371,10 +2370,9 @@ check_zoneconf(const cfg_obj_t *zconfig, const cfg_obj_t *voptions,
 		tmp += strlen(tmp);
 		len -= strlen(tmp);
 		(void)snprintf(tmp, len, "%u/%s", zclass,
-			       (ztype == CFG_ZONE_INVIEW)
-				       ? target
-				       : (viewname != NULL) ? viewname
-							    : "_default");
+			       (ztype == CFG_ZONE_INVIEW) ? target
+			       : (viewname != NULL)	  ? viewname
+							  : "_default");
 		switch (ztype) {
 		case CFG_ZONE_INVIEW:
 			tresult = isc_symtab_lookup(inview, namebuf, 0, NULL);
@@ -3488,11 +3486,13 @@ check_trust_anchor(const cfg_obj_t *key, bool managed, unsigned int *flagsp,
 	uint32_t rdata1, rdata2, rdata3;
 	unsigned char data[4096];
 	const char *atstr = NULL;
-	enum { INIT_DNSKEY,
-	       STATIC_DNSKEY,
-	       INIT_DS,
-	       STATIC_DS,
-	       TRUSTED } anchortype;
+	enum {
+		INIT_DNSKEY,
+		STATIC_DNSKEY,
+		INIT_DS,
+		STATIC_DS,
+		TRUSTED
+	} anchortype;
 
 	/*
 	 * The 2010 and 2017 IANA root keys - these are used below
@@ -4193,7 +4193,7 @@ check_dnstap(const cfg_obj_t *voptions, const cfg_obj_t *config,
 		}
 	}
 	return (ISC_R_SUCCESS);
-#else  /* ifdef HAVE_DNSTAP */
+#else /* ifdef HAVE_DNSTAP */
 	UNUSED(voptions);
 	UNUSED(config);
 	UNUSED(logctx);
@@ -4817,7 +4817,7 @@ bind9_check_controls(const cfg_obj_t *config, isc_log_t *logctx,
 			for (i = 0; i < 3; i++) {
 #ifdef NEED_SECURE_DIRECTORY
 				mask = (0x1 << (i * 3)); /* SEARCH */
-#else  /* ifdef NEED_SECURE_DIRECTORY */
+#else /* ifdef NEED_SECURE_DIRECTORY */
 				mask = (0x6 << (i * 3)); /* READ + WRITE */
 #endif /* ifdef NEED_SECURE_DIRECTORY */
 				if ((perm & mask) == mask) {

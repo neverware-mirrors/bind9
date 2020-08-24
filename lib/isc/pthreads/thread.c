@@ -90,7 +90,7 @@ isc_thread_join(isc_thread_t thread, isc_threadresult_t *result) {
 
 #ifdef __NetBSD__
 #define pthread_setconcurrency(a) (void)a /* nothing */
-#endif					  /* ifdef __NetBSD__ */
+#endif /* ifdef __NetBSD__ */
 
 void
 isc_thread_setconcurrency(unsigned int level) {
@@ -106,12 +106,12 @@ isc_thread_setname(isc_thread_t thread, const char *name) {
 	 */
 #if defined(__NetBSD__)
 	(void)pthread_setname_np(thread, name, NULL);
-#else  /* if defined(__NetBSD__) */
+#else /* if defined(__NetBSD__) */
 	(void)pthread_setname_np(thread, name);
 #endif /* if defined(__NetBSD__) */
 #elif defined(HAVE_PTHREAD_SET_NAME_NP)
 	(void)pthread_set_name_np(thread, name);
-#else  /* if defined(HAVE_PTHREAD_SETNAME_NP) && !defined(__APPLE__) */
+#else /* if defined(HAVE_PTHREAD_SETNAME_NP) && !defined(__APPLE__) */
 	UNUSED(thread);
 	UNUSED(name);
 #endif /* if defined(HAVE_PTHREAD_SETNAME_NP) && !defined(__APPLE__) */
@@ -153,7 +153,7 @@ isc_thread_setaffinity(int cpu) {
 		return (ISC_R_FAILURE);
 	}
 	cpuset_destroy(cset);
-#else  /* linux? */
+#else /* linux? */
 	cpu_set_t set;
 	CPU_ZERO(&set);
 	CPU_SET(cpu, &set);
@@ -166,7 +166,7 @@ isc_thread_setaffinity(int cpu) {
 	if (processor_bind(P_LWPID, P_MYID, cpu, NULL) != 0) {
 		return (ISC_R_FAILURE);
 	}
-#else  /* if defined(HAVE_CPUSET_SETAFFINITY) */
+#else /* if defined(HAVE_CPUSET_SETAFFINITY) */
 	UNUSED(cpu);
 #endif /* if defined(HAVE_CPUSET_SETAFFINITY) */
 	return (ISC_R_SUCCESS);

@@ -69,7 +69,7 @@ typedef enum {
 	LIBRPZ_TRIG_NSDNAME = 4,
 	LIBRPZ_TRIG_NSIP = 5
 } librpz_trig_t;
-#define LIBRPZ_TRIG_SIZE 3     /* sizeof librpz_trig_t in bits */
+#define LIBRPZ_TRIG_SIZE 3 /* sizeof librpz_trig_t in bits */
 typedef uint8_t librpz_tbit_t; /* one bit for each of the TRIGS_NUM
 				* trigger types */
 
@@ -943,7 +943,7 @@ librpz_lib_open(librpz_emsg_t *emsg, void **dl_handle, const char *path) {
 #if LIBRPZ_LIB_OPEN == 1
 	emsg->c[0] = '\0';
 	return (&LIBRPZ_DEF);
-#else  /* if LIBRPZ_LIB_OPEN == 1 */
+#else /* if LIBRPZ_LIB_OPEN == 1 */
 	snprintf(emsg->c, sizeof(librpz_emsg_t),
 		 "librpz not available via ./configure");
 	return (NULL);

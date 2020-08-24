@@ -85,7 +85,7 @@ bool nomerge = true;
 bool docheckmx = true;
 bool dochecksrv = true;
 bool docheckns = true;
-#else  /* if CHECK_LOCAL */
+#else /* if CHECK_LOCAL */
 bool docheckmx = false;
 bool dochecksrv = false;
 bool docheckns = false;

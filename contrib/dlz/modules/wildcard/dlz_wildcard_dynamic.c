@@ -197,7 +197,7 @@ dlz_allowzonexfr(void *dbdata, const char *name, const char *client) {
 #if DLZ_DLOPEN_VERSION < 3
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name)
-#else  /* if DLZ_DLOPEN_VERSION < 3 */
+#else /* if DLZ_DLOPEN_VERSION < 3 */
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 	       dns_clientinfo_t *clientinfo)
@@ -226,7 +226,7 @@ dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup)
-#else  /* if DLZ_DLOPEN_VERSION == 1 */
+#else /* if DLZ_DLOPEN_VERSION == 1 */
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup, dns_clientinfomethods_t *methods,

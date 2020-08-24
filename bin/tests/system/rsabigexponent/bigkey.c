@@ -152,7 +152,7 @@ main(int argc, char **argv) {
 	dst_lib_destroy();
 	isc_mem_destroy(&mctx);
 	return (0);
-#else  /* !USE_PKCS11 */
+#else /* !USE_PKCS11 */
 	return (1);
 #endif /* !USE_PKC11 */
 }

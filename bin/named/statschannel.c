@@ -214,7 +214,7 @@ set_desc(int counter, int maxcounter, const char *fdesc, const char **fdescs,
 	fdescs[counter] = fdesc;
 #if defined(EXTENDED_STATS)
 	xdescs[counter] = xdesc;
-#else  /* if defined(EXTENDED_STATS) */
+#else /* if defined(EXTENDED_STATS) */
 	UNUSED(xdesc);
 	UNUSED(xdescs);
 #endif /* if defined(EXTENDED_STATS) */
@@ -1478,7 +1478,7 @@ rdtypestat_dump(dns_rdatastatstype_t type, uint64_t val, void *arg) {
 		TRY0(xmlTextWriterWriteFormatString(writer, "%" PRIu64, val));
 
 		TRY0(xmlTextWriterEndElement(writer)); /* type */
-#endif						       /* ifdef HAVE_LIBXML2 */
+#endif /* ifdef HAVE_LIBXML2 */
 		break;
 	case isc_statsformat_json:
 #ifdef HAVE_JSON_C
@@ -1564,7 +1564,7 @@ rdatasetstats_dump(dns_rdatastatstype_t type, uint64_t val, void *arg) {
 		TRY0(xmlTextWriterEndElement(writer)); /* counter */
 
 		TRY0(xmlTextWriterEndElement(writer)); /* rrset */
-#endif						       /* ifdef HAVE_LIBXML2 */
+#endif /* ifdef HAVE_LIBXML2 */
 		break;
 	case isc_statsformat_json:
 #ifdef HAVE_JSON_C
@@ -1620,7 +1620,7 @@ opcodestat_dump(dns_opcode_t code, uint64_t val, void *arg) {
 						 ISC_XMLCHAR codebuf));
 		TRY0(xmlTextWriterWriteFormatString(writer, "%" PRIu64, val));
 		TRY0(xmlTextWriterEndElement(writer)); /* counter */
-#endif						       /* ifdef HAVE_LIBXML2 */
+#endif /* ifdef HAVE_LIBXML2 */
 		break;
 	case isc_statsformat_json:
 #ifdef HAVE_JSON_C
@@ -1676,7 +1676,7 @@ rcodestat_dump(dns_rcode_t code, uint64_t val, void *arg) {
 						 ISC_XMLCHAR codebuf));
 		TRY0(xmlTextWriterWriteFormatString(writer, "%" PRIu64, val));
 		TRY0(xmlTextWriterEndElement(writer)); /* counter */
-#endif						       /* ifdef HAVE_LIBXML2 */
+#endif /* ifdef HAVE_LIBXML2 */
 		break;
 	case isc_statsformat_json:
 #ifdef HAVE_JSON_C
@@ -1730,7 +1730,7 @@ dnssecsignstat_dump(dns_keytag_t tag, uint64_t val, void *arg) {
 						 ISC_XMLCHAR tagbuf));
 		TRY0(xmlTextWriterWriteFormatString(writer, "%" PRIu64, val));
 		TRY0(xmlTextWriterEndElement(writer)); /* counter */
-#endif						       /* ifdef HAVE_LIBXML2 */
+#endif /* ifdef HAVE_LIBXML2 */
 		break;
 	case isc_statsformat_json:
 #ifdef HAVE_JSON_C

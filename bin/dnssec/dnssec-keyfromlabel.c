@@ -74,7 +74,7 @@ usage(void) {
 		"        path to PKCS#11 provider library "
 		"(default is %s)\n",
 		PK11_LIB_LOCATION);
-#else  /* if USE_PKCS11 */
+#else /* if USE_PKCS11 */
 	fprintf(stderr, "        name of an OpenSSL engine to use\n");
 #endif /* if USE_PKCS11 */
 	fprintf(stderr, "    -f keyflag: KSK | REVOKE\n");
@@ -629,7 +629,7 @@ main(int argc, char **argv) {
 	ret = dst_key_fromlabel(name, alg, flags, protocol, rdclass,
 #if USE_PKCS11
 				"pkcs11",
-#else  /* if USE_PKCS11 */
+#else /* if USE_PKCS11 */
 				engine,
 #endif /* if USE_PKCS11 */
 				label, NULL, mctx, &key);

@@ -116,7 +116,7 @@ static CK_C_INITIALIZE_ARGS pk11_init_args = {
 
 #ifndef WIN32
 static const char *lib_name = PK11_LIB_LOCATION;
-#else  /* ifndef WIN32 */
+#else /* ifndef WIN32 */
 static const char *lib_name = PK11_LIB_LOCATION ".dll";
 #endif /* ifndef WIN32 */
 
@@ -458,7 +458,7 @@ token_login(pk11_session_t *sp) {
 #if PK11_NO_LOGERR
 			pk11_error_fatalcheck(__FILE__, __LINE__,
 					      "pkcs_C_Login", rv);
-#else  /* if PK11_NO_LOGERR */
+#else /* if PK11_NO_LOGERR */
 			ret = ISC_R_NOPERM;
 #endif /* if PK11_NO_LOGERR */
 		} else {

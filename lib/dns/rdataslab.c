@@ -224,7 +224,7 @@ dns_rdataslab_fromrdataset(dns_rdataset_t *rdataset, isc_mem_t *mctx,
 		} else {
 #if DNS_RDATASET_FIXED
 			buflen += (8 + x[i - 1].rdata.length);
-#else  /* if DNS_RDATASET_FIXED */
+#else /* if DNS_RDATASET_FIXED */
 			buflen += (2 + x[i - 1].rdata.length);
 #endif /* if DNS_RDATASET_FIXED */
 			/*
@@ -241,7 +241,7 @@ dns_rdataslab_fromrdataset(dns_rdataset_t *rdataset, isc_mem_t *mctx,
 	 */
 #if DNS_RDATASET_FIXED
 	buflen += (8 + x[i - 1].rdata.length);
-#else  /* if DNS_RDATASET_FIXED */
+#else /* if DNS_RDATASET_FIXED */
 	buflen += (2 + x[i - 1].rdata.length);
 #endif /* if DNS_RDATASET_FIXED */
 	/*
@@ -309,7 +309,7 @@ dns_rdataslab_fromrdataset(dns_rdataset_t *rdataset, isc_mem_t *mctx,
 		*rawbuf++ = (length & 0x00ff);
 #if DNS_RDATASET_FIXED
 		rawbuf += 2; /* filled in later */
-#endif			     /* if DNS_RDATASET_FIXED */
+#endif /* if DNS_RDATASET_FIXED */
 		/*
 		 * Store the per RR meta data.
 		 */
@@ -353,7 +353,7 @@ dns_rdataslab_size(unsigned char *slab, unsigned int reservelen) {
 		length += *current++;
 #if DNS_RDATASET_FIXED
 		current += length + 2;
-#else  /* if DNS_RDATASET_FIXED */
+#else /* if DNS_RDATASET_FIXED */
 		current += length;
 #endif /* if DNS_RDATASET_FIXED */
 	}
@@ -381,7 +381,7 @@ dns_rdataslab_rdatasize(unsigned char *slab, unsigned int reservelen) {
 		rdatalen += length;
 #if DNS_RDATASET_FIXED
 		current += length + 2;
-#else  /* if DNS_RDATASET_FIXED */
+#else /* if DNS_RDATASET_FIXED */
 		current += length;
 #endif /* if DNS_RDATASET_FIXED */
 	}
@@ -538,7 +538,7 @@ dns_rdataslab_merge(unsigned char *oslab, unsigned char *nslab,
 #if DNS_RDATASET_FIXED
 		olength += length + 8;
 		ocurrent += length + 2;
-#else  /* if DNS_RDATASET_FIXED */
+#else /* if DNS_RDATASET_FIXED */
 		olength += length + 2;
 		ocurrent += length;
 #endif /* if DNS_RDATASET_FIXED */
@@ -563,7 +563,7 @@ dns_rdataslab_merge(unsigned char *oslab, unsigned char *nslab,
 			 */
 #if DNS_RDATASET_FIXED
 			tlength += nrdata.length + 8;
-#else  /* if DNS_RDATASET_FIXED */
+#else /* if DNS_RDATASET_FIXED */
 			tlength += nrdata.length + 2;
 #endif /* if DNS_RDATASET_FIXED */
 			if (type == dns_rdatatype_rrsig) {
@@ -680,7 +680,7 @@ dns_rdataslab_merge(unsigned char *oslab, unsigned char *nslab,
 			*tcurrent++ = (length & 0x00ff);
 #if DNS_RDATASET_FIXED
 			tcurrent += 2; /* fill in later */
-#endif				       /* if DNS_RDATASET_FIXED */
+#endif /* if DNS_RDATASET_FIXED */
 			memmove(tcurrent, data, length);
 			tcurrent += length;
 			oadded++;
@@ -707,7 +707,7 @@ dns_rdataslab_merge(unsigned char *oslab, unsigned char *nslab,
 			*tcurrent++ = (length & 0x00ff);
 #if DNS_RDATASET_FIXED
 			tcurrent += 2; /* fill in later */
-#endif				       /* if DNS_RDATASET_FIXED */
+#endif /* if DNS_RDATASET_FIXED */
 			memmove(tcurrent, data, length);
 			tcurrent += length;
 			nadded++;

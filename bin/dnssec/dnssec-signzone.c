@@ -591,10 +591,10 @@ signset(dns_diff_t *del, dns_diff_t *add, dns_dbnode_t *node, dns_name_t *name,
 				vbprintf(2, "\trrsig by %s dropped - %s\n",
 					 sigstr,
 					 expired ? "expired"
-						 : rrsig.originalttl != set->ttl
-							   ? "ttl change"
-							   : "failed to "
-							     "verify");
+					 : rrsig.originalttl != set->ttl
+						 ? "ttl change"
+						 : "failed to "
+						   "verify");
 				resign = true;
 			}
 		} else if (!ispublishedkey(key) && remove_orphansigs) {
@@ -612,10 +612,10 @@ signset(dns_diff_t *del, dns_diff_t *add, dns_dbnode_t *node, dns_name_t *name,
 				vbprintf(2, "\trrsig by %s dropped - %s\n",
 					 sigstr,
 					 expired ? "expired"
-						 : rrsig.originalttl != set->ttl
-							   ? "ttl change"
-							   : "failed to "
-							     "verify");
+					 : rrsig.originalttl != set->ttl
+						 ? "ttl change"
+						 : "failed to "
+						   "verify");
 			}
 		} else if (!expired) {
 			vbprintf(2, "\trrsig by %s retained\n", sigstr);
@@ -3194,7 +3194,7 @@ usage(void) {
 		"\t\tpath to PKCS#11 provider library "
 		"(default is %s)\n",
 		PK11_LIB_LOCATION);
-#else  /* if USE_PKCS11 */
+#else /* if USE_PKCS11 */
 	fprintf(stderr, "\t\tname of an OpenSSL engine to use\n");
 #endif /* if USE_PKCS11 */
 	fprintf(stderr, "\t-P:\t");

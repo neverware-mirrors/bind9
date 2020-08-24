@@ -121,7 +121,7 @@ try_ipv6only(void) {
 #ifndef IPV6_V6ONLY
 	ipv6only_result = ISC_R_NOTFOUND;
 	return;
-#else  /* ifndef IPV6_V6ONLY */
+#else /* ifndef IPV6_V6ONLY */
 	/* check for TCP sockets */
 	s = socket(PF_INET6, SOCK_STREAM, 0);
 	if (s == INVALID_SOCKET) {
@@ -204,7 +204,7 @@ try_ipv6pktinfo(void) {
 
 #ifdef IPV6_RECVPKTINFO
 	optname = IPV6_RECVPKTINFO;
-#else  /* ifdef IPV6_RECVPKTINFO */
+#else /* ifdef IPV6_RECVPKTINFO */
 	optname = IPV6_PKTINFO;
 #endif /* ifdef IPV6_RECVPKTINFO */
 	on = 1;

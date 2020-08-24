@@ -58,7 +58,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--enable-dnsrps") == 0) {
 #ifdef USE_DNSRPS
 		return (0);
-#else  /* ifdef USE_DNSRPS */
+#else /* ifdef USE_DNSRPS */
 		return (1);
 #endif /* ifdef USE_DNSRPS */
 	}
@@ -66,7 +66,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--edns-version") == 0) {
 #ifdef DNS_EDNS_VERSION
 		printf("%d\n", DNS_EDNS_VERSION);
-#else  /* ifdef DNS_EDNS_VERSION */
+#else /* ifdef DNS_EDNS_VERSION */
 		printf("0\n");
 #endif /* ifdef DNS_EDNS_VERSION */
 		return (0);
@@ -104,7 +104,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--gssapi") == 0) {
 #if HAVE_GSSAPI
 		return (0);
-#else  /* HAVE_GSSAPI */
+#else /* HAVE_GSSAPI */
 		return (1);
 #endif /* HAVE_GSSAPI */
 	}
@@ -112,7 +112,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--have-geoip2") == 0) {
 #ifdef HAVE_GEOIP2
 		return (0);
-#else  /* ifdef HAVE_GEOIP2 */
+#else /* ifdef HAVE_GEOIP2 */
 		return (1);
 #endif /* ifdef HAVE_GEOIP2 */
 	}
@@ -120,7 +120,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--have-libxml2") == 0) {
 #ifdef HAVE_LIBXML2
 		return (0);
-#else  /* ifdef HAVE_LIBXML2 */
+#else /* ifdef HAVE_LIBXML2 */
 		return (1);
 #endif /* ifdef HAVE_LIBXML2 */
 	}
@@ -128,7 +128,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--with-idn") == 0) {
 #ifdef HAVE_LIBIDN2
 		return (0);
-#else  /* ifdef HAVE_LIBIDN2 */
+#else /* ifdef HAVE_LIBIDN2 */
 		return (1);
 #endif /* ifdef HAVE_LIBIDN2 */
 	}
@@ -136,7 +136,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--with-lmdb") == 0) {
 #ifdef HAVE_LMDB
 		return (0);
-#else  /* ifdef HAVE_LMDB */
+#else /* ifdef HAVE_LMDB */
 		return (1);
 #endif /* ifdef HAVE_LMDB */
 	}
@@ -144,7 +144,7 @@ main(int argc, char **argv) {
 	if (strcmp(argv[1], "--with-dlz-filesystem") == 0) {
 #ifdef DLZ_FILESYSTEM
 		return (0);
-#else  /* ifdef DLZ_FILESYSTEM */
+#else /* ifdef DLZ_FILESYSTEM */
 		return (1);
 #endif /* ifdef DLZ_FILESYSTEM */
 	}
@@ -165,7 +165,7 @@ main(int argc, char **argv) {
 			close(s);
 		}
 		return ((n == 0 && v6only == 0) ? 0 : 1);
-#else  /* ifdef WIN32 */
+#else /* ifdef WIN32 */
 		return (1);
 #endif /* ifdef WIN32 */
 	}

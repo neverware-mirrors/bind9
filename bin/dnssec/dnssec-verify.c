@@ -165,7 +165,7 @@ usage(void) {
 		"\t\tpath to PKCS#11 provider library "
 		"(default is %s)\n",
 		PK11_LIB_LOCATION);
-#else  /* if USE_PKCS11 */
+#else /* if USE_PKCS11 */
 	fprintf(stderr, "\t\tname of an OpenSSL engine to use\n");
 #endif /* if USE_PKCS11 */
 	fprintf(stderr, "\t-x:\tDNSKEY record signed with KSKs only, "

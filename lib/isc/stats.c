@@ -29,7 +29,7 @@
 
 #if defined(_WIN32) && !defined(_WIN64)
 typedef atomic_int_fast32_t isc__atomic_statcounter_t;
-#else  /* if defined(_WIN32) && !defined(_WIN64) */
+#else /* if defined(_WIN32) && !defined(_WIN64) */
 typedef atomic_int_fast64_t isc__atomic_statcounter_t;
 #endif /* if defined(_WIN32) && !defined(_WIN64) */
 

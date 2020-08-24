@@ -105,10 +105,10 @@ typedef struct sdb_rdatasetiter {
 #define VALID_SDBNODE(sdbn)   VALID_SDBLOOKUP(sdbn)
 
 /* These values are taken from RFC1537 */
-#define SDB_DEFAULT_REFRESH 28800U  /* 8 hours */
-#define SDB_DEFAULT_RETRY   7200U   /* 2 hours */
+#define SDB_DEFAULT_REFRESH 28800U /* 8 hours */
+#define SDB_DEFAULT_RETRY   7200U /* 2 hours */
 #define SDB_DEFAULT_EXPIRE  604800U /* 7 days */
-#define SDB_DEFAULT_MINIMUM 86400U  /* 1 day */
+#define SDB_DEFAULT_MINIMUM 86400U /* 1 day */
 
 /* This is a reasonable value */
 #define SDB_DEFAULT_TTL (60 * 60 * 24)

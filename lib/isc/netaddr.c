@@ -322,7 +322,7 @@ isc_netaddr_frompath(isc_netaddr_t *netaddr, const char *path) {
 	strlcpy(netaddr->type.un, path, sizeof(netaddr->type.un));
 	netaddr->zone = 0;
 	return (ISC_R_SUCCESS);
-#else  /* ifndef _WIN32 */
+#else /* ifndef _WIN32 */
 	UNUSED(netaddr);
 	UNUSED(path);
 	return (ISC_R_NOTIMPLEMENTED);

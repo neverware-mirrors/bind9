@@ -189,7 +189,7 @@ process_answer(isc_task_t *task, isc_event_t *event) {
 	outstanding_queries--;
 
 	result = dispatch_query(trans);
-#if 0  /* for cancel test */
+#if 0 /* for cancel test */
 	if (result == ISC_R_SUCCESS) {
 		static int count = 0;
 

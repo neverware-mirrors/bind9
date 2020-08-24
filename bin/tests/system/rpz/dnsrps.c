@@ -39,7 +39,7 @@
 #include <dns/librpz.h>
 
 librpz_t *librpz;
-#else  /* ifdef USE_DNSRPS */
+#else /* ifdef USE_DNSRPS */
 typedef struct {
 	char c[120];
 } librpz_emsg_t;
@@ -80,7 +80,7 @@ main(int argc, char **argv) {
 			}
 #ifdef USE_DNSRPS
 			printf("%s\n", librpz->dnsrpzd_path);
-#else  /* ifdef USE_DNSRPS */
+#else /* ifdef USE_DNSRPS */
 			INSIST(0);
 			ISC_UNREACHABLE();
 #endif /* ifdef USE_DNSRPS */
@@ -131,7 +131,7 @@ main(int argc, char **argv) {
 			librpz->rsp_detach(&rsp);
 			librpz->client_detach(&client);
 			printf("%u\n", serial);
-#else  /* ifdef USE_DNSRPS */
+#else /* ifdef USE_DNSRPS */
 			INSIST(0);
 			ISC_UNREACHABLE();
 #endif /* ifdef USE_DNSRPS */
@@ -164,7 +164,7 @@ link_dnsrps(librpz_emsg_t *emsg) {
 	}
 
 	return (true);
-#else  /* ifdef USE_DNSRPS */
+#else /* ifdef USE_DNSRPS */
 	snprintf(emsg->c, sizeof(emsg->c), "DNSRPS not configured");
 	return (false);
 #endif /* ifdef USE_DNSRPS */

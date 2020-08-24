@@ -274,7 +274,7 @@ struct ns_client {
 
 #if defined(_WIN32) && !defined(_WIN64)
 LIBNS_EXTERNAL_DATA extern atomic_uint_fast32_t ns_client_requests;
-#else  /* if defined(_WIN32) && !defined(_WIN64) */
+#else /* if defined(_WIN32) && !defined(_WIN64) */
 LIBNS_EXTERNAL_DATA extern atomic_uint_fast64_t ns_client_requests;
 #endif /* if defined(_WIN32) && !defined(_WIN64) */
 

@@ -152,7 +152,7 @@ dns_sdlz_putnamedrr_t(dns_sdlzallnodes_t *allnodes, const char *name,
 #if DLZ_DLOPEN_VERSION < 3
 typedef isc_result_t
 dns_dlz_writeablezone_t(dns_view_t *view, const char *zone_name);
-#else  /* DLZ_DLOPEN_VERSION >= 3 */
+#else /* DLZ_DLOPEN_VERSION >= 3 */
 typedef isc_result_t
 dns_dlz_writeablezone_t(dns_view_t *view, dns_dlzdb_t *dlzdb,
 			const char *zone_name);
@@ -192,7 +192,7 @@ dlz_destroy(void *dbdata);
 #if DLZ_DLOPEN_VERSION < 3
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name);
-#else  /* DLZ_DLOPEN_VERSION >= 3 */
+#else /* DLZ_DLOPEN_VERSION >= 3 */
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 	       dns_clientinfo_t *clientinfo);
@@ -205,7 +205,7 @@ dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup);
-#else  /* DLZ_DLOPEN_VERSION > 1 */
+#else /* DLZ_DLOPEN_VERSION > 1 */
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup, dns_clientinfomethods_t *methods,
@@ -254,7 +254,7 @@ dlz_closeversion(const char *zone, bool commit, void *dbdata, void **versionp);
 #if DLZ_DLOPEN_VERSION < 3
 isc_result_t
 dlz_configure(dns_view_t *view, void *dbdata);
-#else  /* DLZ_DLOPEN_VERSION >= 3 */
+#else /* DLZ_DLOPEN_VERSION >= 3 */
 isc_result_t
 dlz_configure(dns_view_t *view, dns_dlzdb_t *dlzdb, void *dbdata);
 #endif /* DLZ_DLOPEN_VERSION */

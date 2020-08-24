@@ -273,7 +273,7 @@ printsection(dns_message_t *msg, dns_section_t sectionid,
 					print_name = &empty_name;
 					first = false;
 				}
-#else  /* ifdef USEINITALWS */
+#else /* ifdef USEINITALWS */
 				UNUSED(first); /* Shut up compiler. */
 #endif /* ifdef USEINITALWS */
 			} else {

@@ -537,7 +537,7 @@ postgres_get_resultset(const char *zone, const char *record, const char *client,
 			isc_log_write(dns_lctx, DNS_LOGCATEGORY_DATABASE,
 				      DNS_LOGMODULE_DLZ, ISC_LOG_ERROR,
 				      "%d clearing rs", dlz_thread_num);
-#endif				      /* if 0 */
+#endif /* if 0 */
 			PQclear(*rs); /* get rid of it */
 			/* in case this was the last attempt */
 			*rs = NULL;

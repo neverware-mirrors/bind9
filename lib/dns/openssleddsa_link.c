@@ -651,7 +651,7 @@ err:
 		EVP_PKEY_free(pkey);
 	}
 	return (ret);
-#else  /* if !defined(OPENSSL_NO_ENGINE) */
+#else /* if !defined(OPENSSL_NO_ENGINE) */
 	UNUSED(key);
 	UNUSED(engine);
 	UNUSED(label);

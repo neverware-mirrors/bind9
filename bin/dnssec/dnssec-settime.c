@@ -62,7 +62,7 @@ usage(void) {
 #elif defined(USE_PKCS11)
 	fprintf(stderr, "    -E engine:          specify OpenSSL engine "
 			"(default \"pkcs11\")\n");
-#else  /* if USE_PKCS11 */
+#else /* if USE_PKCS11 */
 	fprintf(stderr, "    -E engine:          specify OpenSSL engine\n");
 #endif /* if USE_PKCS11 */
 	fprintf(stderr, "    -f:                 force update of old-style "

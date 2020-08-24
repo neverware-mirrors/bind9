@@ -173,13 +173,14 @@ typedef isc_event_t intev_t;
 /*
  * Socket State
  */
-enum { SOCK_INITIALIZED, /* Socket Initialized */
-       SOCK_OPEN,	 /* Socket opened but nothing yet to do */
-       SOCK_DATA,	 /* Socket sending or receiving data */
-       SOCK_LISTEN,	 /* TCP Socket listening for connects */
-       SOCK_ACCEPT,	 /* TCP socket is waiting to accept */
-       SOCK_CONNECT,	 /* TCP Socket connecting */
-       SOCK_CLOSED,	 /* Socket has been closed */
+enum {
+	SOCK_INITIALIZED, /* Socket Initialized */
+	SOCK_OPEN,	  /* Socket opened but nothing yet to do */
+	SOCK_DATA,	  /* Socket sending or receiving data */
+	SOCK_LISTEN,	  /* TCP Socket listening for connects */
+	SOCK_ACCEPT,	  /* TCP socket is waiting to accept */
+	SOCK_CONNECT,	  /* TCP Socket connecting */
+	SOCK_CLOSED,	  /* Socket has been closed */
 };
 
 #define SOCKET_MAGIC	ISC_MAGIC('I', 'O', 'i', 'o')
@@ -272,7 +273,7 @@ struct isc_socket {
 	unsigned int listener : 1,		    /* listener socket */
 		connected : 1, pending_connect : 1, /* connect
 						     * pending */
-		bound : 1,			    /* bound to local addr */
+		bound  : 1,			    /* bound to local addr */
 		dupped : 1;	     /* created by isc_socket_dup() */
 	unsigned int pending_iocp;   /* Should equal the counters below.
 				      * Debug. */
@@ -1362,7 +1363,7 @@ use_min_mtu(isc_socket_t *sock) {
 		(void)setsockopt(sock->fd, IPPROTO_IPV6, IPV6_USE_MIN_MTU,
 				 (void *)&on, sizeof(on));
 	}
-#else  /* ifdef IPV6_USE_MIN_MTU */
+#else /* ifdef IPV6_USE_MIN_MTU */
 	UNUSED(sock);
 #endif /* ifdef IPV6_USE_MIN_MTU */
 }
@@ -1666,7 +1667,7 @@ socket_create(isc_socketmgr_t *manager, int pf, isc_sockettype_t type,
 					 "failed: %s",
 					 sock->fd, strbuf);
 		}
-#else  /* ifdef IPV6_RECVPKTINFO */
+#else /* ifdef IPV6_RECVPKTINFO */
 		/* 2292 */
 		if ((pf == AF_INET6) &&
 		    (setsockopt(sock->fd, IPPROTO_IPV6, IPV6_PKTINFO,
@@ -3571,7 +3572,7 @@ void
 isc_socket_ipv6only(isc_socket_t *sock, bool yes) {
 #if defined(IPV6_V6ONLY)
 	int onoff = yes ? 1 : 0;
-#else  /* if defined(IPV6_V6ONLY) */
+#else /* if defined(IPV6_V6ONLY) */
 	UNUSED(yes);
 #endif /* if defined(IPV6_V6ONLY) */
 
@@ -3589,7 +3590,7 @@ void
 isc_socket_dscp(isc_socket_t *sock, isc_dscp_t dscp) {
 #if !defined(IP_TOS) && !defined(IPV6_TCLASS)
 	UNUSED(dscp);
-#else  /* if !defined(IP_TOS) && !defined(IPV6_TCLASS) */
+#else /* if !defined(IP_TOS) && !defined(IPV6_TCLASS) */
 	if (dscp < 0) {
 		return;
 	}

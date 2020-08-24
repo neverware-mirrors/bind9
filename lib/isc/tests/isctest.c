@@ -176,7 +176,7 @@ isc_test_nap(uint32_t usec) {
 	nanosleep(&ts, NULL);
 #elif HAVE_USLEEP
 	usleep(usec);
-#else  /* ifdef HAVE_NANOSLEEP */
+#else /* ifdef HAVE_NANOSLEEP */
 	/*
 	 * No fractional-second sleep function is available, so we
 	 * round up to the nearest second and sleep instead

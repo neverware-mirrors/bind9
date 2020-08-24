@@ -150,18 +150,18 @@ ISC_LANG_BEGINDECLS
 	((void *)((unsigned char *)(b)->base + (b)->active)) /*c*/
 #define isc_buffer_used(b) \
 	((void *)((unsigned char *)(b)->base + (b)->used)) /*d*/
-#define isc_buffer_length(b) ((b)->length)		   /*e*/
+#define isc_buffer_length(b) ((b)->length) /*e*/
 /*@}*/
 
 /*@{*/
 /*!
  * Derived lengths.  (Described in the introductory comment.)
  */
-#define isc_buffer_usedlength(b)      ((b)->used)		   /* d-a */
-#define isc_buffer_consumedlength(b)  ((b)->current)		   /* b-a */
-#define isc_buffer_remaininglength(b) ((b)->used - (b)->current)   /* d-b */
+#define isc_buffer_usedlength(b)      ((b)->used) /* d-a */
+#define isc_buffer_consumedlength(b)  ((b)->current) /* b-a */
+#define isc_buffer_remaininglength(b) ((b)->used - (b)->current) /* d-b */
 #define isc_buffer_activelength(b)    ((b)->active - (b)->current) /* c-b */
-#define isc_buffer_availablelength(b) ((b)->length - (b)->used)	   /* e-d */
+#define isc_buffer_availablelength(b) ((b)->length - (b)->used) /* e-d */
 /*@}*/
 
 /*!

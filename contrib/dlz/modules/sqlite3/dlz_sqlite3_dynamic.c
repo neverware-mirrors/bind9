@@ -77,7 +77,7 @@ typedef struct {
 #if PTHREADS
 	db_list_t *db; /*%< handle to a list of DB */
 	int dbcount;
-#else  /* if PTHREADS */
+#else /* if PTHREADS */
 	dbinstance_t *db; /*%< handle to DB */
 #endif /* if PTHREADS */
 
@@ -270,7 +270,7 @@ sqlite3_get_resultset(const char *zone, const char *record, const char *client,
 #if PTHREADS
 	/* find an available DBI from the list */
 	dbi = sqlite3_find_avail(db);
-#else  /* PTHREADS */
+#else /* PTHREADS */
 	/*
 	 * only 1 DBI - no need to lock instance lock either
 	 * only 1 thread in the whole process, no possible contention.
@@ -912,7 +912,7 @@ dlz_create(const char *dlzname, unsigned int argc, char *argv[], void **dbdata,
 #if PTHREADS
 	/* if debugging, let user know we are multithreaded. */
 	s3->log(ISC_LOG_DEBUG(1), "SQLite3 module: running multithreaded");
-#else  /* PTHREADS */
+#else /* PTHREADS */
 	/* if debugging, let user know we are single threaded. */
 	s3->log(ISC_LOG_DEBUG(1), "SQLite3 module: running single threaded");
 #endif /* PTHREADS */
@@ -1033,7 +1033,7 @@ dlz_create(const char *dlzname, unsigned int argc, char *argv[], void **dbdata,
 		/* when multithreaded, build a list of DBI's */
 		DLZ_LINK_INIT(dbi, link);
 		DLZ_LIST_APPEND(*(s3->db), dbi, link);
-#else  /* if PTHREADS */
+#else /* if PTHREADS */
 	/*
 	 * when single threaded, hold onto the one connection
 	 * instance.
@@ -1069,7 +1069,7 @@ dlz_destroy(void *dbdata) {
 	if (db->db != NULL) {
 		sqlite3_destroy_dblist((db_list_t *)(db->db));
 	}
-#else  /* PTHREADS */
+#else /* PTHREADS */
 	sqlite3_destroy(db);
 #endif /* PTHREADS */
 

@@ -1090,7 +1090,7 @@ diff_keys(const dns_rpz_cidr_key_t *key1, dns_rpz_prefix_t prefix1,
 		if (ISC_UNLIKELY(delta != 0)) {
 #ifdef HAVE_BUILTIN_CLZ
 			bit += __builtin_clz(delta);
-#else  /* ifdef HAVE_BUILTIN_CLZ */
+#else /* ifdef HAVE_BUILTIN_CLZ */
 			bit += clz(delta);
 #endif /* ifdef HAVE_BUILTIN_CLZ */
 			break;
@@ -1474,7 +1474,7 @@ dns_rpz_new_zones(dns_rpz_zones_t **rpzsp, char *rps_cstr, size_t rps_cstr_size,
 	if (rps_cstr != NULL) {
 		result = dns_dnsrps_view_init(zones, rps_cstr);
 	}
-#else  /* ifdef USE_DNSRPS */
+#else /* ifdef USE_DNSRPS */
 	INSIST(!zones->p.dnsrps_enabled);
 #endif /* ifdef USE_DNSRPS */
 	if (result == ISC_R_SUCCESS && !zones->p.dnsrps_enabled) {

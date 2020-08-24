@@ -67,7 +67,7 @@ named_geoip_init(void) {
 	if (named_g_geoip == NULL) {
 		named_g_geoip = &geoip_table;
 	}
-#else  /* if defined(HAVE_GEOIP2) */
+#else /* if defined(HAVE_GEOIP2) */
 	return;
 #endif /* if defined(HAVE_GEOIP2) */
 }
@@ -103,7 +103,7 @@ named_geoip_load(char *dir) {
 	named_g_geoip->isp = open_geoip2(dir, "GeoIP2-ISP.mmdb", &geoip_isp);
 	named_g_geoip->domain = open_geoip2(dir, "GeoIP2-Domain.mmdb",
 					    &geoip_domain);
-#else  /* if defined(HAVE_GEOIP2) */
+#else /* if defined(HAVE_GEOIP2) */
 	UNUSED(dir);
 
 	return;

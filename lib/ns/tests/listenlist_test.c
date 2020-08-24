@@ -136,7 +136,7 @@ main(void) {
 	 * the use, as libuv will trigger errors.
 	 */
 	printf("1..0 # Skip ASAN is in use\n");
-#else  /* ADDRESS_SANIZITER */
+#else /* ADDRESS_SANIZITER */
 	printf("1..0 # Skip cmocka not available\n");
 #endif /* __SANITIZE_ADDRESS__ */
 	return (0);

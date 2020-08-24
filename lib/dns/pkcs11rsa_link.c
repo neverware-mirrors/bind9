@@ -2063,7 +2063,7 @@ static dst_func_t pkcs11rsa_functions = {
 	pkcs11rsa_createctx,
 #ifndef PK11_RSA_PKCS_REPLACE
 	pkcs11rsa_createctx2,
-#else  /* ifndef PK11_RSA_PKCS_REPLACE */
+#else /* ifndef PK11_RSA_PKCS_REPLACE */
 	NULL, /*%< createctx2 */
 #endif /* ifndef PK11_RSA_PKCS_REPLACE */
 	pkcs11rsa_destroyctx,

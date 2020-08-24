@@ -110,7 +110,7 @@ static void
 usage(void) {
 	fprintf(stderr, "Press <Help> for complete list of options\n");
 }
-#else  /* if TARGET_OS_IPHONE */
+#else /* if TARGET_OS_IPHONE */
 ISC_NORETURN static void
 usage(void);
 
@@ -326,7 +326,7 @@ received(unsigned int bytes, isc_sockaddr_t *from, dig_query_t *query) {
 	struct tm tmnow;
 #ifdef WIN32
 	wchar_t time_str[100];
-#else  /* ifdef WIN32 */
+#else /* ifdef WIN32 */
 	char time_str[100];
 #endif /* ifdef WIN32 */
 	char fromtext[ISC_SOCKADDR_FORMATSIZE];
@@ -358,7 +358,7 @@ received(unsigned int bytes, isc_sockaddr_t *from, dig_query_t *query) {
 		{
 			printf(";; WHEN: %ls\n", time_str);
 		}
-#else  /* ifdef WIN32 */
+#else /* ifdef WIN32 */
 		if (strftime(time_str, sizeof(time_str),
 			     "%a %b %d %H:%M:%S %Z %Y", &tmnow) > 0U)
 		{
@@ -1308,7 +1308,7 @@ plus_option(char *option, bool is_batchfile, dig_lookup_t *lookup) {
 #ifndef HAVE_LIBIDN2
 					fprintf(stderr, ";; IDN input support"
 							" not enabled\n");
-#else  /* ifndef HAVE_LIBIDN2 */
+#else /* ifndef HAVE_LIBIDN2 */
 					lookup->idnin = state;
 #endif /* ifndef HAVE_LIBIDN2 */
 					break;
@@ -1317,7 +1317,7 @@ plus_option(char *option, bool is_batchfile, dig_lookup_t *lookup) {
 #ifndef HAVE_LIBIDN2
 					fprintf(stderr, ";; IDN output support"
 							" not enabled\n");
-#else  /* ifndef HAVE_LIBIDN2 */
+#else /* ifndef HAVE_LIBIDN2 */
 					lookup->idnout = state;
 #endif /* ifndef HAVE_LIBIDN2 */
 					break;

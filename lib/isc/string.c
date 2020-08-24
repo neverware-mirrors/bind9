@@ -111,7 +111,7 @@ int
 isc_string_strerror_r(int errnum, char *buf, size_t buflen) {
 #if defined(_WIN32) || defined(_WIN64)
 	return (strerror_s(buf, buflen, errnum));
-#else  /* if defined(_WIN32) || defined(_WIN64) */
+#else /* if defined(_WIN32) || defined(_WIN64) */
 	return (strerror_r(errnum, buf, buflen));
 #endif /* if defined(_WIN32) || defined(_WIN64) */
 }

@@ -52,7 +52,7 @@ isc_condition_waituntil(isc_condition_t *c, isc_mutex_t *m, isc_time_t *t) {
 	do {
 #if ISC_MUTEX_PROFILE
 		presult = pthread_cond_timedwait(c, &m->mutex, &ts);
-#else  /* if ISC_MUTEX_PROFILE */
+#else /* if ISC_MUTEX_PROFILE */
 		presult = pthread_cond_timedwait(c, m, &ts);
 #endif /* if ISC_MUTEX_PROFILE */
 		if (presult == 0) {

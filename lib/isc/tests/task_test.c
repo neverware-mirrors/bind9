@@ -604,7 +604,7 @@ basic(void **state) {
 
 #ifndef WIN32
 	sleep(2);
-#else  /* ifndef WIN32 */
+#else /* ifndef WIN32 */
 	Sleep(2000);
 #endif /* ifndef WIN32 */
 
@@ -633,7 +633,7 @@ basic(void **state) {
 
 #ifndef WIN32
 	sleep(10);
-#else  /* ifndef WIN32 */
+#else /* ifndef WIN32 */
 	Sleep(10000);
 #endif /* ifndef WIN32 */
 	isc_timer_detach(&ti1);

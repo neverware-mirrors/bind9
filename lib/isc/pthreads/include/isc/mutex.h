@@ -55,7 +55,7 @@ typedef struct {
 	pthread_mutex_t	  mutex; /*%< The actual mutex. */
 	isc_mutexstats_t *stats; /*%< Mutex statistics. */
 } isc_mutex_t;
-#else  /* if ISC_MUTEX_PROFILE */
+#else /* if ISC_MUTEX_PROFILE */
 typedef pthread_mutex_t isc_mutex_t;
 #endif /* if ISC_MUTEX_PROFILE */
 

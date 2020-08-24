@@ -248,7 +248,7 @@ dlz_allowzonexfr(void *dbdata, const char *name, const char *client) {
 	/* check to see if we are authoritative for the zone first. */
 #if DLZ_DLOPEN_VERSION >= 3
 	result = dlz_findzonedb(dbdata, name, NULL, NULL);
-#else  /* if DLZ_DLOPEN_VERSION >= 3 */
+#else /* if DLZ_DLOPEN_VERSION >= 3 */
 	result = dlz_findzonedb(dbdata, name);
 #endif /* if DLZ_DLOPEN_VERSION >= 3 */
 	if (result != ISC_R_SUCCESS) {
@@ -483,7 +483,7 @@ bdbhpt_cleanup(bdbhpt_instance_t *db) {
 #if DLZ_DLOPEN_VERSION < 3
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name)
-#else  /* if DLZ_DLOPEN_VERSION < 3 */
+#else /* if DLZ_DLOPEN_VERSION < 3 */
 isc_result_t
 dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 	       dns_clientinfo_t *clientinfo)
@@ -548,7 +548,7 @@ dlz_findzonedb(void *dbdata, const char *name, dns_clientinfomethods_t *methods,
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup)
-#else  /* if DLZ_DLOPEN_VERSION == 1 */
+#else /* if DLZ_DLOPEN_VERSION == 1 */
 isc_result_t
 dlz_lookup(const char *zone, const char *name, void *dbdata,
 	   dns_sdlzlookup_t *lookup, dns_clientinfomethods_t *methods,

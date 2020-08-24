@@ -410,7 +410,7 @@ openuniquemode(char *templet, int mode, bool binary, FILE **fp) {
 	if (result == ISC_R_SUCCESS) {
 #if 1
 		UNUSED(mode);
-#else  /* if 1 */
+#else /* if 1 */
 		(void)fchmod(fd, mode);
 #endif /* if 1 */
 		f = fdopen(fd, binary ? "wb+" : "w+");

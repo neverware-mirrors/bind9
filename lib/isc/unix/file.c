@@ -148,7 +148,7 @@ isc_file_getmodtime(const char *file, isc_time_t *modtime) {
 	if (result == ISC_R_SUCCESS) {
 #if defined(HAVE_STAT_NSEC)
 		isc_time_set(modtime, stats.st_mtime, stats.st_mtim.tv_nsec);
-#else  /* if defined(HAVE_STAT_NSEC) */
+#else /* if defined(HAVE_STAT_NSEC) */
 		isc_time_set(modtime, stats.st_mtime, 0);
 #endif /* if defined(HAVE_STAT_NSEC) */
 	}
@@ -691,7 +691,7 @@ isc_file_mmap(void *addr, size_t len, int prot, int flags, int fd,
 	      off_t offset) {
 #ifdef HAVE_MMAP
 	return (mmap(addr, len, prot, flags, fd, offset));
-#else  /* ifdef HAVE_MMAP */
+#else /* ifdef HAVE_MMAP */
 	void *buf;
 	ssize_t ret;
 	off_t end;
@@ -725,7 +725,7 @@ int
 isc_file_munmap(void *addr, size_t len) {
 #ifdef HAVE_MMAP
 	return (munmap(addr, len));
-#else  /* ifdef HAVE_MMAP */
+#else /* ifdef HAVE_MMAP */
 	UNUSED(len);
 
 	free(addr);

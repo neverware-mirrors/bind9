@@ -118,7 +118,7 @@ struct file_header {
 	 * will be used to tell if we can load the map file or not
 	 */
 	uint32_t ptrsize;
-	unsigned int bigendian : 1;	 /* big or little endian system */
+	unsigned int bigendian	    : 1; /* big or little endian system */
 	unsigned int rdataset_fixed : 1; /* compiled with
 					  * --enable-rrset-fixed
 					  */
@@ -494,7 +494,7 @@ write_header(FILE *file, dns_rbt_t *rbt, uint64_t first_node_offset,
 
 #ifdef DNS_RDATASET_FIXED
 	header.rdataset_fixed = 1;
-#else  /* ifdef DNS_RDATASET_FIXED */
+#else /* ifdef DNS_RDATASET_FIXED */
 	header.rdataset_fixed = 0;
 #endif /* ifdef DNS_RDATASET_FIXED */
 
@@ -913,7 +913,7 @@ dns_rbt_deserialize_tree(void *base_address, size_t filesize,
 		goto cleanup;
 	}
 
-#else  /* ifdef DNS_RDATASET_FIXED */
+#else /* ifdef DNS_RDATASET_FIXED */
 	if (header->rdataset_fixed != 0) {
 		result = ISC_R_INVALIDFILE;
 		goto cleanup;

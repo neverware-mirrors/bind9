@@ -286,7 +286,7 @@ isc__mutex_init(isc_mutex_t *mp, const char *file, unsigned int line) {
 	RUNTIME_CHECK(result == ISC_R_SUCCESS);
 
 	err = pthread_mutex_init(mp, &attr);
-#else  /* HAVE_PTHREAD_MUTEX_ADAPTIVE_NP */
+#else /* HAVE_PTHREAD_MUTEX_ADAPTIVE_NP */
 	err = pthread_mutex_init(mp, ISC__MUTEX_ATTRS);
 #endif /* HAVE_PTHREAD_MUTEX_ADAPTIVE_NP */
 	if (err != 0) {

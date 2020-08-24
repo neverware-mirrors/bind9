@@ -1237,7 +1237,7 @@ parse_args(int argc, char **argv) {
 			argv[0]);
 		exit(1);
 	}
-#else  /* HAVE_GSSAPI */
+#else /* HAVE_GSSAPI */
 	if (usegsstsig) {
 		fprintf(stderr,
 			"%s: cannot specify -g	or -o, "
@@ -1723,7 +1723,7 @@ evaluate_realm(char *cmdline) {
 	}
 	realm = isc_mem_strdup(gmctx, buf);
 	return (STATUS_MORE);
-#else  /* HAVE_GSSAPI */
+#else /* HAVE_GSSAPI */
 	UNUSED(cmdline);
 	return (STATUS_SYNTAX);
 #endif /* HAVE_GSSAPI */
@@ -2209,7 +2209,7 @@ do_next_command(char *cmdline) {
 #if HAVE_GSSAPI
 		usegsstsig = true;
 		use_win2k_gsstsig = false;
-#else  /* HAVE_GSSAPI */
+#else /* HAVE_GSSAPI */
 		fprintf(stderr, "gsstsig not supported\n");
 #endif /* HAVE_GSSAPI */
 		return (STATUS_MORE);
@@ -2218,7 +2218,7 @@ do_next_command(char *cmdline) {
 #if HAVE_GSSAPI
 		usegsstsig = true;
 		use_win2k_gsstsig = true;
-#else  /* HAVE_GSSAPI */
+#else /* HAVE_GSSAPI */
 		fprintf(stderr, "gsstsig not supported\n");
 #endif /* HAVE_GSSAPI */
 		return (STATUS_MORE);
@@ -2781,7 +2781,7 @@ lookforsoa:
 		send_update(zname, &master_servers[master_inuse]);
 		setzoneclass(dns_rdataclass_none);
 	}
-#else  /* HAVE_GSSAPI */
+#else /* HAVE_GSSAPI */
 	send_update(zname, &master_servers[master_inuse]);
 	setzoneclass(dns_rdataclass_none);
 #endif /* HAVE_GSSAPI */

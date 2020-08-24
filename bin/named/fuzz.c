@@ -99,7 +99,7 @@ fuzz_thread_client(void *arg) {
 	 */
 #ifdef __AFL_LOOP
 	for (int loop = 0; loop < 100000; loop++) {
-#else  /* ifdef __AFL_LOOP */
+#else /* ifdef __AFL_LOOP */
 	{
 #endif /* ifdef __AFL_LOOP */
 		ssize_t length;

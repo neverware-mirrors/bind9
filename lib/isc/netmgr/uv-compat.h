@@ -59,7 +59,7 @@ struct isc_uv_stream_info_s {
 	uv_handle_type type;
 #ifdef WIN32
 	WSAPROTOCOL_INFOW socket_info;
-#else  /* ifdef WIN32 */
+#else /* ifdef WIN32 */
 	int fd;
 #endif /* ifdef WIN32 */
 };

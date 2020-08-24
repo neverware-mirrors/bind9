@@ -69,7 +69,7 @@ isc__md_sha512(void);
 #define ISC_SHA512_DIGESTLENGTH isc_md_type_get_size(ISC_MD_SHA512)
 #define ISC_SHA512_BLOCK_LENGTH isc_md_type_get_block_size(ISC_MD_SHA512)
 
-#define ISC_MAX_MD_SIZE	   64U	/* EVP_MAX_MD_SIZE */
+#define ISC_MAX_MD_SIZE	   64U /* EVP_MAX_MD_SIZE */
 #define ISC_MAX_BLOCK_SIZE 128U /* ISC_SHA512_BLOCK_LENGTH */
 
 /**

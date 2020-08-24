@@ -74,7 +74,7 @@ ns_plugin_expandpath(const char *src, char *dst, size_t dstsize) {
 		 */
 		result = snprintf(dst, dstsize, "%s/%s", NAMED_PLUGINDIR, src);
 	}
-#else  /* ifndef WIN32 */
+#else /* ifndef WIN32 */
 	/*
 	 * On Windows, always copy 'src' do 'dst'.
 	 */

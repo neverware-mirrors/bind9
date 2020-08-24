@@ -1857,7 +1857,7 @@ parse_addrmatchelt(cfg_parser_t *pctx, const cfg_type_t *type,
 #if defined(HAVE_GEOIP2)
 			CHECK(cfg_gettoken(pctx, 0));
 			CHECK(cfg_parse_obj(pctx, &cfg_type_geoip, ret));
-#else  /* if defined(HAVE_GEOIP2) */
+#else /* if defined(HAVE_GEOIP2) */
 			cfg_parser_error(pctx, CFG_LOG_NEAR,
 					 "'geoip' "
 					 "not supported in this build");

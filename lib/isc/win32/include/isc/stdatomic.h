@@ -528,7 +528,7 @@ atomic_compare_exchange_strong_explicit64(atomic_int_fast64_t *obj,
 						   desired, *expected);
 		break;
 	}
-#else  /* ifdef _WIN64 */
+#else /* ifdef _WIN64 */
 	__v = InterlockedCompareExchange64((atomic_int_fast64_t *)obj, desired,
 					   *expected);
 #endif /* ifdef _WIN64 */

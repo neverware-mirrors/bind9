@@ -201,7 +201,7 @@ struct isc__mempool {
 			   /*%< Debugging only. */
 #if ISC_MEMPOOL_NAMES
 	char name[16]; /*%< printed name in stats reports */
-#endif		       /* if ISC_MEMPOOL_NAMES */
+#endif /* if ISC_MEMPOOL_NAMES */
 };
 
 /*
@@ -587,7 +587,7 @@ mem_putunlocked(isc__mem_t *ctx, void *mem, size_t size) {
 	if (ISC_UNLIKELY((ctx->flags & ISC_MEMFLAG_FILL) != 0)) {
 #if ISC_MEM_CHECKOVERRUN
 		check_overrun(mem, size, new_size);
-#endif					     /* if ISC_MEM_CHECKOVERRUN */
+#endif /* if ISC_MEM_CHECKOVERRUN */
 		memset(mem, 0xde, new_size); /* Mnemonic for "dead". */
 	}
 
@@ -1014,7 +1014,7 @@ isc_mem_destroy(isc_mem_t **ctxp) {
 	if (isc_refcount_decrement(&ctx->references) > 1) {
 		print_active(ctx, stderr);
 	}
-#else  /* if ISC_MEM_TRACKLINES */
+#else /* if ISC_MEM_TRACKLINES */
 	isc_refcount_decrementz(&ctx->references);
 #endif /* if ISC_MEM_TRACKLINES */
 	isc_refcount_destroy(&ctx->references);
@@ -1230,7 +1230,7 @@ isc_mem_stats(isc_mem_t *ctx0, FILE *out) {
 		fprintf(out, "%15s %10lu %10u %10u %10u %10u %10u %10u %s\n",
 #if ISC_MEMPOOL_NAMES
 			pool->name,
-#else  /* if ISC_MEMPOOL_NAMES */
+#else /* if ISC_MEMPOOL_NAMES */
 			"(not tracked)",
 #endif /* if ISC_MEMPOOL_NAMES */
 			(unsigned long)pool->size, pool->maxalloc,
@@ -1653,7 +1653,7 @@ isc_mempool_setname(isc_mempool_t *mpctx0, const char *name) {
 	if (mpctx->lock != NULL) {
 		UNLOCK(mpctx->lock);
 	}
-#else  /* if ISC_MEMPOOL_NAMES */
+#else /* if ISC_MEMPOOL_NAMES */
 	UNUSED(mpctx);
 	UNUSED(name);
 #endif /* if ISC_MEMPOOL_NAMES */
@@ -2483,7 +2483,7 @@ isc__mem_printactive(isc_mem_t *ctx0, FILE *file) {
 	isc__mem_t *ctx = (isc__mem_t *)ctx0;
 
 	print_active(ctx, file);
-#else  /* if ISC_MEM_TRACKLINES */
+#else /* if ISC_MEM_TRACKLINES */
 	UNUSED(ctx0);
 	UNUSED(file);
 #endif /* if ISC_MEM_TRACKLINES */

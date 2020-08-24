@@ -573,7 +573,7 @@ openssldh_fromdns(dst_key_t *key, isc_buffer_t *data) {
 	 * DH structure is empty, hence we cannot use DH_get0_key().
 	 */
 	dh->pub_key = pub_key;
-#else  /* LIBRESSL_VERSION_NUMBER */
+#else /* LIBRESSL_VERSION_NUMBER */
 	DH_set0_key(dh, pub_key, NULL);
 #endif /* LIBRESSL_VERSION_NUMBER */
 	isc_region_consume(&r, publen);

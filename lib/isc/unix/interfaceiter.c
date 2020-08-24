@@ -224,7 +224,7 @@ failure:
 	if (iter->proc != NULL) {
 		fclose(iter->proc);
 	}
-#endif				     /* ifdef __linux */
+#endif /* ifdef __linux */
 	if (iter->ifaddrs != NULL) { /* just in case */
 		freeifaddrs(iter->ifaddrs);
 	}

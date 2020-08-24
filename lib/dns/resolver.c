@@ -9898,7 +9898,7 @@ rctx_badserver(respctx_t *rctx, isc_result_t result) {
 			rctx->broken_server = DNS_R_BADVERS;
 			rctx->next_server = true;
 		}
-#else  /* if DNS_EDNS_VERSION > 0 */
+#else /* if DNS_EDNS_VERSION > 0 */
 		rctx->broken_server = DNS_R_BADVERS;
 		rctx->next_server = true;
 #endif /* if DNS_EDNS_VERSION > 0 */
@@ -10288,7 +10288,7 @@ dns_resolver_create(dns_view_t *view, isc_taskmgr_t *taskmgr,
 	{
 		goto cleanup_alglock;
 	}
-#else  /* if USE_ALGLOCK */
+#else /* if USE_ALGLOCK */
 	{
 		goto cleanup_spillattimer;
 	}

@@ -173,7 +173,7 @@ usage(void) {
 		"        path to PKCS#11 provider library "
 		"(default is %s)\n",
 		PK11_LIB_LOCATION);
-#else  /* if USE_PKCS11 */
+#else /* if USE_PKCS11 */
 	fprintf(stderr, "        name of an OpenSSL engine to use\n");
 #endif /* if USE_PKCS11 */
 	fprintf(stderr, "    -f <keyflag>: KSK | REVOKE\n");

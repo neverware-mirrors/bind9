@@ -960,7 +960,7 @@ opensslrsa_parse(dst_key_t *key, isc_lex_t *lexer, dst_key_t *pub) {
 		dst__privstruct_free(&priv, mctx);
 		isc_safe_memwipe(&priv, sizeof(priv));
 		return (ISC_R_SUCCESS);
-#else  /* if !defined(OPENSSL_NO_ENGINE) */
+#else /* if !defined(OPENSSL_NO_ENGINE) */
 		DST_RET(DST_R_NOENGINE);
 #endif /* if !defined(OPENSSL_NO_ENGINE) */
 	}
@@ -1148,7 +1148,7 @@ err:
 		EVP_PKEY_free(pkey);
 	}
 	return (ret);
-#else  /* if !defined(OPENSSL_NO_ENGINE) */
+#else /* if !defined(OPENSSL_NO_ENGINE) */
 	UNUSED(key);
 	UNUSED(engine);
 	UNUSED(label);

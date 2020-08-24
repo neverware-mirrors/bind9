@@ -1561,7 +1561,7 @@ dlz_closeversion(const char *zone, bool commit, void *dbdata, void **versionp) {
 #if DLZ_DLOPEN_VERSION < 3
 isc_result_t
 dlz_configure(dns_view_t *view, void *dbdata)
-#else  /* DLZ_DLOPEN_VERSION >= 3 */
+#else /* DLZ_DLOPEN_VERSION >= 3 */
 isc_result_t
 dlz_configure(dns_view_t *view, dns_dlzdb_t *dlzdb, void *dbdata)
 #endif /* DLZ_DLOPEN_VERSION */

@@ -129,7 +129,7 @@ dst__openssl_init(isc_mem_t *mctx, const char *engine) {
 #if !defined(OPENSSL_NO_ENGINE)
 #if !defined(CONF_MFLAGS_DEFAULT_SECTION)
 	OPENSSL_config(NULL);
-#else  /* if !defined(CONF_MFLAGS_DEFAULT_SECTION) */
+#else /* if !defined(CONF_MFLAGS_DEFAULT_SECTION) */
 	/*
 	 * OPENSSL_config() can only be called a single time as of
 	 * 1.0.2e so do the steps individually.

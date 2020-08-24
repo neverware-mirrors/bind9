@@ -242,7 +242,7 @@ ns_interfacemgr_create(isc_mem_t *mctx, ns_server_t *sctx,
 	}
 #if defined(HAVE_GEOIP2)
 	mgr->aclenv.geoip = geoip;
-#else  /* if defined(HAVE_GEOIP2) */
+#else /* if defined(HAVE_GEOIP2) */
 	UNUSED(geoip);
 #endif /* if defined(HAVE_GEOIP2) */
 
@@ -265,7 +265,7 @@ ns_interfacemgr_create(isc_mem_t *mctx, ns_server_t *sctx,
 		isc_task_attach(task, &mgr->task);
 	}
 	isc_refcount_init(&mgr->references, (mgr->route != NULL) ? 2 : 1);
-#else  /* ifdef USE_ROUTE_SOCKET */
+#else /* ifdef USE_ROUTE_SOCKET */
 	isc_refcount_init(&mgr->references, 1);
 #endif /* ifdef USE_ROUTE_SOCKET */
 	mgr->magic = IFMGR_MAGIC;

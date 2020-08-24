@@ -52,11 +52,11 @@ struct addrinfo {
 #undef NO_ADDRESS
 
 #define NETDB_INTERNAL -1 /* see errno */
-#define NETDB_SUCCESS  0  /* no problem */
-#define HOST_NOT_FOUND 1  /* Authoritative Answer Host not found */
-#define TRY_AGAIN      2  /* Non-Authoritative Host not found, or SERVERFAIL */
-#define NO_RECOVERY    3  /* Non recoverable errors, FORMERR, REFUSED, NOTIMP */
-#define NO_DATA	       4  /* Valid name, no data record of requested type */
+#define NETDB_SUCCESS  0 /* no problem */
+#define HOST_NOT_FOUND 1 /* Authoritative Answer Host not found */
+#define TRY_AGAIN      2 /* Non-Authoritative Host not found, or SERVERFAIL */
+#define NO_RECOVERY    3 /* Non recoverable errors, FORMERR, REFUSED, NOTIMP */
+#define NO_DATA	       4 /* Valid name, no data record of requested type */
 #define NO_ADDRESS     NO_DATA /* no address, look for MX record */
 
 /*
@@ -78,15 +78,15 @@ struct addrinfo {
 #undef EAI_PROTOCOL
 #undef EAI_MAX
 
-#define EAI_ADDRFAMILY 1  /* address family for hostname not supported */
-#define EAI_AGAIN      2  /* temporary failure in name resolution */
-#define EAI_BADFLAGS   3  /* invalid value for ai_flags */
-#define EAI_FAIL       4  /* non-recoverable failure in name resolution */
-#define EAI_FAMILY     5  /* ai_family not supported */
-#define EAI_MEMORY     6  /* memory allocation failure */
-#define EAI_NODATA     7  /* no address associated with hostname */
-#define EAI_NONAME     8  /* hostname nor servname provided, or not known */
-#define EAI_SERVICE    9  /* servname not supported for ai_socktype */
+#define EAI_ADDRFAMILY 1 /* address family for hostname not supported */
+#define EAI_AGAIN      2 /* temporary failure in name resolution */
+#define EAI_BADFLAGS   3 /* invalid value for ai_flags */
+#define EAI_FAIL       4 /* non-recoverable failure in name resolution */
+#define EAI_FAMILY     5 /* ai_family not supported */
+#define EAI_MEMORY     6 /* memory allocation failure */
+#define EAI_NODATA     7 /* no address associated with hostname */
+#define EAI_NONAME     8 /* hostname nor servname provided, or not known */
+#define EAI_SERVICE    9 /* servname not supported for ai_socktype */
 #define EAI_SOCKTYPE   10 /* ai_socktype not supported */
 #define EAI_SYSTEM     11 /* system error returned in errno */
 #define EAI_BADHINTS   12

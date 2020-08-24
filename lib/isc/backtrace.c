@@ -46,7 +46,7 @@ isc_backtrace_gettrace(void **addrs, int maxaddrs, int *nframes) {
 	return (ISC_R_SUCCESS);
 }
 
-#else  /* HAVE_BACKTRACE */
+#else /* HAVE_BACKTRACE */
 isc_result_t
 isc_backtrace_gettrace(void **addrs, int maxaddrs, int *nframes) {
 	UNUSED(addrs);

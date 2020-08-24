@@ -352,13 +352,13 @@ struct isc__socket {
 	unsigned int listener : 1,	       /* listener socket */
 		connected : 1, connecting : 1, /* connect pending
 						* */
-		bound : 1,		       /* bound to local addr */
+		bound  : 1,		       /* bound to local addr */
 		dupped : 1, active : 1,	       /* currently active */
 		pktdscp : 1;		       /* per packet dscp */
 
 #ifdef ISC_PLATFORM_RECVOVERFLOW
 	unsigned char overflow; /* used for MSG_TRUNC fake */
-#endif				/* ifdef ISC_PLATFORM_RECVOVERFLOW */
+#endif /* ifdef ISC_PLATFORM_RECVOVERFLOW */
 
 	unsigned int dscp;
 };
@@ -481,17 +481,19 @@ setdscp(isc__socket_t *sock, isc_dscp_t dscp);
 /*%
  * Shortcut index arrays to get access to statistics counters.
  */
-enum { STATID_OPEN = 0,
-       STATID_OPENFAIL = 1,
-       STATID_CLOSE = 2,
-       STATID_BINDFAIL = 3,
-       STATID_CONNECTFAIL = 4,
-       STATID_CONNECT = 5,
-       STATID_ACCEPTFAIL = 6,
-       STATID_ACCEPT = 7,
-       STATID_SENDFAIL = 8,
-       STATID_RECVFAIL = 9,
-       STATID_ACTIVE = 10 };
+enum {
+	STATID_OPEN = 0,
+	STATID_OPENFAIL = 1,
+	STATID_CLOSE = 2,
+	STATID_BINDFAIL = 3,
+	STATID_CONNECTFAIL = 4,
+	STATID_CONNECT = 5,
+	STATID_ACCEPTFAIL = 6,
+	STATID_ACCEPT = 7,
+	STATID_SENDFAIL = 8,
+	STATID_RECVFAIL = 9,
+	STATID_ACTIVE = 10
+};
 static const isc_statscounter_t udp4statsindex[] = {
 	isc_sockstatscounter_udp4open,
 	isc_sockstatscounter_udp4openfail,
@@ -984,13 +986,13 @@ make_nonblock(int fd) {
 	char strbuf[ISC_STRERRORSIZE];
 #ifdef USE_FIONBIO_IOCTL
 	int on = 1;
-#else  /* ifdef USE_FIONBIO_IOCTL */
+#else /* ifdef USE_FIONBIO_IOCTL */
 	int flags;
 #endif /* ifdef USE_FIONBIO_IOCTL */
 
 #ifdef USE_FIONBIO_IOCTL
 	ret = ioctl(fd, FIONBIO, (char *)&on);
-#else  /* ifdef USE_FIONBIO_IOCTL */
+#else /* ifdef USE_FIONBIO_IOCTL */
 	flags = fcntl(fd, F_GETFL, 0);
 	flags |= O_NONBLOCK;
 	ret = fcntl(fd, F_SETFL, flags);
@@ -1001,7 +1003,7 @@ make_nonblock(int fd) {
 		UNEXPECTED_ERROR(__FILE__, __LINE__,
 #ifdef USE_FIONBIO_IOCTL
 				 "ioctl(%d, FIONBIO, &on): %s", fd,
-#else  /* ifdef USE_FIONBIO_IOCTL */
+#else /* ifdef USE_FIONBIO_IOCTL */
 				 "fcntl(%d, F_SETFL, %d): %s", fd, flags,
 #endif /* ifdef USE_FIONBIO_IOCTL */
 				 strbuf);
@@ -1024,7 +1026,7 @@ static inline socklen_t
 cmsg_len(socklen_t len) {
 #ifdef CMSG_LEN
 	return (CMSG_LEN(len));
-#else  /* ifdef CMSG_LEN */
+#else /* ifdef CMSG_LEN */
 	socklen_t hdrlen;
 
 	/*
@@ -1040,7 +1042,7 @@ static inline socklen_t
 cmsg_space(socklen_t len) {
 #ifdef CMSG_SPACE
 	return (CMSG_SPACE(len));
-#else  /* ifdef CMSG_SPACE */
+#else /* ifdef CMSG_SPACE */
 	struct msghdr msg;
 	struct cmsghdr *cmsgp;
 	/*
@@ -1392,7 +1394,7 @@ build_msghdr_recv(isc__socket_t *sock, char *cmsgbuf, isc_socketevent_t *dev,
 #if defined(USE_CMSG)
 	msg->msg_control = cmsgbuf;
 	msg->msg_controllen = RECVCMSGBUFLEN;
-#else  /* if defined(USE_CMSG) */
+#else /* if defined(USE_CMSG) */
 	msg->msg_control = NULL;
 	msg->msg_controllen = 0;
 #endif /* USE_CMSG */
@@ -2124,7 +2126,7 @@ again:
 #ifdef NETLINK_ROUTE
 				sock->fd = socket(sock->pf, SOCK_RAW,
 						  NETLINK_ROUTE);
-#else  /* ifdef NETLINK_ROUTE */
+#else /* ifdef NETLINK_ROUTE */
 				sock->fd = socket(sock->pf, SOCK_RAW, 0);
 #endif /* ifdef NETLINK_ROUTE */
 				if (sock->fd != -1) {
@@ -2292,7 +2294,7 @@ again:
 					 "failed: %s",
 					 sock->fd, strbuf);
 		}
-#else  /* ifdef IPV6_RECVPKTINFO */
+#else /* ifdef IPV6_RECVPKTINFO */
 		/* RFC 2292 */
 		if ((sock->pf == AF_INET6) &&
 		    (setsockopt(sock->fd, IPPROTO_IPV6, IPV6_PKTINFO,
@@ -3428,7 +3430,7 @@ netthread(void *uap) {
 				}
 #ifndef ISC_SOCKET_USE_POLLWATCH
 				dvp.dp_timeout = -1;
-#else  /* ifndef ISC_SOCKET_USE_POLLWATCH */
+#else /* ifndef ISC_SOCKET_USE_POLLWATCH */
 				if (pollstate == poll_idle) {
 					dvp.dp_timeout = -1;
 				} else {
@@ -3686,7 +3688,7 @@ setup_thread(isc__socketthread_t *thread) {
 	 */
 	thread->fd_bufsize = howmany(manager->maxsocks, NFDBITS) *
 			     sizeof(fd_mask);
-#else  /* if ISC_SOCKET_MAXSOCKETS > FD_SETSIZE */
+#else /* if ISC_SOCKET_MAXSOCKETS > FD_SETSIZE */
 	thread->fd_bufsize = sizeof(fd_set);
 #endif /* if ISC_SOCKET_MAXSOCKETS > FD_SETSIZE */
 
@@ -4316,7 +4318,7 @@ isc_socket_cleanunix(const isc_sockaddr_t *sockaddr, bool active) {
 		}
 	}
 	close(s);
-#else  /* ifndef _WIN32 */
+#else /* ifndef _WIN32 */
 	UNUSED(sockaddr);
 	UNUSED(active);
 #endif /* ifndef _WIN32 */
@@ -4367,7 +4369,7 @@ isc_socket_permunix(const isc_sockaddr_t *sockaddr, uint32_t perm,
 		result = ISC_R_FAILURE;
 	}
 	return (result);
-#else  /* ifndef _WIN32 */
+#else /* ifndef _WIN32 */
 	UNUSED(sockaddr);
 	UNUSED(perm);
 	UNUSED(owner);
@@ -4424,7 +4426,7 @@ isc_socket_bind(isc_socket_t *sock0, const isc_sockaddr_t *sockaddr,
 			UNEXPECTED_ERROR(__FILE__, __LINE__,
 					 "setsockopt(%d) failed", sock->fd);
 		}
-#endif		/* if defined(__FreeBSD_kernel__) && defined(SO_REUSEPORT_LB) */
+#endif /* if defined(__FreeBSD_kernel__) && defined(SO_REUSEPORT_LB) */
 		/* Press on... */
 	}
 #ifdef AF_UNIX
@@ -4472,7 +4474,7 @@ isc_socket_filter(isc_socket_t *sock0, const char *filter) {
 #if defined(SO_ACCEPTFILTER) && defined(ENABLE_ACCEPTFILTER)
 	char strbuf[ISC_STRERRORSIZE];
 	struct accept_filter_arg afa;
-#else  /* if defined(SO_ACCEPTFILTER) && defined(ENABLE_ACCEPTFILTER) */
+#else /* if defined(SO_ACCEPTFILTER) && defined(ENABLE_ACCEPTFILTER) */
 	UNUSED(sock);
 	UNUSED(filter);
 #endif /* if defined(SO_ACCEPTFILTER) && defined(ENABLE_ACCEPTFILTER) */
@@ -4490,7 +4492,7 @@ isc_socket_filter(isc_socket_t *sock0, const char *filter) {
 		return (ISC_R_FAILURE);
 	}
 	return (ISC_R_SUCCESS);
-#else  /* if defined(SO_ACCEPTFILTER) && defined(ENABLE_ACCEPTFILTER) */
+#else /* if defined(SO_ACCEPTFILTER) && defined(ENABLE_ACCEPTFILTER) */
 	return (ISC_R_NOTIMPLEMENTED);
 #endif /* if defined(SO_ACCEPTFILTER) && defined(ENABLE_ACCEPTFILTER) */
 }
@@ -4539,7 +4541,7 @@ set_tcp_fastopen(isc__socket_t *sock, unsigned int backlog) {
 
 #ifdef __APPLE__
 	backlog = 1;
-#else  /* ifdef __APPLE__ */
+#else /* ifdef __APPLE__ */
 	backlog = backlog / 2;
 	if (backlog == 0) {
 		backlog = 1;
@@ -4554,7 +4556,7 @@ set_tcp_fastopen(isc__socket_t *sock, unsigned int backlog) {
 				 sock->fd, strbuf);
 		/* TCP_FASTOPEN is experimental so ignore failures */
 	}
-#else  /* if defined(ENABLE_TCP_FASTOPEN) && defined(TCP_FASTOPEN) */
+#else /* if defined(ENABLE_TCP_FASTOPEN) && defined(TCP_FASTOPEN) */
 	UNUSED(sock);
 	UNUSED(backlog);
 #endif /* if defined(ENABLE_TCP_FASTOPEN) && defined(TCP_FASTOPEN) */
@@ -5137,7 +5139,7 @@ isc_socket_ipv6only(isc_socket_t *sock0, bool yes) {
 	isc__socket_t *sock = (isc__socket_t *)sock0;
 #if defined(IPV6_V6ONLY)
 	int onoff = yes ? 1 : 0;
-#else  /* if defined(IPV6_V6ONLY) */
+#else /* if defined(IPV6_V6ONLY) */
 	UNUSED(yes);
 	UNUSED(sock);
 #endif /* if defined(IPV6_V6ONLY) */
@@ -5207,7 +5209,7 @@ isc_socket_dscp(isc_socket_t *sock0, isc_dscp_t dscp) {
 
 #if !defined(IP_TOS) && !defined(IPV6_TCLASS)
 	UNUSED(dscp);
-#else  /* if !defined(IP_TOS) && !defined(IPV6_TCLASS) */
+#else /* if !defined(IP_TOS) && !defined(IPV6_TCLASS) */
 	if (dscp < 0) {
 		return;
 	}
@@ -5295,7 +5297,7 @@ init_hasreuseport(void) {
 #if defined(__FreeBSD_kernel__)
 	} else if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT_LB, (void *)&yes,
 			      sizeof(yes)) < 0)
-#else  /* if defined(__FreeBSD_kernel__) */
+#else /* if defined(__FreeBSD_kernel__) */
 	} else if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (void *)&yes,
 			      sizeof(yes)) < 0)
 #endif /* if defined(__FreeBSD_kernel__) */

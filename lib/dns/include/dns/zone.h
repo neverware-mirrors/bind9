@@ -105,24 +105,24 @@ typedef enum {
 
 #ifndef DNS_ZONE_MINREFRESH
 #define DNS_ZONE_MINREFRESH 300 /*%< 5 minutes */
-#endif				/* ifndef DNS_ZONE_MINREFRESH */
+#endif /* ifndef DNS_ZONE_MINREFRESH */
 #ifndef DNS_ZONE_MAXREFRESH
 #define DNS_ZONE_MAXREFRESH 2419200 /*%< 4 weeks */
-#endif				    /* ifndef DNS_ZONE_MAXREFRESH */
+#endif /* ifndef DNS_ZONE_MAXREFRESH */
 #ifndef DNS_ZONE_DEFAULTREFRESH
 #define DNS_ZONE_DEFAULTREFRESH 3600 /*%< 1 hour */
-#endif				     /* ifndef DNS_ZONE_DEFAULTREFRESH */
+#endif /* ifndef DNS_ZONE_DEFAULTREFRESH */
 #ifndef DNS_ZONE_MINRETRY
 #define DNS_ZONE_MINRETRY 300 /*%< 5 minutes */
-#endif			      /* ifndef DNS_ZONE_MINRETRY */
+#endif /* ifndef DNS_ZONE_MINRETRY */
 #ifndef DNS_ZONE_MAXRETRY
 #define DNS_ZONE_MAXRETRY 1209600 /*%< 2 weeks */
-#endif				  /* ifndef DNS_ZONE_MAXRETRY */
+#endif /* ifndef DNS_ZONE_MAXRETRY */
 #ifndef DNS_ZONE_DEFAULTRETRY
 #define DNS_ZONE_DEFAULTRETRY        \
 	60 /*%< 1 minute, subject to \
 	    * exponential backoff */
-#endif	   /* ifndef DNS_ZONE_DEFAULTRETRY */
+#endif /* ifndef DNS_ZONE_DEFAULTRETRY */
 
 #define DNS_ZONESTATE_XFERRUNNING  1
 #define DNS_ZONESTATE_XFERDEFERRED 2

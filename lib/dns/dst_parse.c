@@ -652,7 +652,7 @@ dst__privstruct_writefile(const dst_key_t *key, const dst_private_t *priv,
 		/* Windows security model is pretty different,
 		 * e.g., there is no umask... */
 		level = ISC_LOG_NOTICE;
-#else  /* ifdef _WIN32 */
+#else /* ifdef _WIN32 */
 		level = ISC_LOG_WARNING;
 #endif /* ifdef _WIN32 */
 		isc_log_write(dns_lctx, DNS_LOGCATEGORY_GENERAL,

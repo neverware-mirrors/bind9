@@ -87,9 +87,9 @@ struct dns_request {
 
 #define DNS_REQUEST_F_CONNECTING 0x0001
 #define DNS_REQUEST_F_SENDING	 0x0002
-#define DNS_REQUEST_F_CANCELED                                                \
-	0x0004				 /*%< ctlevent received, or otherwise \
-					  * synchronously canceled */
+#define DNS_REQUEST_F_CANCELED                      \
+	0x0004 /*%< ctlevent received, or otherwise \
+		* synchronously canceled */
 #define DNS_REQUEST_F_TIMEDOUT	  0x0008 /*%< canceled due to a timeout */
 #define DNS_REQUEST_F_TCP	  0x0010 /*%< This request used TCP */
 #define DNS_REQUEST_CANCELED(r)	  (((r)->flags & DNS_REQUEST_F_CANCELED) != 0)

@@ -54,7 +54,7 @@ usage(void) {
 		"    -E engine:    specify PKCS#11 provider "
 		"(default: %s)\n",
 		PK11_LIB_LOCATION);
-#else  /* if USE_PKCS11 */
+#else /* if USE_PKCS11 */
 	fprintf(stderr, "    -E engine:    specify OpenSSL engine\n");
 #endif /* if USE_PKCS11 */
 	fprintf(stderr, "    -f:           force overwrite\n");

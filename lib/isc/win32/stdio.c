@@ -49,7 +49,7 @@ isc_stdio_seek(FILE *f, off_t offset, int whence) {
 
 #ifndef _WIN64
 	r = fseek(f, offset, whence);
-#else  /* ifndef _WIN64 */
+#else /* ifndef _WIN64 */
 	r = _fseeki64(f, offset, whence);
 #endif /* ifndef _WIN64 */
 	if (r == 0) {
@@ -63,7 +63,7 @@ isc_result_t
 isc_stdio_tell(FILE *f, off_t *offsetp) {
 #ifndef _WIN64
 	long r;
-#else  /* ifndef _WIN64 */
+#else /* ifndef _WIN64 */
 	__int64 r;
 #endif /* ifndef _WIN64 */
 
@@ -71,7 +71,7 @@ isc_stdio_tell(FILE *f, off_t *offsetp) {
 
 #ifndef _WIN64
 	r = ftell(f);
-#else  /* ifndef _WIN64 */
+#else /* ifndef _WIN64 */
 	r = _ftelli64(f);
 #endif /* ifndef _WIN64 */
 	if (r >= 0) {

@@ -79,7 +79,7 @@ ISC_LANG_BEGINDECLS
 #define ISC_LEXOPT_DNSMULTILINE 0x20 /*%< Handle '(' and ')'. */
 #define ISC_LEXOPT_NOMORE	0x40 /*%< Want "no more" token. */
 
-#define ISC_LEXOPT_CNUMBER	    0x80  /*%< Recognize octal and hex. */
+#define ISC_LEXOPT_CNUMBER	    0x80 /*%< Recognize octal and hex. */
 #define ISC_LEXOPT_ESCAPE	    0x100 /*%< Recognize escapes. */
 #define ISC_LEXOPT_QSTRINGMULTILINE 0x200 /*%< Allow multiline "" strings */
 #define ISC_LEXOPT_OCTAL	    0x400 /*%< Expect a octal number. */

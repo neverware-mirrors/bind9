@@ -21,7 +21,7 @@ sysconf_ncpus(void) {
 	return (sysconf((_SC_NPROCESSORS_ONLN)));
 #elif defined(_SC_NPROC_ONLN)
 	return (sysconf((_SC_NPROC_ONLN)));
-#else  /* if defined(_SC_NPROCESSORS_ONLN) */
+#else /* if defined(_SC_NPROCESSORS_ONLN) */
 	return (0);
 #endif /* if defined(_SC_NPROCESSORS_ONLN) */
 }

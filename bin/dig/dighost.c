@@ -405,7 +405,7 @@ warn(const char *format, ...) {
 	va_end(args);
 	fprintf(stderr, "\n");
 }
-#else  /* if TARGET_OS_IPHONE */
+#else /* if TARGET_OS_IPHONE */
 void
 warn(const char *format, ...) {
 	va_list args;
@@ -663,7 +663,7 @@ make_empty_lookup(void) {
 #ifdef HAVE_LIBIDN2
 	looknew->idnin = isatty(1) ? (getenv("IDN_DISABLE") == NULL) : false;
 	looknew->idnout = looknew->idnin;
-#else  /* ifdef HAVE_LIBIDN2 */
+#else /* ifdef HAVE_LIBIDN2 */
 	looknew->idnin = false;
 	looknew->idnout = false;
 #endif /* HAVE_LIBIDN2 */
@@ -2244,7 +2244,7 @@ setup_lookup(dig_lookup_t *lookup) {
 #if TARGET_OS_IPHONE
 			check_next_lookup(current_lookup);
 			return (false);
-#else  /* if TARGET_OS_IPHONE */
+#else /* if TARGET_OS_IPHONE */
 			digexit();
 #endif /* if TARGET_OS_IPHONE */
 		}
