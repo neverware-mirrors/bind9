@@ -101,6 +101,8 @@ _setup(void **state) {
 
 	UNUSED(state);
 
+	assert_return_code(chdir(TESTS_DIR), 0);
+
 	result = setup();
 	assert_int_equal(result, ISC_R_SUCCESS);
 

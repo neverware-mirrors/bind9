@@ -364,6 +364,15 @@ totext_test(void **state) {
 	}
 	cleanup();
 }
+
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
 #endif /* HAVE_DNSTAP */
 
 int
@@ -378,7 +387,7 @@ main(void) {
 	/* make sure text conversion gets the right local time */
 	setenv("TZ", "PST8", 1);
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 #else  /* if HAVE_DNSTAP */
 	print_message("1..0 # Skip dnstap not enabled\n");
 #endif /* HAVE_DNSTAP */

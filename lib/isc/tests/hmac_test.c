@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define UNIT_TESTING
 #include <cmocka.h>
@@ -36,10 +37,14 @@
 static int
 _setup(void **state) {
 	isc_hmac_t *hmac = isc_hmac_new();
+
 	if (hmac == NULL) {
 		return (-1);
 	}
 	*state = hmac;
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
 	return (0);
 }
 

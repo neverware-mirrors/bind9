@@ -48,6 +48,8 @@ _setup(void **state) {
 
 	UNUSED(state);
 
+	assert_return_code(chdir(TESTS_DIR), 0);
+
 	result = dns_test_begin(NULL, true);
 	assert_int_equal(result, ISC_R_SUCCESS);
 

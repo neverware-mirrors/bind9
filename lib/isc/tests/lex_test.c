@@ -35,6 +35,8 @@ _setup(void **state) {
 
 	UNUSED(state);
 
+	assert_return_code(chdir(TESTS_DIR), 0);
+
 	result = isc_test_begin(NULL, true, 0);
 	assert_int_equal(result, ISC_R_SUCCESS);
 

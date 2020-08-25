@@ -488,6 +488,15 @@ isc_mempool_benchmark(void **state) {
 
 #endif /* __SANITIZE_THREAD */
 
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+
 /*
  * Main
  */
@@ -523,7 +532,7 @@ main(void) {
 #endif /* if ISC_MEM_TRACKLINES */
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 }
 
 #else /* HAVE_CMOCKA */

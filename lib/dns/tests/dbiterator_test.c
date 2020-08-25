@@ -354,6 +354,15 @@ seek_nx_nsec3(void **state) {
  * dns_dbiterator_origin
  * dns_dbiterator_setcleanmode
  */
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+
 int
 main(void) {
 	const struct CMUnitTest tests[] = {
@@ -376,7 +385,7 @@ main(void) {
 						_teardown),
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 }
 
 #else /* HAVE_CMOCKA */

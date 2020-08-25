@@ -61,6 +61,8 @@ _setup(void **state) {
 
 	UNUSED(state);
 
+	assert_return_code(chdir(TESTS_DIR), 0);
+
 	/* Timer tests require two worker threads */
 	result = isc_test_begin(NULL, true, 2);
 	assert_int_equal(result, ISC_R_SUCCESS);

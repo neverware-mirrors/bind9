@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
 
 /* For FIPS_mode() */
 #include <openssl/crypto.h>
@@ -39,6 +40,9 @@ _setup(void **state) {
 		return (-1);
 	}
 	*state = md;
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
 	return (0);
 }
 

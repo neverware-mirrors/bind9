@@ -16,6 +16,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define UNIT_TESTING
 #include <cmocka.h>
@@ -106,6 +107,15 @@ tables(void **state) {
 	assert_string_equal(str, "(result code text not available)");
 }
 
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+
 int
 main(void) {
 	const struct CMUnitTest tests[] = {
@@ -114,7 +124,7 @@ main(void) {
 		cmocka_unit_test(tables),
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 }
 
 #else /* HAVE_CMOCKA */

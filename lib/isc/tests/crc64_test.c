@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define UNIT_TESTING
 #include <cmocka.h>
@@ -83,6 +84,15 @@ isc_crc64_test(void **state) {
 	       "81E5EB73C8E7874A", 1);
 }
 
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+
 int
 main(void) {
 	const struct CMUnitTest tests[] = {
@@ -90,7 +100,7 @@ main(void) {
 		cmocka_unit_test(isc_crc64_test),
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 }
 
 #else /* HAVE_CMOCKA */

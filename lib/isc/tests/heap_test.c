@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define UNIT_TESTING
 #include <cmocka.h>
@@ -34,6 +35,8 @@ _setup(void **state) {
 	isc_result_t result;
 
 	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
 
 	result = isc_test_begin(NULL, true, 0);
 	assert_int_equal(result, ISC_R_SUCCESS);

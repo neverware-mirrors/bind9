@@ -13,6 +13,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include <isc/buffer.h>
 #include <isc/hash.h>

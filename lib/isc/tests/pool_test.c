@@ -168,6 +168,15 @@ get_objects(void **state) {
 	assert_null(pool);
 }
 
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+
 int
 main(void) {
 	const struct CMUnitTest tests[] = {
@@ -176,7 +185,7 @@ main(void) {
 		cmocka_unit_test_setup_teardown(get_objects, _setup, _teardown),
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 }
 
 #else /* HAVE_CMOCKA */

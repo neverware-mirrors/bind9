@@ -114,6 +114,15 @@ ns_listenlist_default_test(void **state) {
 	ns_listenlist_detach(&list);
 }
 
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+
 int
 main(void) {
 	const struct CMUnitTest tests[] = {
@@ -121,7 +130,7 @@ main(void) {
 						_setup, _teardown),
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 }
 
 #else /* HAVE_CMOCKA && !__SANITIZE_ADDRESS__ */

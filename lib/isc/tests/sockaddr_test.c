@@ -161,6 +161,15 @@ sockaddr_eqaddrprefix(void **state) {
 	assert_false(isc_sockaddr_eqaddrprefix(&isa_a, &isa_c, 16));
 }
 
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+
 int
 main(void) {
 	const struct CMUnitTest tests[] = {
@@ -170,7 +179,7 @@ main(void) {
 		cmocka_unit_test(sockaddr_eqaddrprefix),
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 }
 
 #else /* HAVE_CMOCKA */

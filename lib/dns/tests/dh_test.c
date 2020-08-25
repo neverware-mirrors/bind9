@@ -89,6 +89,17 @@ dh_computesecret(void **state) {
 }
 #endif /* USE_OPENSSL */
 
+#if USE_OPENSSL
+static int
+run_group_setup(void **state) {
+	UNUSED(state);
+
+	assert_return_code(chdir(TESTS_DIR), 0);
+
+	return (0);
+}
+#endif
+
 int
 main(void) {
 #if USE_OPENSSL
@@ -97,7 +108,7 @@ main(void) {
 						_teardown),
 	};
 
-	return (cmocka_run_group_tests(tests, NULL, NULL));
+	return (cmocka_run_group_tests(tests, run_group_setup, NULL));
 #else  /* if USE_OPENSSL */
 	print_message("1..0 # Skipped: dh test broken with PKCS11");
 #endif /* if USE_OPENSSL */
