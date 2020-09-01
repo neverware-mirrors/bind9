@@ -51,6 +51,8 @@ Feature Changes
   has a higher chance of being exceeded by non-attack queries, which is the
   main reason for increasing its default value. [GL #2305]
 
+- ``ipv4only.arpa`` is now served when ``dns64`` is configured. [GL #385]
+
 Bug Fixes
 ~~~~~~~~~
 
