@@ -296,6 +296,16 @@ dns64_cname(const dns_name_t *zone, const dns_name_t *name,
 		 */
 		return (ISC_R_NOTFOUND);
 	}
+
+	/*
+	 * Reverse of 192.0.0.170 or 192.0.0.171 maps to ipv4only.arpa.
+	 */
+	if ((v[0] == 170 || v[0] == 171) && v[1] == 0 && v[2] == 0 &&
+	    v[3] == 192) {
+		return (dns_sdb_putrdata(lookup, dns_rdatatype_ptr, 600,
+					 ipv4only, sizeof(ipv4only)));
+	}
+
 	return (dns_sdb_putrdata(lookup, dns_rdatatype_cname, 600, rdata,
 				 (unsigned int)len));
 }
