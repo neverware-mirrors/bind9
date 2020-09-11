@@ -43,7 +43,12 @@ EXTRA_DIST =					\
 	../misc/statistics-channels.grammar.rst	\
 	../misc/stub.zoneopt.rst		\
 	../misc/trusted-keys.grammar.rst	\
-	../notes/*.rst
+	../notes/notes-9.17.0.rst		\
+	../notes/notes-9.17.1.rst		\
+	../notes/notes-9.17.2.rst		\
+	../notes/notes-9.17.3.rst		\
+	../notes/notes-9.17.4.rst		\
+	../notes/notes-current.rst
 
 html-local:
 	$(AM_V_SPHINX)$(SPHINX_BUILD) -b html -d $(SPHINXBUILDDIR)/doctrees $(ALLSPHINXOPTS) $(SPHINXBUILDDIR)/html
