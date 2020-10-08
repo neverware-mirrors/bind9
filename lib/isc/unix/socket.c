@@ -2415,8 +2415,6 @@ again:
 #endif /* IPV6_RECVPKTINFO */
 #endif /* defined(USE_CMSG) */
 
-		set_ip_dontfrag(sock);
-
 #if defined(SET_RCVBUF)
 		optlen = sizeof(size);
 		if (getsockopt(sock->fd, SOL_SOCKET, SO_RCVBUF, (void *)&size,
@@ -2482,6 +2480,9 @@ again:
 	}
 #endif /* ifdef IP_RECVTOS */
 #endif /* defined(USE_CMSG) || defined(SET_RCVBUF) || defined(SET_SNDBUF) */
+
+	set_ip_dontfrag(sock);
+	set_ip_recverr(sock);
 
 setup_done:
 	inc_stats(manager->stats, sock->statsindex[STATID_OPEN]);
@@ -4623,7 +4624,7 @@ set_tcp_fastopen(isc__socket_t *sock, unsigned int backlog) {
 #endif /* if defined(ENABLE_TCP_FASTOPEN) && defined(TCP_FASTOPEN) */
 }
 
-void
+static void
 set_ip_recverr(isc__socket_t *sock) {
 #if defined(HAVE_LINUX_ERRQUEUE_H)
 	int on = 1;
