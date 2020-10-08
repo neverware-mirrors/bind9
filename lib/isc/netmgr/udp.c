@@ -98,6 +98,8 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 
 		(void)isc__nm_socket_dontfrag(csock->fd, sa_family);
 
+		(void)isc__nm_socket_recverr(csock->fd, sa_family);
+
 		ievent = isc__nm_get_ievent(mgr, netievent_udplisten);
 		ievent->sock = csock;
 		isc__nm_enqueue_ievent(&mgr->workers[i],

@@ -863,5 +863,11 @@ isc__nm_socket_incoming_cpu(uv_os_sock_t fd);
 isc_result_t
 isc__nm_socket_dontfrag(uv_os_sock_t fd, sa_family_t sa_family);
 /*%<
- * Set the SO_IP_DONTFRAG (or equivalent) socket option of the fd if available
+ * Set the IP_DONTFRAG (or equivalent) socket option on the fd if available
+ */
+
+isc_result_t
+isc__nm_socket_recverr(uv_os_sock_t fd, sa_family_t sa_family);
+/*%<
+ * Set the IP(V6)_RECVERR socket option on the fd on Linux
  */
