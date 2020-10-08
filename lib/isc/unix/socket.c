@@ -4556,6 +4556,29 @@ set_tcp_fastopen(isc__socket_t *sock, unsigned int backlog) {
 #endif /* if defined(ENABLE_TCP_FASTOPEN) && defined(TCP_FASTOPEN) */
 }
 
+void
+set_ip_recverr(isc__socket_t *sock) {
+#if HAVE_LINUX_ERRQUEUE_H
+	if (sock->pf == AF_INET6) {
+		if (setsockopt_on(sock->fd, IPPROTO_IPV6, IPV6_RECVERR) == -1) {
+			return (ISC_R_FAILURE);
+		} else {
+			return (ISC_R_SUCCESS);
+		}
+	} else if (sock->pf == AF_INET) {
+		if (setsockopt_on(sock->fd, IPPROTO_IP, IP_RECVERR) == -1) {
+			return (ISC_R_FAILURE);
+		} else {
+			return (ISC_R_SUCCESS);
+		}
+	} else {
+		return (ISC_R_FAMILYNOSUPPORT);
+	}
+#else
+	UNUSED(sock);
+#endif
+}
+
 /*
  * Set up to listen on a given socket.  We do this by creating an internal
  * event that will be dispatched when the socket has read activity.  The
