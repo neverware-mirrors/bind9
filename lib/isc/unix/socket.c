@@ -28,6 +28,9 @@
 #include <linux/rtnetlink.h>
 #endif /* if defined(HAVE_LINUX_NETLINK_H) && defined(HAVE_LINUX_RTNETLINK_H) \
 	*/
+#if defined(HAVE_LINUX_ERRQUEUE_H)
+#include <linux/errqueue.h>
+#endif
 
 #include <errno.h>
 #include <fcntl.h>
@@ -312,6 +315,11 @@ typedef isc_event_t intev_t;
 		  sizeof(void *))
 #define SENDCMSGBUFLEN                                                    \
 	ISC_ALIGN(2 * (CMSG_SP_IN6PKT + CMSG_SP_INT + CMSG_SP_TCTOS) + 1, \
+		  sizeof(void *))
+
+#define ERRCMSGBUFLEN                                                        \
+	ISC_ALIGN(2 * (CMSG_SP_IN6PKT + CMSG_SP_TIMESTAMP + CMSG_SP_TCTOS) + \
+			  1,                                                 \
 		  sizeof(void *))
 
 /*%
@@ -1473,6 +1481,52 @@ dump_msg(struct msghdr *msg) {
 #define DOIO_HARD    2 /* i/o error, event sent */
 #define DOIO_EOF     3 /* EOF, no event sent */
 
+#if defined(HAVE_LINUX_ERRQUEUE_H)
+static int
+recv_err(isc__socket_t *sock, isc_socketevent_t *dev) {
+	struct iovec iov[MAXSCATTERGATHER_RECV];
+	size_t read_count;
+	struct msghdr msghdr;
+	char cmsgbuf[RECVCMSGBUFLEN];
+	struct sock_extended_err *ee;
+
+	while (true) {
+		memset(cmsgbuf, 0, sizeof(cmsgbuf));
+		build_msghdr_recv(sock, cmsgbuf, dev, &msghdr, iov,
+				  &read_count);
+
+		if (recvmsg(sock->fd, &msghdr, MSG_ERRQUEUE) < 0) {
+			break;
+		}
+
+		ee = NULL;
+
+		for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msghdr); cmsg;
+		     cmsg = CMSG_NXTHDR(&msghdr, cmsg))
+		{
+			switch (cmsg->cmsg_level) {
+			case IPPROTO_IP:
+				if (cmsg->cmsg_type == IP_RECVERR) {
+					ee = (struct sock_extended_err *)
+						CMSG_DATA(cmsg);
+				}
+				break;
+			case IPPROTO_IPV6:
+				if (cmsg->cmsg_type == IPV6_RECVERR) {
+					ee = (struct sock_extended_err *)
+						CMSG_DATA(cmsg);
+				}
+				break;
+			}
+		}
+		if (ee) {
+			return (ee->ee_errno);
+		}
+	}
+	return (0);
+}
+#endif
+
 static int
 doio_recv(isc__socket_t *sock, isc_socketevent_t *dev) {
 	int cc;
@@ -1497,6 +1551,12 @@ doio_recv(isc__socket_t *sock, isc_socketevent_t *dev) {
 #endif /* if defined(ISC_SOCKET_DEBUG) */
 
 	if (cc < 0) {
+#if defined(HAVE_LINUX_ERRQUEUE_H)
+		int extended_errno = recv_err(sock, dev);
+		if (extended_errno != 0) {
+			recv_errno = extended_errno;
+		}
+#endif
 		if (SOFT_ERROR(recv_errno)) {
 			return (DOIO_SOFT);
 		}
@@ -1676,6 +1736,13 @@ resend:
 	 * Check for error or block condition.
 	 */
 	if (cc < 0) {
+#if defined(HAVE_LINUX_ERRQUEUE_H)
+		int extended_errno = recv_err(sock, dev);
+
+		if (extended_errno != 0) {
+			send_errno = extended_errno;
+		}
+#endif
 		if (send_errno == EINTR && ++attempts < NRETRIES) {
 			goto resend;
 		}
@@ -4558,7 +4625,7 @@ set_tcp_fastopen(isc__socket_t *sock, unsigned int backlog) {
 
 void
 set_ip_recverr(isc__socket_t *sock) {
-#if HAVE_LINUX_ERRQUEUE_H
+#if defined(HAVE_LINUX_ERRQUEUE_H)
 	if (sock->pf == AF_INET6) {
 		if (setsockopt_on(sock->fd, IPPROTO_IPV6, IPV6_RECVERR) == -1) {
 			return (ISC_R_FAILURE);
