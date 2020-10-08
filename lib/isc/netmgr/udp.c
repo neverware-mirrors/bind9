@@ -44,6 +44,7 @@ isc_result_t
 isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		 void *cbarg, size_t extrahandlesize, isc_nmsocket_t **sockp) {
 	isc_nmsocket_t *nsock = NULL;
+	int shared_fd = -1;
 
 	REQUIRE(VALID_NM(mgr));
 
@@ -79,7 +80,15 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		INSIST(csock->recv_cb == NULL && csock->recv_cbarg == NULL);
 		csock->recv_cb = cb;
 		csock->recv_cbarg = cbarg;
-		csock->fd = socket(sa_family, SOCK_DGRAM, 0);
+		/*
+		 * If the platform doesn't have support for SO_REUSEPORT_LB then
+		 * we use shared socket for all the threads and let them compete.
+		 */
+		if (shared_fd >= 0) {
+			csock->fd = shared_fd;
+		} else {
+			csock->fd = socket(sa_family, SOCK_DGRAM, 0);
+		}
 		RUNTIME_CHECK(csock->fd >= 0);
 
 		result = isc__nm_socket_reuse(csock->fd);
@@ -89,6 +98,9 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		result = isc__nm_socket_reuse_lb(csock->fd);
 		RUNTIME_CHECK(result == ISC_R_SUCCESS ||
 			      result == ISC_R_NOTIMPLEMENTED);
+		if (result == ISC_R_NOTIMPLEMENTED) {
+			shared_fd = csock->fd;
+		}
 
 		/* We don't check for the result, because SO_INCOMING_CPU can be
 		 * available without the setter on Linux kernel version 4.4, and
@@ -311,9 +323,7 @@ isc__nm_async_udpstop(isc__networker_t *worker, isc__netievent_t *ev0) {
 	 * If network manager is paused, re-enqueue the event for later.
 	 */
 	if (!isc__nm_acquire_interlocked(sock->mgr)) {
-		isc__netievent_udplisten_t *event = NULL;
-
-		event = isc__nm_get_ievent(sock->mgr, netievent_udpstop);
+		isc__netievent_udplisten_t *event = isc__nm_get_ievent(sock->mgr, netievent_udpstop);
 		event->sock = sock;
 		isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
 				       (isc__netievent_t *)event);
