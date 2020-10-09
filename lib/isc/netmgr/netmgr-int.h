@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <uv.h>
 
+#define NETMGR_TRACE 1
+
 #include <isc/astack.h>
 #include <isc/atomic.h>
 #include <isc/buffer.h>
@@ -142,7 +144,6 @@ typedef enum isc__netievent_type {
 	netievent_tcpsend,
 	netievent_tcpstartread,
 	netievent_tcppauseread,
-	netievent_tcpchildaccept,
 	netievent_tcpaccept,
 	netievent_tcpstop,
 	netievent_tcpclose,
@@ -232,16 +233,6 @@ typedef isc__netievent__socket_req_t isc__netievent_tcplisten_t;
 typedef isc__netievent__socket_req_t isc__netievent_tcpsend_t;
 typedef isc__netievent__socket_req_t isc__netievent_tcpdnssend_t;
 
-typedef struct isc__netievent__socket_streaminfo_quota {
-	isc__netievent_type type;
-	isc_nmsocket_t *sock;
-	isc_uv_stream_info_t streaminfo;
-	isc_quota_t *quota;
-} isc__netievent__socket_streaminfo_quota_t;
-
-typedef isc__netievent__socket_streaminfo_quota_t
-	isc__netievent_tcpchildaccept_t;
-
 typedef struct isc__netievent__socket_handle {
 	isc__netievent_type type;
 	isc_nmsocket_t *sock;
@@ -278,7 +269,6 @@ typedef union {
 	isc__netievent__socket_req_t nisr;
 	isc__netievent_udpsend_t nius;
 	isc__netievent__socket_quota_t nisq;
-	isc__netievent__socket_streaminfo_quota_t nissq;
 } isc__netievent_storage_t;
 
 /*
@@ -753,8 +743,6 @@ void
 isc__nm_async_tcplisten(isc__networker_t *worker, isc__netievent_t *ev0);
 void
 isc__nm_async_tcpaccept(isc__networker_t *worker, isc__netievent_t *ev0);
-void
-isc__nm_async_tcpchildaccept(isc__networker_t *worker, isc__netievent_t *ev0);
 void
 isc__nm_async_tcpstop(isc__networker_t *worker, isc__netievent_t *ev0);
 void

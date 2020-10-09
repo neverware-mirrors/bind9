@@ -266,7 +266,6 @@ stoplistening(isc_nmsocket_t *sock) {
 
 void
 isc__nm_udp_stoplistening(isc_nmsocket_t *sock) {
-	isc__netievent_udpstop_t *ievent = NULL;
 
 	/* We can't be launched from network thread, we'd deadlock */
 	REQUIRE(!isc__nm_in_netthread());
@@ -290,7 +289,8 @@ isc__nm_udp_stoplistening(isc_nmsocket_t *sock) {
 	 * event. Otherwise, go ahead and stop listening right away.
 	 */
 	if (!isc__nm_acquire_interlocked(sock->mgr)) {
-		ievent = isc__nm_get_ievent(sock->mgr, netievent_udpstop);
+		isc__netievent_udpstop_t *ievent =
+			isc__nm_get_ievent(sock->mgr, netievent_udpstop);
 		ievent->sock = sock;
 		isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
 				       (isc__netievent_t *)ievent);

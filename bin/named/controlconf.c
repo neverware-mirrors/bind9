@@ -1198,6 +1198,7 @@ add_listener(named_controls_t *cp, controllistener_t **listenerp,
 			       control_newconn, listener,
 			       sizeof(controlconnection_t), 5, NULL,
 			       &listener->sock));
+
 #if 0
 	/* XXX: no unix socket support yet */
 	if (type == isc_socktype_unix) {

@@ -429,6 +429,8 @@ isc_nm_destroy(isc_nm_t **mgr0) {
 #endif /* ifdef WIN32 */
 	}
 
+	fprintf(stderr, "isc_nm_destroy() took %d ns\n", counter * 10);
+
 	INSIST(references == 1);
 
 	/*
@@ -624,9 +626,6 @@ process_queue(isc__networker_t *worker, isc_queue_t *queue) {
 			break;
 		case netievent_tcplisten:
 			isc__nm_async_tcplisten(worker, ievent);
-			break;
-		case netievent_tcpchildaccept:
-			isc__nm_async_tcpchildaccept(worker, ievent);
 			break;
 		case netievent_tcpaccept:
 			isc__nm_async_tcpaccept(worker, ievent);

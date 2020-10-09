@@ -129,7 +129,6 @@ libisc_la_SOURCES =		\
 	netmgr/tcp.c		\
 	netmgr/tcpdns.c		\
 	netmgr/udp.c		\
-	netmgr/uv-compat.c	\
 	netmgr/uv-compat.h	\
 	netmgr/uverr2result.c	\
 	unix/pk11_api.c		\
