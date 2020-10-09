@@ -14,8 +14,6 @@
 #include <unistd.h>
 #include <uv.h>
 
-#define NETMGR_TRACE 1
-
 #include <isc/astack.h>
 #include <isc/atomic.h>
 #include <isc/buffer.h>
