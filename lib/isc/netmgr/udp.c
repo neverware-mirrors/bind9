@@ -44,7 +44,6 @@ isc_result_t
 isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		 void *cbarg, size_t extrahandlesize, isc_nmsocket_t **sockp) {
 	isc_nmsocket_t *nsock = NULL;
-	int shared_fd = -1;
 
 	REQUIRE(VALID_NM(mgr));
 
@@ -64,6 +63,7 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 	nsock->recv_cb = cb;
 	nsock->recv_cbarg = cbarg;
 	nsock->extrahandlesize = extrahandlesize;
+	nsock->fd = -1;
 
 	for (size_t i = 0; i < mgr->nworkers; i++) {
 		isc_result_t result;
@@ -84,8 +84,8 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		 * If the platform doesn't have support for SO_REUSEPORT_LB then
 		 * we use shared socket for all the threads and let them compete.
 		 */
-		if (shared_fd >= 0) {
-			csock->fd = shared_fd;
+		if (nsock->fd >= 0) {
+			csock->fd = dup(nsock->fd);
 		} else {
 			csock->fd = socket(sa_family, SOCK_DGRAM, 0);
 		}
@@ -98,8 +98,8 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		result = isc__nm_socket_reuse_lb(csock->fd);
 		RUNTIME_CHECK(result == ISC_R_SUCCESS ||
 			      result == ISC_R_NOTIMPLEMENTED);
-		if (result == ISC_R_NOTIMPLEMENTED) {
-			shared_fd = csock->fd;
+		if (result == ISC_R_NOTIMPLEMENTED && nsock->fd == -1) {
+			nsock->fd = csock->fd;
 		}
 
 		/* We don't check for the result, because SO_INCOMING_CPU can be

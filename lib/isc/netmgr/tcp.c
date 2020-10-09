@@ -303,24 +303,24 @@ isc_nm_listentcp(isc_nm_t *mgr, isc_nmiface_t *iface,
 		REQUIRE(csock->parent != NULL);
 
 		if (nsock->fd >= 0) {
-			csock->fd = nsock->fd;
+			csock->fd = dup(nsock->fd);
 		} else {
 			csock->fd = socket(sa_family, SOCK_STREAM, 0);
-
-			result = isc__nm_socket_reuse(csock->fd);
-			RUNTIME_CHECK(result == ISC_R_SUCCESS ||
-				      result == ISC_R_NOTIMPLEMENTED);
-
-			result = isc__nm_socket_reuse_lb(csock->fd);
-			RUNTIME_CHECK(result == ISC_R_SUCCESS ||
-				      result == ISC_R_NOTIMPLEMENTED);
-			if (result == ISC_R_NOTIMPLEMENTED) {
-				nsock->fd = csock->fd;
-			}
-			(void)isc__nm_socket_incoming_cpu(csock->fd);
-			/* TODO: set min mss */
 		}
 		RUNTIME_CHECK(csock->fd >= 0);
+
+		result = isc__nm_socket_reuse(csock->fd);
+		RUNTIME_CHECK(result == ISC_R_SUCCESS ||
+			      result == ISC_R_NOTIMPLEMENTED);
+
+		result = isc__nm_socket_reuse_lb(csock->fd);
+		RUNTIME_CHECK(result == ISC_R_SUCCESS ||
+			      result == ISC_R_NOTIMPLEMENTED);
+		if (result == ISC_R_NOTIMPLEMENTED && nsock->fd == -1) {
+			nsock->fd = csock->fd;
+		}
+		(void)isc__nm_socket_incoming_cpu(csock->fd);
+		/* TODO: set min mss */
 	}
 
 	for (size_t i = 0; i < mgr->nworkers; i++) {
