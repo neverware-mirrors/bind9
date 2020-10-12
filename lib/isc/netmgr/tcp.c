@@ -74,6 +74,10 @@ static isc_result_t
 accept_connection(isc_nmsocket_t *sock, isc_quota_t *quota);
 static void
 stoplistening(isc_nmsocket_t *sock);
+static void
+stop_tcp_parent(isc_nmsocket_t *sock);
+void
+tcp_listenclose_direct(isc_nmsocket_t *sock);
 
 static void
 quota_accept_cb(isc_quota_t *quota, void *sock0);
@@ -343,7 +347,7 @@ isc_nm_listentcp(isc_nm_t *mgr, isc_nmiface_t *iface,
 	}
 
 	if (result != ISC_R_SUCCESS) {
-		isc__nm_tcp_stoplistening(nsock);
+		stop_tcp_parent(nsock);
 		return (result);
 	}
 
@@ -492,17 +496,13 @@ stop_tcp_child(isc_nmsocket_t *sock) {
 	REQUIRE(sock->parent != NULL);
 
 	if (sock->listening) {
-		uv_close((uv_handle_t *)&sock->uv_handle.tcp,
-			 tcp_listenclose_cb);
+		uv_close((uv_handle_t *)&sock->uv_handle.tcp, tcp_listenclose_cb);
 
 		isc__nm_incstats(sock->mgr, sock->statsindex[STATID_CLOSE]);
+	} else {
+		/* We are in nmthread, so we can call the callback directly */
+		tcp_listenclose_direct(sock);
 	}
-
-	isc_nmsocket_t *ssock = sock->parent;
-	LOCK(&ssock->lock);
-	atomic_fetch_sub(&ssock->rchildren, 1);
-	UNLOCK(&ssock->lock);
-	BROADCAST(&ssock->cond);
 }
 
 static void
@@ -598,6 +598,22 @@ isc__nm_async_tcpstop(isc__networker_t *worker, isc__netievent_t *ev0) {
 	stop_tcp_parent(sock);
 }
 
+void
+tcp_listenclose_direct(isc_nmsocket_t *sock) {
+	REQUIRE(VALID_NMSOCK(sock));
+	isc_nmsocket_t *ssock = sock->parent;
+	REQUIRE(VALID_NMSOCK(ssock));
+
+	atomic_store(&sock->closed, true);
+	atomic_store(&sock->listening, false);
+	sock->pquota = NULL;
+
+	LOCK(&ssock->lock);
+	atomic_fetch_sub(&ssock->rchildren, 1);
+	UNLOCK(&ssock->lock);
+	BROADCAST(&ssock->cond);
+}
+
 /*
  * This callback is used for closing listening sockets.
  */
@@ -605,9 +621,7 @@ static void
 tcp_listenclose_cb(uv_handle_t *handle) {
 	isc_nmsocket_t *sock = uv_handle_get_data(handle);
 
-	atomic_store(&sock->closed, true);
-	atomic_store(&sock->listening, false);
-	sock->pquota = NULL;
+	tcp_listenclose_direct(sock);
 
 	isc__nmsocket_detach((isc_nmsocket_t **)&sock->uv_handle.tcp.data);
 }
