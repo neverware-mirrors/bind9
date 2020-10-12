@@ -266,7 +266,7 @@ isc_nm_listentcp(isc_nm_t *mgr, isc_nmiface_t *iface,
 	isc__nmsocket_init(nsock, mgr, isc_nm_tcplistener, iface);
 
 	nsock->nchildren = mgr->nworkers;
-	atomic_init(&nsock->rchildren, 0);
+	atomic_init(&nsock->rchildren, mgr->nworkers);
 	nsock->children = isc_mem_get(mgr->mctx,
 				      mgr->nworkers * sizeof(*nsock));
 	memset(nsock->children, 0, mgr->nworkers * sizeof(*nsock));
@@ -449,7 +449,6 @@ isc__nm_async_tcplisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 			     (isc_nmsocket_t **)&sock->uv_handle.tcp.data);
 
 	atomic_store(&sock->listening, true);
-	atomic_fetch_add(&sock->rchildren, 1);
 
 done:
 	LOCK(&sock->parent->lock);
@@ -492,17 +491,14 @@ stop_tcp_child(isc_nmsocket_t *sock) {
 	REQUIRE(sock->tid == isc_nm_tid());
 	REQUIRE(sock->parent != NULL);
 
-	isc_nmsocket_t *ssock = sock->parent;
+	if (sock->listening) {
+		uv_close((uv_handle_t *)&sock->uv_handle.tcp,
+			 tcp_listenclose_cb);
 
-	if (!uv_is_active((uv_handle_t *)&sock->uv_handle.tcp)) {
-		return;
+		isc__nm_incstats(sock->mgr, sock->statsindex[STATID_CLOSE]);
 	}
 
-	uv_close((uv_handle_t *)&sock->uv_handle.tcp,
-		 tcp_listenclose_cb);
-
-	isc__nm_incstats(sock->mgr, sock->statsindex[STATID_CLOSE]);
-
+	isc_nmsocket_t *ssock = sock->parent;
 	LOCK(&ssock->lock);
 	atomic_fetch_sub(&ssock->rchildren, 1);
 	UNLOCK(&ssock->lock);
@@ -562,6 +558,7 @@ stop_tcp_parent(isc_nmsocket_t *sock) {
 
 void
 isc__nm_tcp_stoplistening(isc_nmsocket_t *sock) {
+	REQUIRE(!isc__nm_in_netthread());
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(sock->type == isc_nm_tcplistener);
 

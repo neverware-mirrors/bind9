@@ -242,9 +242,12 @@ stoplistening(isc_nmsocket_t *sock) {
 
 	for (int i = 0; i < sock->nchildren; i++) {
 		isc__netievent_udpstop_t *event = NULL;
+		isc_nmsocket_t *csock = &sock->children[i];
 
-		if (isc_nm_tid() == sock->children[i].tid) {
-			stop_udp_child(&sock->children[i]);
+		REQUIRE(VALID_NMSOCK(csock));
+
+		if (isc_nm_tid() == csock->tid) {
+			stop_udp_child(csock);
 			continue;
 		}
 
@@ -262,6 +265,25 @@ stoplistening(isc_nmsocket_t *sock) {
 	UNLOCK(&sock->lock);
 
 	isc__nmsocket_prep_destroy(sock);
+}
+
+static void
+stop_udp_parent(isc_nmsocket_t *sock) {
+	REQUIRE(sock->parent == NULL);
+
+	/*
+	 * If network manager is paused, re-enqueue the event for later.
+	 */
+	if (!isc__nm_acquire_interlocked(sock->mgr)) {
+		isc__netievent_udplisten_t *event =
+			isc__nm_get_ievent(sock->mgr, netievent_udpstop);
+		event->sock = sock;
+		isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
+				       (isc__netievent_t *)event);
+	} else {
+		stoplistening(sock);
+		isc__nm_drop_interlocked(sock->mgr);
+	}
 }
 
 void
@@ -284,20 +306,7 @@ isc__nm_udp_stoplistening(isc_nmsocket_t *sock) {
 	 */
 	atomic_store(&sock->active, false);
 
-	/*
-	 * If the manager is interlocked, re-enqueue this as an asynchronous
-	 * event. Otherwise, go ahead and stop listening right away.
-	 */
-	if (!isc__nm_acquire_interlocked(sock->mgr)) {
-		isc__netievent_udpstop_t *ievent =
-			isc__nm_get_ievent(sock->mgr, netievent_udpstop);
-		ievent->sock = sock;
-		isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
-				       (isc__netievent_t *)ievent);
-	} else {
-		stoplistening(sock);
-		isc__nm_drop_interlocked(sock->mgr);
-	}
+	stop_udp_parent(sock);
 }
 
 /*
@@ -319,18 +328,7 @@ isc__nm_async_udpstop(isc__networker_t *worker, isc__netievent_t *ev0) {
 		return;
 	}
 
-	/*
-	 * If network manager is paused, re-enqueue the event for later.
-	 */
-	if (!isc__nm_acquire_interlocked(sock->mgr)) {
-		isc__netievent_udplisten_t *event = isc__nm_get_ievent(sock->mgr, netievent_udpstop);
-		event->sock = sock;
-		isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
-				       (isc__netievent_t *)event);
-	} else {
-		stoplistening(sock);
-		isc__nm_drop_interlocked(sock->mgr);
-	}
+	stop_udp_parent(sock);
 }
 
 /*

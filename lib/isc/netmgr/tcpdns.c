@@ -399,11 +399,6 @@ isc__nm_async_tcpdnsstop(isc__networker_t *worker, isc__netievent_t *ev0) {
 
 	isc__nmsocket_clearcb(sock);
 
-	if (sock->outer != NULL) {
-		isc__nm_tcp_stoplistening(sock->outer);
-		isc__nmsocket_detach(&sock->outer);
-	}
-
 	isc__nmsocket_detach(&sock);
 }
 
@@ -411,6 +406,11 @@ void
 isc__nm_tcpdns_stoplistening(isc_nmsocket_t *sock) {
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(sock->type == isc_nm_tcpdnslistener);
+
+	if (sock->outer != NULL) {
+		isc__nm_tcp_stoplistening(sock->outer);
+		isc__nmsocket_detach(&sock->outer);
+	}
 
 	isc__netievent_tcpdnsstop_t *ievent =
 		isc__nm_get_ievent(sock->mgr, netievent_tcpdnsstop);
