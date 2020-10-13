@@ -149,10 +149,6 @@ free_listener(controllistener_t *listener) {
 
 	isc_refcount_destroy(&listener->refs);
 
-	if (listener->sock != NULL) {
-		isc_nmsocket_close(&listener->sock);
-	}
-
 	free_controlkeylist(&listener->keys, listener->mctx);
 
 	if (listener->acl != NULL) {
@@ -191,7 +187,7 @@ shutdown_listener(controllistener_t *listener) {
 		listener->exiting = true;
 	}
 
-	isc_nm_stoplistening(listener->sock);
+	isc_nm_stoplistening(&listener->sock);
 	maybe_free_listener(listener);
 }
 

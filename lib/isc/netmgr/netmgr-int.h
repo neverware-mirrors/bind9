@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <uv.h>
 
+#define NETMGR_TRACE 1
+
 #include <isc/astack.h>
 #include <isc/atomic.h>
 #include <isc/buffer.h>
@@ -148,7 +150,6 @@ typedef enum isc__netievent_type {
 
 	netievent_tcpdnssend,
 	netievent_tcpdnsclose,
-	netievent_tcpdnsstop,
 
 	netievent_closecb,
 	netievent_shutdown,
@@ -212,13 +213,13 @@ typedef struct isc__netievent__socket {
 
 typedef isc__netievent__socket_t isc__netievent_udplisten_t;
 typedef isc__netievent__socket_t isc__netievent_udpstop_t;
+typedef isc__netievent__socket_t isc__netievent_tcplisten_t;
 typedef isc__netievent__socket_t isc__netievent_tcpstop_t;
 typedef isc__netievent__socket_t isc__netievent_tcpclose_t;
 typedef isc__netievent__socket_t isc__netievent_startread_t;
 typedef isc__netievent__socket_t isc__netievent_pauseread_t;
 typedef isc__netievent__socket_t isc__netievent_closecb_t;
 typedef isc__netievent__socket_t isc__netievent_tcpdnsclose_t;
-typedef isc__netievent__socket_t isc__netievent_tcpdnsstop_t;
 
 typedef struct isc__netievent__socket_req {
 	isc__netievent_type type;
@@ -227,7 +228,6 @@ typedef struct isc__netievent__socket_req {
 } isc__netievent__socket_req_t;
 
 typedef isc__netievent__socket_req_t isc__netievent_tcpconnect_t;
-typedef isc__netievent__socket_req_t isc__netievent_tcplisten_t;
 typedef isc__netievent__socket_req_t isc__netievent_tcpsend_t;
 typedef isc__netievent__socket_req_t isc__netievent_tcpdnssend_t;
 
@@ -400,7 +400,7 @@ struct isc_nmsocket {
 	isc_nmsocket_t *server;
 
 	/*% Child sockets for multi-socket setups */
-	isc_nmsocket_t *children;
+	isc_nmsocket_t **children;
 	int nchildren;
 	isc_nmiface_t *iface;
 	isc_nmhandle_t *statichandle;
@@ -613,13 +613,16 @@ isc__nm_uvreq_put(isc__nm_uvreq_t **req, isc_nmsocket_t *sock);
  * if that doesn't work, freed.
  */
 
-void
-isc__nmsocket_init(isc_nmsocket_t *sock, isc_nm_t *mgr, isc_nmsocket_type type,
-		   isc_nmiface_t *iface);
+isc_nmsocket_t *
+isc__nmsocket_get(isc_nm_t *mgr, isc_nmsocket_type type,
+		  isc_nmiface_t *iface);
 /*%<
  * Initialize socket 'sock', attach it to 'mgr', and set it to type 'type'
  * and its interface to 'iface'.
  */
+
+void
+isc__nmsocket_put(isc_nmsocket_t **sockp);
 
 void
 isc__nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target);
@@ -632,6 +635,12 @@ isc__nmsocket_detach(isc_nmsocket_t **socketp);
 /*%<
  * Detach from socket, decreasing refcount and possibly destroying the
  * socket if it's no longer referenced.
+ */
+
+void
+isc__nmsocket_close(isc_nmsocket_t **socketp);
+/*%<
+ * Close from listening socket, this must be the last reference to it.
  */
 
 void
@@ -780,8 +789,6 @@ void
 isc__nm_async_tcpdnsclose(isc__networker_t *worker, isc__netievent_t *ev0);
 void
 isc__nm_async_tcpdnssend(isc__networker_t *worker, isc__netievent_t *ev0);
-void
-isc__nm_async_tcpdnsstop(isc__networker_t *worker, isc__netievent_t *ev0);
 
 #define isc__nm_uverr2result(x) \
 	isc___nm_uverr2result(x, true, __FILE__, __LINE__)

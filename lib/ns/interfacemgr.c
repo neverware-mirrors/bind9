@@ -557,12 +557,10 @@ cleanup_interface:
 void
 ns_interface_shutdown(ns_interface_t *ifp) {
 	if (ifp->udplistensocket != NULL) {
-		isc_nm_stoplistening(ifp->udplistensocket);
-		isc_nmsocket_close(&ifp->udplistensocket);
+		isc_nm_stoplistening(&ifp->udplistensocket);
 	}
 	if (ifp->tcplistensocket != NULL) {
-		isc_nm_stoplistening(ifp->tcplistensocket);
-		isc_nmsocket_close(&ifp->tcplistensocket);
+		isc_nm_stoplistening(&ifp->tcplistensocket);
 	}
 	if (ifp->clientmgr != NULL) {
 		ns_clientmgr_destroy(&ifp->clientmgr);

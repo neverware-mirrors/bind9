@@ -286,10 +286,6 @@ destroy_httpdmgr(isc_httpdmgr_t *httpdmgr) {
 
 	httpdmgr->magic = 0;
 
-	if (httpdmgr->sock != NULL) {
-		isc_nmsocket_close(&httpdmgr->sock);
-	}
-
 	/*
 	 * Clear out the list of all actions we know about.  Just free the
 	 * memory.
@@ -987,7 +983,7 @@ isc_httpdmgr_shutdown(isc_httpdmgr_t **httpdmgrp) {
 	httpdmgr = *httpdmgrp;
 	*httpdmgrp = NULL;
 
-	isc_nm_stoplistening(httpdmgr->sock);
+	isc_nm_stoplistening(&httpdmgr->sock);
 
 	LOCK(&httpdmgr->lock);
 	httpdmgr->flags |= ISC_HTTPDMGR_SHUTTINGDOWN;

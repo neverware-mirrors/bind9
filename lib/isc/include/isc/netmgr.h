@@ -101,15 +101,6 @@ int
 isc_nm_tid(void);
 
 void
-isc_nmsocket_close(isc_nmsocket_t **sockp);
-/*%<
- * isc_nmsocket_close() detaches a listening socket that was
- * created by isc_nm_listenudp(), isc_nm_listentcp(), or
- * isc_nm_listentcpdns(). Once there are no remaining child
- * sockets with active handles, the socket will be closed.
- */
-
-void
 isc_nmhandle_attach(isc_nmhandle_t *handle, isc_nmhandle_t **dest);
 void
 isc_nmhandle_detach(isc_nmhandle_t **handlep);
@@ -181,9 +172,9 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
  */
 
 void
-isc_nm_stoplistening(isc_nmsocket_t *sock);
+isc_nm_stoplistening(isc_nmsocket_t **sockp);
 /*%<
- * Stop listening on socket 'sock'.
+ * Stop listening on socket 'sock', detach the socket.
  */
 
 void
