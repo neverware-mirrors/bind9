@@ -529,7 +529,7 @@ isc__nm_async_udpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
 	result = udp_send_direct(sock, uvreq, &ievent->peer);
 	if (result != ISC_R_SUCCESS) {
 		uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
-		isc__nm_uvreq_put(&uvreq, uvreq->handle->sock);
+		isc__nm_uvreq_put(&uvreq, uvreq->sock);
 	}
 }
 
