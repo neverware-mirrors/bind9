@@ -100,10 +100,15 @@ isc_nm_closedown(isc_nm_t *mgr);
 int
 isc_nm_tid(void);
 
+#define isc_nmhandle_attach(handle, dest) \
+	isc__nmhandle_attach(handle, dest, __FILE__, __LINE__)
+#define isc_nmhandle_detach(handlep) \
+	isc__nmhandle_detach(handlep, __FILE__, __LINE__)
+
 void
-isc_nmhandle_attach(isc_nmhandle_t *handle, isc_nmhandle_t **dest);
+isc__nmhandle_attach(isc_nmhandle_t *handle, isc_nmhandle_t **dest, const char *file, unsigned int line);
 void
-isc_nmhandle_detach(isc_nmhandle_t **handlep);
+isc__nmhandle_detach(isc_nmhandle_t **handlep, const char *file, unsigned int line);
 /*%<
  * Increment/decrement the reference counter in a netmgr handle,
  * but (unlike the attach/detach functions) do not change the pointer

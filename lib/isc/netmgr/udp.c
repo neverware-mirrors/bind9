@@ -11,6 +11,7 @@
 
 #include <unistd.h>
 #include <uv.h>
+#include <syscall.h>
 
 #include <isc/atomic.h>
 #include <isc/buffer.h>
@@ -80,7 +81,7 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		isc__netievent_udplisten_t *ievent = NULL;
 		isc_nmsocket_t *csock = nsock->children[i] =
 			isc__nmsocket_get(mgr, isc_nm_udpsocket, iface);
-		fprintf(stderr, "isc_nm_listenudp(): attach %p->references = %lu\n", nsock, isc_refcount_current(&nsock->references));
+		fprintf(stderr, "isc_nm_listenudp(): %lu isc__nmsocket_attach(%p)->references = %lu\n", syscall(SYS_gettid), nsock, isc_refcount_current(&nsock->references));
 		isc__nmsocket_attach(nsock, &csock->parent);
 		csock->tid = i;
 		csock->extrahandlesize = extrahandlesize;
@@ -231,10 +232,10 @@ udp_stop_cb(uv_handle_t *handle) {
 
 
 	/* Detach from parent socket */
-	fprintf(stderr, "udp_stop_cb(): %p->references = %lu\n", sock->parent, isc_refcount_current(&sock->references));
+	fprintf(stderr, "udp_stop_cb(): %lu %p->references = %lu\n", syscall(SYS_gettid), sock->parent, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock->parent);
 	/* Detach the last reference to child socket to destroy it */
-	fprintf(stderr, "udp_stop_cb(): %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
+	fprintf(stderr, "udp_stop_cb(): %lu %p->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 }
 
@@ -267,7 +268,7 @@ stop_udp_parent(isc_nmsocket_t *sock) {
 	sock->nchildren = 0;
 	atomic_store(&sock->closed, true);
 
-	fprintf(stderr, "stop_udp_parent(): %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
+	fprintf(stderr, "stop_udp_parent(): %lu %p->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_close(&sock);
 }
 
@@ -338,7 +339,7 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 	 * to ensure it won't be destroyed by the recv callback.
 	 */
 	sock = uv_handle_get_data((uv_handle_t *)handle);
-	fprintf(stderr, "udp_recv_cb(): attach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
+	fprintf(stderr, "udp_recv_cb(): %lu isc__nmsocket_attach(%p)->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	sock = NULL;
 	isc__nmsocket_attach(uv_handle_get_data((uv_handle_t *)handle), &sock);
 
@@ -363,7 +364,7 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 		if (free_buf) {
 			isc__nm_free_uvbuf(sock, buf);
 		}
-		fprintf(stderr, "udp_recv_cb(): detach %p->references = %lu, addr = %p, maxudp = %u, active = %s\n", sock, isc_refcount_current(&sock->references), addr, maxudp, isc__nmsocket_active(sock)?"true":"false");
+		fprintf(stderr, "udp_recv_cb(): %lu isc__nmsocket_detach(%p)->references = %lu, addr = %p, maxudp = %u, active = %s\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references), addr, maxudp, isc__nmsocket_active(sock)?"true":"false");
 		isc__nmsocket_detach(&sock);
 		return;
 	}
@@ -388,13 +389,14 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 	/*
 	 * The sock is now attached to the handle, we can detach our ref.
 	 */
-	fprintf(stderr, "udp_recv_cb(): detach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
+	fprintf(stderr, "udp_recv_cb(): %lu isc__nmsocket_detach(%p)->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 
 	/*
 	 * If the recv callback wants to hold on to the handle,
 	 * it needs to attach to it.
 	 */
+	fprintf(stderr, "udp_recv_cb(): %lu isc__nmhandle_detach(%p)->references = %lu\n", syscall(SYS_gettid), nmhandle, isc_refcount_current(&nmhandle->references));
 	isc_nmhandle_detach(&nmhandle);
 }
 
@@ -423,6 +425,7 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 	 * we need to do so here.
 	 */
 	if (maxudp != 0 && region->length > maxudp) {
+		fprintf(stderr, "isc__nm_udp_send(): %lu isc__nmhandle_detach(%p)->references = %lu\n", syscall(SYS_gettid), handle, isc_refcount_current(&handle->references));
 		isc_nmhandle_detach(&handle);
 		return (ISC_R_SUCCESS);
 	}
@@ -433,7 +436,7 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 
 	switch (sock->type) {
 	case isc_nm_udpsocket: {
-		fprintf(stderr, "isc__nm_udp_send(): isc_nm_udpsocket(%p) %s\n", sock,
+		fprintf(stderr, "isc__nm_udp_send(): %lu isc_nm_udpsocket(%p) %s\n", syscall(SYS_gettid), sock,
 			isc__nm_in_netthread()?"YES":"NO");
 		if (isc__nm_in_netthread()) {
 			tid = isc_nm_tid();
@@ -465,7 +468,7 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 		INSIST(0);
 		ISC_UNREACHABLE();
 	}
-	fprintf(stderr, "isc__nm_udp_send(): sock(%p) rsock(%p) %i %s\n", sock, rsock, tid, isc__nm_in_netthread()?"YES":"NO");
+	fprintf(stderr, "isc__nm_udp_send(): %lu sock(%p) rsock(%p) %i %s\n", syscall(SYS_gettid), sock, rsock, tid, isc__nm_in_netthread()?"YES":"NO");
 
 	if (rsock == NULL || !isc__nmsocket_active(rsock)) {
 		fprintf(stderr, "CANCELED - NOT ACTIVE OR DEAD\n");
@@ -518,6 +521,7 @@ isc__nm_async_udpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
 	if (sock->parent == NULL) {
 		uvreq->cb.send(uvreq->handle, ISC_R_CANCELED, uvreq->cbarg);
 		isc__nm_uvreq_put(&uvreq, uvreq->handle->sock);
+		return;
 	}
 
 	result = udp_send_direct(ievent->sock, ievent->req, &ievent->peer);

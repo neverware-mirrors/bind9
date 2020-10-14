@@ -597,15 +597,21 @@ isc__nmhandle_get(isc_nmsocket_t *sock, isc_sockaddr_t *peer,
  * to detach the socket afterward.
  */
 
+#define isc__nm_uvreq_get(mgr, sock) \
+	isc___nm_uvreq_get(mgr, sock, __FILE__, __LINE__)
+
 isc__nm_uvreq_t *
-isc__nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock);
+isc___nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock, const char *file, unsigned int line);
 /*%<
  * Get a UV request structure for the socket 'sock', allocating a
  * new one if there isn't one available in 'sock->inactivereqs'.
  */
 
+#define isc__nm_uvreq_put(mgr, sock) \
+	isc___nm_uvreq_put(mgr, sock, __FILE__, __LINE__)
+
 void
-isc__nm_uvreq_put(isc__nm_uvreq_t **req, isc_nmsocket_t *sock);
+isc___nm_uvreq_put(isc__nm_uvreq_t **req, isc_nmsocket_t *sock, const char *file, unsigned int line);
 /*%<
  * Completes the use of a UV request structure, setting '*req' to NULL.
  *
@@ -621,24 +627,36 @@ isc__nmsocket_get(isc_nm_t *mgr, isc_nmsocket_type type,
  * and its interface to 'iface'.
  */
 
-void
-isc__nmsocket_put(isc_nmsocket_t **sockp);
+#define isc__nmsocket_put(sockp) \
+	isc___nmsocket_put(sockp, __FILE__, __LINE__)
 
 void
-isc__nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target);
+isc___nmsocket_put(isc_nmsocket_t **sockp, const char *file, unsigned int line);
+
+#define isc__nmsocket_attach(sock, target) \
+	isc___nmsocket_attach(sock, target, __FILE__, __LINE__)
+
+void
+isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target, const char *file, unsigned int line);
 /*%<
  * Attach to a socket, increasing refcount
  */
 
+#define isc__nmsocket_detach(socketp) \
+	isc___nmsocket_detach(socketp, __FILE__, __LINE__)
+
 void
-isc__nmsocket_detach(isc_nmsocket_t **socketp);
+isc___nmsocket_detach(isc_nmsocket_t **socketp, const char *file, unsigned int line);
 /*%<
  * Detach from socket, decreasing refcount and possibly destroying the
  * socket if it's no longer referenced.
  */
 
+#define isc__nmsocket_close(socketp) \
+	isc___nmsocket_close(socketp, __FILE__, __LINE__)
+
 void
-isc__nmsocket_close(isc_nmsocket_t **socketp);
+isc___nmsocket_close(isc_nmsocket_t **socketp, const char *file, unsigned int line);
 /*%<
  * Close from listening socket, this must be the last reference to it.
  */
