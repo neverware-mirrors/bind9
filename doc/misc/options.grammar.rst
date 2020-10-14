@@ -119,6 +119,7 @@
   	heartbeat-interval <integer>;
   	hostname ( <quoted_string> | none );
   	https-endpoint <quoted_string> https-server <string>;
+  	https-port <integer>;
   	https-server <string> [ port <integer> ] tls <string> { (
   	    <quoted_string> [ port <integer> ] [ dscp <integer> ] |
   	    <ipv4_address> [ port <integer> ] [ dscp <integer> ] |
