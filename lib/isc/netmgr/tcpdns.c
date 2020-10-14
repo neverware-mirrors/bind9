@@ -81,9 +81,12 @@ alloc_dnsbuf(isc_nmsocket_t *sock, size_t len) {
 
 static void
 timer_close_cb(uv_handle_t *handle) {
+	uv_timer_t *timer = (uv_timer_t *)handle;
 	isc_nmsocket_t *sock = (isc_nmsocket_t *)uv_handle_get_data(handle);
 
 	REQUIRE(VALID_NMSOCK(sock));
+
+	isc_mem_put(sock->mgr->mctx, timer, sizeof(*timer));
 
 	atomic_store(&sock->closed, true);
 	tcpdns_close_direct(sock);
@@ -147,11 +150,11 @@ dnslisten_acceptcb(isc_nmhandle_t *handle, isc_result_t result, void *cbarg) {
 	dnssock->tid = isc_nm_tid();
 	dnssock->closehandle_cb = resume_processing;
 
+	dnssock->timer = isc_mem_get(dnssock->mgr->mctx, sizeof(*dnssock->timer));
 	uv_timer_init(&dnssock->mgr->workers[isc_nm_tid()].loop,
-		      &dnssock->timer);
-	dnssock->timer.data = dnssock;
-	dnssock->timer_initialized = true;
-	uv_timer_start(&dnssock->timer, dnstcp_readtimeout,
+		      dnssock->timer);
+	uv_handle_set_data((uv_handle_t *)dnssock->timer, dnssock);
+	uv_timer_start(dnssock->timer, dnstcp_readtimeout,
 		       dnssock->read_timeout, 0);
 
 	/*
@@ -307,8 +310,8 @@ dnslisten_readcb(isc_nmhandle_t *handle, isc_result_t eresult,
 		 * We have a packet: stop timeout timers
 		 */
 		atomic_store(&dnssock->outerhandle->sock->processing, true);
-		if (dnssock->timer_initialized) {
-			uv_timer_stop(&dnssock->timer);
+		if (dnssock->timer) {
+			uv_timer_stop(dnssock->timer);
 		}
 
 		if (atomic_load(&dnssock->sequential) ||
@@ -452,8 +455,8 @@ resume_processing(void *arg) {
 	if (atomic_load(&sock->ah) == 0) {
 		/* Nothing is active; sockets can timeout now */
 		atomic_store(&sock->outerhandle->sock->processing, false);
-		if (sock->timer_initialized) {
-			uv_timer_start(&sock->timer, dnstcp_readtimeout,
+		if (sock->timer) {
+			uv_timer_start(sock->timer, dnstcp_readtimeout,
 				       sock->read_timeout, 0);
 		}
 	}
@@ -469,8 +472,8 @@ resume_processing(void *arg) {
 		if (result == ISC_R_SUCCESS) {
 			atomic_store(&sock->outerhandle->sock->processing,
 				     true);
-			if (sock->timer_initialized) {
-				uv_timer_stop(&sock->timer);
+			if (sock->timer) {
+				uv_timer_stop(sock->timer);
 			}
 			isc_nmhandle_detach(&handle);
 		} else if (sock->outerhandle != NULL) {
@@ -502,8 +505,8 @@ resume_processing(void *arg) {
 			break;
 		}
 
-		if (sock->timer_initialized) {
-			uv_timer_stop(&sock->timer);
+		if (sock->timer) {
+			uv_timer_stop(sock->timer);
 		}
 		atomic_store(&sock->outerhandle->sock->processing, true);
 		isc_nmhandle_detach(&dnshandle);
@@ -617,15 +620,16 @@ tcpdns_close_direct(isc_nmsocket_t *sock) {
 	/* We don't need atomics here, it's all in single network thread */
 	if (sock->self != NULL) {
 		isc__nmsocket_detach(&sock->self);
-	} else if (sock->timer_initialized) {
+	} else if (sock->timer) {
 		/*
 		 * We need to fire the timer callback to clean it up,
 		 * it will then call us again (via detach) so that we
 		 * can finally close the socket.
 		 */
-		sock->timer_initialized = false;
-		uv_timer_stop(&sock->timer);
-		uv_close((uv_handle_t *)&sock->timer, timer_close_cb);
+		uv_timer_t *timer = sock->timer;
+		sock->timer = NULL;
+		uv_timer_stop(timer);
+		uv_close((uv_handle_t *)timer, timer_close_cb);
 	} else {
 		/*
 		 * At this point we're certain that there are no external

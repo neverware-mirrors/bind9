@@ -389,8 +389,7 @@ struct isc_nmsocket {
 	/*%
 	 * TCP read timeout timer.
 	 */
-	uv_timer_t timer;
-	bool timer_initialized;
+	uv_timer_t *timer;
 	uint64_t read_timeout;
 
 	/*% outer socket is for 'wrapped' sockets - e.g. tcpdns in tcp */

@@ -737,6 +737,14 @@ isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target, const char 
 	*target = sock;
 }
 
+static void
+timer_close_cb(uv_handle_t *handle) {
+	uv_timer_t *timer = (uv_timer_t *)handle;
+	isc_mem_t *mctx = uv_handle_get_data(handle);
+
+	isc_mem_put(mctx, timer, sizeof(*timer));
+}
+
 /*
  * Free all resources inside a socket (including its children if any).
  */
@@ -784,12 +792,15 @@ isc___nmsocket_put(isc_nmsocket_t **sockp, const char *file, unsigned int line) 
 
 	sock->pquota = NULL;
 
-	if (sock->timer_initialized) {
-		sock->timer_initialized = false;
+	if (sock->timer) {
+		uv_timer_t *timer = sock->timer;
+		sock->timer = NULL;
 		/* We might be in timer callback */
-		if (!uv_is_closing((uv_handle_t *)&sock->timer)) {
-			uv_timer_stop(&sock->timer);
-			uv_close((uv_handle_t *)&sock->timer, NULL);
+		/* OS: Really? */
+		if (!uv_is_closing((uv_handle_t *)timer)) {
+			uv_timer_stop(timer);
+			uv_handle_set_data((uv_handle_t *)sock->timer, sock->mgr->mctx);
+			uv_close((uv_handle_t *)timer, timer_close_cb);
 		}
 	}
 

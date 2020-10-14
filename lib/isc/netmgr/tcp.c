@@ -689,13 +689,12 @@ isc__nm_async_tcp_startread(isc__networker_t *worker, isc__netievent_t *ev0) {
 
 	REQUIRE(worker->id == isc_nm_tid());
 	if (sock->read_timeout != 0) {
-		if (!sock->timer_initialized) {
-			uv_timer_init(&worker->loop, &sock->timer);
-			uv_handle_set_data((uv_handle_t *)&sock->timer, sock);
-			sock->timer_initialized = true;
+		if (!sock->timer) {
+			sock->timer = isc_mem_get(sock->mgr->mctx, sizeof(*sock->timer));
+			uv_timer_init(&worker->loop, sock->timer);
+			uv_handle_set_data((uv_handle_t *)sock->timer, sock);
 		}
-		uv_timer_start(&sock->timer, readtimeout_cb, sock->read_timeout,
-			       0);
+		uv_timer_start(sock->timer, readtimeout_cb, sock->read_timeout, 0);
 	}
 
 	r = uv_read_start(&sock->uv_handle.stream, tcp_alloc_cb, read_cb);
@@ -738,8 +737,8 @@ isc__nm_async_tcp_pauseread(isc__networker_t *worker, isc__netievent_t *ev0) {
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(worker->id == isc_nm_tid());
 
-	if (sock->timer_initialized) {
-		uv_timer_stop(&sock->timer);
+	if (sock->timer) {
+		uv_timer_stop(sock->timer);
 	}
 	uv_read_stop(&sock->uv_handle.stream);
 }
@@ -801,9 +800,9 @@ read_cb(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 					      ? sock->mgr->keepalive
 					      : sock->mgr->idle);
 
-		if (sock->timer_initialized && sock->read_timeout != 0) {
+		if (sock->timer && sock->read_timeout != 0) {
 			/* The timer will be updated */
-			uv_timer_start(&sock->timer, readtimeout_cb,
+			uv_timer_start(sock->timer, readtimeout_cb,
 				       sock->read_timeout, 0);
 		}
 
@@ -1142,8 +1141,9 @@ tcp_close_cb(uv_handle_t *uvhandle) {
 }
 
 static void
-timer_close_cb(uv_handle_t *uvhandle) {
-	isc_nmsocket_t *sock = uv_handle_get_data(uvhandle);
+timer_close_cb(uv_handle_t *handle) {
+	uv_timer_t *timer = (uv_timer_t *)handle;
+	isc_nmsocket_t *sock = uv_handle_get_data(handle);
 
 	REQUIRE(VALID_NMSOCK(sock));
 
@@ -1151,6 +1151,8 @@ timer_close_cb(uv_handle_t *uvhandle) {
 		isc__nmsocket_detach(&sock->server);
 	}
 	uv_close(&sock->uv_handle.handle, tcp_close_cb);
+
+	isc_mem_put(sock->mgr->mctx, timer, sizeof(*timer));
 }
 
 static void
@@ -1161,10 +1163,11 @@ tcp_close_direct(isc_nmsocket_t *sock) {
 	if (sock->quota != NULL) {
 		isc_quota_detach(&sock->quota);
 	}
-	if (sock->timer_initialized) {
-		sock->timer_initialized = false;
-		uv_timer_stop(&sock->timer);
-		uv_close((uv_handle_t *)&sock->timer, timer_close_cb);
+	if (sock->timer) {
+		uv_timer_t *timer = sock->timer;
+		sock->timer = NULL;
+		uv_timer_stop(timer);
+		uv_close((uv_handle_t *)timer, timer_close_cb);
 	} else {
 		if (sock->server != NULL) {
 			isc__nmsocket_detach(&sock->server);
