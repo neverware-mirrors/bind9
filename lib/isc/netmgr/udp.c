@@ -225,17 +225,15 @@ isc__nm_async_udplisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 static void
 udp_stop_cb(uv_handle_t *handle) {
 	isc_nmsocket_t *sock = uv_handle_get_data(handle);
-	REQUIRE(sock->parent != NULL);
+	REQUIRE(VALID_NMSOCK(sock));
+	REQUIRE(VALID_NMSOCK(sock->parent));
 
 	atomic_store(&sock->closed, true);
 	atomic_store(&sock->listening, false);
 
-
 	/* Detach from parent socket */
-	fprintf(stderr, "udp_stop_cb(): %lu %p->references = %lu\n", syscall(SYS_gettid), sock->parent, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock->parent);
 	/* Detach the last reference to child socket to destroy it */
-	fprintf(stderr, "udp_stop_cb(): %lu %p->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 }
 
@@ -268,14 +266,11 @@ stop_udp_parent(isc_nmsocket_t *sock) {
 	sock->nchildren = 0;
 	atomic_store(&sock->closed, true);
 
-	fprintf(stderr, "stop_udp_parent(): %lu %p->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_close(&sock);
 }
 
 void
 isc__nm_udp_stoplistening(isc_nmsocket_t *sock) {
-
-	/* We can't be launched from network thread, we'd deadlock */
 	REQUIRE(!isc__nm_in_netthread());
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(sock->type == isc_nm_udplistener);
@@ -425,7 +420,6 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 	 * we need to do so here.
 	 */
 	if (maxudp != 0 && region->length > maxudp) {
-		fprintf(stderr, "isc__nm_udp_send(): %lu isc__nmhandle_detach(%p)->references = %lu\n", syscall(SYS_gettid), handle, isc_refcount_current(&handle->references));
 		isc_nmhandle_detach(&handle);
 		return (ISC_R_SUCCESS);
 	}
@@ -436,8 +430,6 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 
 	switch (sock->type) {
 	case isc_nm_udpsocket: {
-		fprintf(stderr, "isc__nm_udp_send(): %lu isc_nm_udpsocket(%p) %s\n", syscall(SYS_gettid), sock,
-			isc__nm_in_netthread()?"YES":"NO");
 		if (isc__nm_in_netthread()) {
 			tid = isc_nm_tid();
 			if (sock->tid == tid) {
@@ -468,10 +460,8 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 		INSIST(0);
 		ISC_UNREACHABLE();
 	}
-	fprintf(stderr, "isc__nm_udp_send(): %lu sock(%p) rsock(%p) %i %s\n", syscall(SYS_gettid), sock, rsock, tid, isc__nm_in_netthread()?"YES":"NO");
 
 	if (rsock == NULL || !isc__nmsocket_active(rsock)) {
-		fprintf(stderr, "CANCELED - NOT ACTIVE OR DEAD\n");
 		return (ISC_R_CANCELED);
 	}
 
@@ -505,26 +495,6 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 	}
 }
 
-/*
- * Asynchronous 'udpsend' event handler: send a packet on a UDP socket.
- */
-void
-isc__nm_async_udpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
-	isc_result_t result;
-	isc__netievent_udpsend_t *ievent = (isc__netievent_udpsend_t *)ev0;
-	isc_nmsocket_t *sock = ievent->sock;
-	isc__nm_uvreq_t *uvreq = ievent->req;
-
-	REQUIRE(sock->type == isc_nm_udpsocket);
-	REQUIRE(worker->id == sock->tid);
-
-	result = udp_send_direct(ievent->sock, ievent->req, &ievent->peer);
-	if (result != ISC_R_SUCCESS) {
-		uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
-		isc__nm_uvreq_put(&uvreq, uvreq->handle->sock);
-	}
-}
-
 static void
 udp_send_cb(uv_udp_send_t *req, int status) {
 	isc_result_t result = ISC_R_SUCCESS;
@@ -544,6 +514,26 @@ udp_send_cb(uv_udp_send_t *req, int status) {
 }
 
 /*
+ * Asynchronous 'udpsend' event handler: send a packet on a UDP socket.
+ */
+void
+isc__nm_async_udpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
+	isc_result_t result;
+	isc__netievent_udpsend_t *ievent = (isc__netievent_udpsend_t *)ev0;
+	isc_nmsocket_t *sock = ievent->sock;
+	isc__nm_uvreq_t *uvreq = ievent->req;
+
+	REQUIRE(sock->type == isc_nm_udpsocket);
+	REQUIRE(worker->id == sock->tid);
+
+	result = udp_send_direct(sock, uvreq, &ievent->peer);
+	if (result != ISC_R_SUCCESS) {
+		uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
+		isc__nm_uvreq_put(&uvreq, uvreq->handle->sock);
+	}
+}
+
+/*
  * udp_send_direct sends buf to a peer on a socket. Sock has to be in
  * the same thread as the callee.
  */
@@ -551,7 +541,7 @@ static isc_result_t
 udp_send_direct(isc_nmsocket_t *sock, isc__nm_uvreq_t *req,
 		isc_sockaddr_t *peer) {
 	const struct sockaddr *sa = NULL;
-	int rv;
+	int r;
 
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(VALID_UVREQ(req));
@@ -563,12 +553,11 @@ udp_send_direct(isc_nmsocket_t *sock, isc__nm_uvreq_t *req,
 	}
 
 	sa = atomic_load(&sock->connected) ? NULL : &peer->type.sa;
-	rv = uv_udp_send(&req->uv_req.udp_send, &sock->uv_handle.udp,
-			 &req->uvbuf, 1, sa, udp_send_cb);
-	if (rv < 0) {
-		isc__nm_incstats(req->sock->mgr,
-				 req->sock->statsindex[STATID_SENDFAIL]);
-		return (isc__nm_uverr2result(rv));
+	r = uv_udp_send(&req->uv_req.udp_send, &sock->uv_handle.udp,
+			&req->uvbuf, 1, sa, udp_send_cb);
+	if (r < 0) {
+		isc__nm_incstats(sock->mgr, sock->statsindex[STATID_SENDFAIL]);
+		return (isc__nm_uverr2result(r));
 	}
 
 	return (ISC_R_SUCCESS);

@@ -561,7 +561,6 @@ isc__nm_async_stopcb(isc__networker_t *worker, isc__netievent_t *ev0) {
 	worker->finished = true;
 	/* Close the async handler */
 	uv_close((uv_handle_t *)&worker->async, NULL);
-	/* uv_stop(&worker->loop); */
 }
 
 static void
@@ -731,19 +730,19 @@ isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target, const char 
 	uint_fast32_t refs;
 
 	refs = isc_refcount_increment(&sock->references);
-	fprintf(stderr, "%u:%s:%u:isc__nmsocket_attach(%p, ...)->references = %lu\n", syscall(SYS_gettid), file, line,
-		sock, refs);
+	fprintf(stderr, "%u:%s:%u:isc__nmsocket_attach(%p, %p)->references = %lu\n", syscall(SYS_gettid), file, line,
+		sock, &sock->uv_handle, refs);
 
 	*target = sock;
 }
 
-static void
-timer_close_cb(uv_handle_t *handle) {
-	uv_timer_t *timer = (uv_timer_t *)handle;
-	isc_mem_t *mctx = uv_handle_get_data(handle);
+/* static void */
+/* timer_close_cb(uv_handle_t *handle) { */
+/* 	uv_timer_t *timer = (uv_timer_t *)handle; */
+/* 	isc_mem_t *mctx = uv_handle_get_data(handle); */
 
-	isc_mem_put(mctx, timer, sizeof(*timer));
-}
+/* 	isc_mem_put(mctx, timer, sizeof(*timer)); */
+/* } */
 
 /*
  * Free all resources inside a socket (including its children if any).
@@ -792,17 +791,19 @@ isc___nmsocket_put(isc_nmsocket_t **sockp, const char *file, unsigned int line) 
 
 	sock->pquota = NULL;
 
-	if (sock->timer) {
-		uv_timer_t *timer = sock->timer;
-		sock->timer = NULL;
-		/* We might be in timer callback */
-		/* OS: Really? */
-		if (!uv_is_closing((uv_handle_t *)timer)) {
-			uv_timer_stop(timer);
-			uv_handle_set_data((uv_handle_t *)sock->timer, sock->mgr->mctx);
-			uv_close((uv_handle_t *)timer, timer_close_cb);
-		}
-	}
+	REQUIRE(sock->timer == NULL);
+
+	/* if (sock->timer) { */
+	/* 	uv_timer_t *timer = sock->timer; */
+	/* 	sock->timer = NULL; */
+	/* 	/\* We might be in timer callback *\/ */
+	/* 	/\* OS: Really? *\/ */
+	/* 	if (!uv_is_closing((uv_handle_t *)timer)) { */
+	/* 		uv_timer_stop(timer); */
+	/* 		uv_handle_set_data((uv_handle_t *)sock->timer, sock->mgr->mctx); */
+	/* 		uv_close((uv_handle_t *)timer, timer_close_cb); */
+	/* 	} */
+	/* } */
 
 	isc_astack_destroy(sock->inactivehandles);
 
@@ -831,16 +832,6 @@ static void
 nmsocket_maybe_destroy(isc_nmsocket_t *sock) {
 	int active_handles;
 	bool destroy = false;
-
-	if (sock->parent != NULL) {
-		/*
-		 * This is a child socket and cannot be destroyed except
-		 * as a side effect of destroying the parent, so let's go
-		 * see if the parent is ready to be destroyed.
-		 */
-		nmsocket_maybe_destroy(sock->parent);
-		return;
-	}
 
 	/*
 	 * This is a parent socket (or a standalone). See whether the
@@ -933,8 +924,8 @@ isc___nmsocket_detach(isc_nmsocket_t **sockp, const char *file, unsigned int lin
 	uint_fast32_t refs;
 
 	refs = isc_refcount_decrement(&sock->references);
-	fprintf(stderr, "%u:%s:%u:nmsocket_detach(%p, ...)->references = %lu\n", syscall(SYS_gettid), file, line,
-		sock, refs);
+	fprintf(stderr, "%u:%s:%u:nmsocket_detach(%p, %p)->references = %lu\n", syscall(SYS_gettid), file, line,
+		sock, &sock->uv_handle, refs);
 
 	if (refs == 1) {
 		isc__nmsocket_prep_destroy(sock);
@@ -1097,7 +1088,6 @@ isc__nmhandle_get(isc_nmsocket_t *sock, isc_sockaddr_t *peer,
 		INSIST(VALID_NMHANDLE(handle));
 	}
 
-	fprintf(stderr, "isc__nmhandle_get(): %lu attach %p->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_attach(sock, &handle->sock);
 
 #ifdef NETMGR_TRACE
@@ -1173,7 +1163,7 @@ isc__nmhandle_attach(isc_nmhandle_t *handle, isc_nmhandle_t **handlep, const cha
 	uint_fast32_t refs;
 
 	refs = isc_refcount_increment(&handle->references);
-	fprintf(stderr, "%u:%s:%u:isc__nmhandle_attach(%p, ...)->references = %lu\n", syscall(SYS_gettid), file, line,
+	fprintf(stderr, "%u:%s:%u:isc__nmhandle_attach(%p)->references = %lu\n", syscall(SYS_gettid), file, line,
 		handle, refs);
 	*handlep = handle;
 }
@@ -1271,7 +1261,7 @@ nmhandle_detach_cb(isc_nmhandle_t **handlep) {
 	*handlep = NULL;
 
 	refs = isc_refcount_decrement(&handle->references);
-	fprintf(stderr, "%u:%s:%u:isc__nmhandle_detach(%p, ...)->references = %lu\n", syscall(SYS_gettid), file, line,
+	fprintf(stderr, "%u:%s:%u:isc__nmhandle_detach(%p)->references = %lu\n", syscall(SYS_gettid), file, line,
 		handle, refs);
 
 	if (refs > 1) {
@@ -1305,7 +1295,6 @@ nmhandle_detach_cb(isc_nmhandle_t **handlep) {
 			 * The socket will be finally detached by the closecb
 			 * event handler.
 			 */
-			fprintf(stderr, "isc_nmhandle_detach(): %lu attach %p->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 			isc__nmsocket_attach(sock, &event->sock);
 			isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
 					       (isc__netievent_t *)event);
@@ -1316,8 +1305,6 @@ nmhandle_detach_cb(isc_nmhandle_t **handlep) {
 		/* statichandle is assigned, not attached. */
 		sock->statichandle = NULL;
 	}
-
-	fprintf(stderr, "isc_nmhandle_detach(): %lu isc__nmsocket_detach(%p)->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 
 	isc___nmsocket_detach(&sock, file, line);
 }
@@ -1387,7 +1374,6 @@ isc___nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock, const char *file, unsign
 	*req = (isc__nm_uvreq_t){ .magic = 0 };
 	req->uv_req.req.data = req;
 
-	fprintf(stderr, "isc__nm_uvreq_get(): %lu attach %p->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc___nmsocket_attach(sock, &req->sock, file, line);
 	req->magic = UVREQ_MAGIC;
 
@@ -1425,7 +1411,6 @@ isc___nm_uvreq_put(isc__nm_uvreq_t **req0, isc_nmsocket_t *sock, const char *fil
 		isc__nmhandle_detach(&handle, file, line);
 	}
 
-	fprintf(stderr, "isc__nm_uvreq_put(): %lu isc__nmsocket_detach(%p)->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc___nmsocket_detach(&sock, file, line);
 }
 
@@ -1541,7 +1526,6 @@ isc__nm_async_closecb(isc__networker_t *worker, isc__netievent_t *ev0) {
 
 	sock->closehandle_cb(sock);
 
-	fprintf(stderr, "isc__nm_async_closecb(): %lu isc__nmsocket_detach(%p)->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 }
 
