@@ -80,7 +80,8 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		isc__netievent_udplisten_t *ievent = NULL;
 		isc_nmsocket_t *csock = nsock->children[i] =
 			isc__nmsocket_get(mgr, isc_nm_udpsocket, iface);
-		csock->parent = nsock;
+		fprintf(stderr, "isc_nm_listenudp(): attach %p->references = %lu\n", nsock, isc_refcount_current(&nsock->references));
+		isc__nmsocket_attach(nsock, &csock->parent);
 		csock->tid = i;
 		csock->extrahandlesize = extrahandlesize;
 
@@ -185,7 +186,6 @@ isc__nm_async_udplisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 		uv_bind_flags |= UV_UDP_IPV6ONLY;
 	}
 
-	/* FIXME: Use attach here? */
 	uv_handle_set_data(&sock->uv_handle.handle, sock);
 
 	r = uv_udp_bind(&sock->uv_handle.udp,
@@ -224,10 +224,17 @@ isc__nm_async_udplisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 static void
 udp_stop_cb(uv_handle_t *handle) {
 	isc_nmsocket_t *sock = uv_handle_get_data(handle);
+	REQUIRE(sock->parent != NULL);
 
 	atomic_store(&sock->closed, true);
 	atomic_store(&sock->listening, false);
 
+
+	/* Detach from parent socket */
+	fprintf(stderr, "udp_stop_cb(): %p->references = %lu\n", sock->parent, isc_refcount_current(&sock->references));
+	isc__nmsocket_detach(&sock->parent);
+	/* Detach the last reference to child socket to destroy it */
+	fprintf(stderr, "udp_stop_cb(): %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 }
 
@@ -239,6 +246,8 @@ stop_udp_parent(isc_nmsocket_t *sock) {
 
 		if (csock != NULL) {
 			REQUIRE(VALID_NMSOCK(csock));
+
+			atomic_store(&sock->active, false);
 
 			sock->children[i] = NULL;
 			atomic_fetch_sub(&sock->rchildren, 1);
@@ -258,6 +267,7 @@ stop_udp_parent(isc_nmsocket_t *sock) {
 	sock->nchildren = 0;
 	atomic_store(&sock->closed, true);
 
+	fprintf(stderr, "stop_udp_parent(): %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_close(&sock);
 }
 
@@ -299,8 +309,6 @@ isc__nm_async_udpstop(isc__networker_t *worker, isc__netievent_t *ev0) {
 	REQUIRE(sock->type == isc_nm_udpsocket);
 	REQUIRE(sock->tid == isc_nm_tid());
 
-	sock->parent = NULL;
-
 	uv_udp_recv_stop(&sock->uv_handle.udp);
 	uv_close((uv_handle_t *)&sock->uv_handle.udp, udp_stop_cb);
 	isc__nm_incstats(sock->mgr, sock->statsindex[STATID_CLOSE]);
@@ -329,6 +337,9 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 	 * network thread that we're in, we still attach to the socket here
 	 * to ensure it won't be destroyed by the recv callback.
 	 */
+	sock = uv_handle_get_data((uv_handle_t *)handle);
+	fprintf(stderr, "udp_recv_cb(): attach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
+	sock = NULL;
 	isc__nmsocket_attach(uv_handle_get_data((uv_handle_t *)handle), &sock);
 
 #ifdef UV_UDP_MMSG_CHUNK
@@ -352,6 +363,7 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 		if (free_buf) {
 			isc__nm_free_uvbuf(sock, buf);
 		}
+		fprintf(stderr, "udp_recv_cb(): detach %p->references = %lu, addr = %p, maxudp = %u, active = %s\n", sock, isc_refcount_current(&sock->references), addr, maxudp, isc__nmsocket_active(sock)?"true":"false");
 		isc__nmsocket_detach(&sock);
 		return;
 	}
@@ -376,6 +388,7 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 	/*
 	 * The sock is now attached to the handle, we can detach our ref.
 	 */
+	fprintf(stderr, "udp_recv_cb(): detach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 
 	/*
@@ -394,12 +407,12 @@ isc_result_t
 isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 		 void *cbarg) {
 	isc_nmsocket_t *sock = handle->sock;
-	isc_nmsocket_t *psock = NULL, *rsock = sock;
+	isc_nmsocket_t *rsock = sock;
 	isc_sockaddr_t *peer = &handle->peer;
 	isc__netievent_udpsend_t *ievent = NULL;
 	isc__nm_uvreq_t *uvreq = NULL;
 	uint32_t maxudp = atomic_load(&sock->mgr->maxudp);
-	int ntid;
+	int tid = -1;
 
 	/*
 	 * We're simulating a firewall blocking UDP packets bigger than
@@ -414,39 +427,52 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 		return (ISC_R_SUCCESS);
 	}
 
-	if (sock->type == isc_nm_udpsocket && !atomic_load(&sock->client)) {
-		INSIST(sock->parent != NULL);
-		psock = sock->parent;
-	} else if (sock->type == isc_nm_udplistener) {
-		psock = sock;
-	} else if (!atomic_load(&sock->client)) {
-		INSIST(0);
-		ISC_UNREACHABLE();
-	}
-
 	if (!isc__nmsocket_active(sock)) {
 		return (ISC_R_CANCELED);
 	}
 
-	/*
-	 * If we're in the network thread, we can send directly.  If the
-	 * handle is associated with a UDP socket, we can reuse its thread
-	 * (assuming CPU affinity). Otherwise, pick a thread at random.
-	 */
-	if (isc__nm_in_netthread()) {
-		ntid = isc_nm_tid();
-	} else if (sock->type == isc_nm_udpsocket &&
-		   !atomic_load(&sock->client)) {
-		ntid = sock->tid;
-	} else {
-		ntid = (int)isc_random_uniform(sock->nchildren);
+	switch (sock->type) {
+	case isc_nm_udpsocket: {
+		fprintf(stderr, "isc__nm_udp_send(): isc_nm_udpsocket(%p) %s\n", sock,
+			isc__nm_in_netthread()?"YES":"NO");
+		if (isc__nm_in_netthread()) {
+			tid = isc_nm_tid();
+			if (sock->tid == tid) {
+				rsock = sock;
+				break;
+			}
+		} else {
+			tid = (int)isc_random_uniform(sock->nchildren);
+		}
+		if (sock->parent == NULL) {
+			rsock = sock;
+		} else {
+			rsock = sock->parent->children[tid];
+		}
+		break;
+	}
+	case isc_nm_udplistener: {
+		if (isc__nm_in_netthread()) {
+			tid = isc_nm_tid();
+		} else {
+			/* We assign the sender to random children */
+			tid = (int)isc_random_uniform(sock->nchildren);
+		}
+		rsock = sock->children[tid];
+		break;
+	}
+	default:
+		INSIST(0);
+		ISC_UNREACHABLE();
+	}
+	fprintf(stderr, "isc__nm_udp_send(): sock(%p) rsock(%p) %i %s\n", sock, rsock, tid, isc__nm_in_netthread()?"YES":"NO");
+
+	if (rsock == NULL || !isc__nmsocket_active(rsock)) {
+		fprintf(stderr, "CANCELED - NOT ACTIVE OR DEAD\n");
+		return (ISC_R_CANCELED);
 	}
 
-	if (psock != NULL) {
-		rsock = psock->children[ntid];
-	}
-
-	uvreq = isc__nm_uvreq_get(sock->mgr, sock);
+	uvreq = isc__nm_uvreq_get(sock->mgr, rsock);
 	uvreq->uvbuf.base = (char *)region->base;
 	uvreq->uvbuf.len = region->length;
 
@@ -481,16 +507,23 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
  */
 void
 isc__nm_async_udpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
+	isc_result_t result;
 	isc__netievent_udpsend_t *ievent = (isc__netievent_udpsend_t *)ev0;
+	isc_nmsocket_t *sock = ievent->sock;
+	isc__nm_uvreq_t *uvreq = ievent->req;
 
-	REQUIRE(worker->id == ievent->sock->tid);
+	REQUIRE(sock->type == isc_nm_udpsocket);
+	REQUIRE(worker->id == sock->tid);
 
-	if (isc__nmsocket_active(ievent->sock)) {
-		udp_send_direct(ievent->sock, ievent->req, &ievent->peer);
-	} else {
-		ievent->req->cb.send(ievent->req->handle, ISC_R_CANCELED,
-				     ievent->req->cbarg);
-		isc__nm_uvreq_put(&ievent->req, ievent->req->sock);
+	if (sock->parent == NULL) {
+		uvreq->cb.send(uvreq->handle, ISC_R_CANCELED, uvreq->cbarg);
+		isc__nm_uvreq_put(&uvreq, uvreq->handle->sock);
+	}
+
+	result = udp_send_direct(ievent->sock, ievent->req, &ievent->peer);
+	if (result != ISC_R_SUCCESS) {
+		uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
+		isc__nm_uvreq_put(&uvreq, uvreq->handle->sock);
 	}
 }
 
@@ -522,6 +555,8 @@ udp_send_direct(isc_nmsocket_t *sock, isc__nm_uvreq_t *req,
 	const struct sockaddr *sa = NULL;
 	int rv;
 
+	REQUIRE(VALID_NMSOCK(sock));
+	REQUIRE(VALID_UVREQ(req));
 	REQUIRE(sock->tid == isc_nm_tid());
 	REQUIRE(sock->type == isc_nm_udpsocket);
 

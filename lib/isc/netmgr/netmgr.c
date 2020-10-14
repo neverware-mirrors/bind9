@@ -728,12 +728,7 @@ isc__nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target) {
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(target != NULL && *target == NULL);
 
-	if (sock->parent != NULL) {
-		INSIST(sock->parent->parent == NULL); /* sanity check */
-		isc_refcount_increment0(&sock->parent->references);
-	} else {
-		isc_refcount_increment0(&sock->references);
-	}
+	isc_refcount_increment(&sock->references);
 
 	*target = sock;
 }
@@ -854,7 +849,9 @@ nmsocket_maybe_destroy(isc_nmsocket_t *sock) {
 		}
 	}
 
-	if (active_handles == 0 || sock->statichandle != NULL) {
+	if (active_handles == 0 ||
+	    (active_handles == 1 && sock->statichandle != NULL))
+	{
 		destroy = true;
 	}
 
@@ -915,22 +912,11 @@ isc__nmsocket_detach(isc_nmsocket_t **sockp) {
 	REQUIRE(sockp != NULL && *sockp != NULL);
 	REQUIRE(VALID_NMSOCK(*sockp));
 
-	isc_nmsocket_t *sock = *sockp, *rsock = NULL;
+	isc_nmsocket_t *sock = *sockp;
 	*sockp = NULL;
 
-	/*
-	 * If the socket is a part of a set (a child socket) we are
-	 * counting references for the whole set at the parent.
-	 */
-	if (sock->parent != NULL) {
-		rsock = sock->parent;
-		INSIST(rsock->parent == NULL); /* Sanity check */
-	} else {
-		rsock = sock;
-	}
-
-	if (isc_refcount_decrement(&rsock->references) == 1) {
-		isc__nmsocket_prep_destroy(rsock);
+	if (isc_refcount_decrement(&sock->references) == 1) {
+		isc__nmsocket_prep_destroy(sock);
 	}
 }
 
@@ -941,7 +927,6 @@ isc__nmsocket_close(isc_nmsocket_t **sockp) {
 	REQUIRE((*sockp)->type == isc_nm_udplistener ||
 		(*sockp)->type == isc_nm_tcplistener ||
 		(*sockp)->type == isc_nm_tcpdnslistener);
-	REQUIRE(isc_refcount_current(&(*sockp)->references) == 1);
 
 	isc__nmsocket_detach(sockp);
 }
@@ -1091,6 +1076,7 @@ isc__nmhandle_get(isc_nmsocket_t *sock, isc_sockaddr_t *peer,
 		INSIST(VALID_NMHANDLE(handle));
 	}
 
+	fprintf(stderr, "isc__nmhandle_get(): attach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_attach(sock, &handle->sock);
 
 #ifdef NETMGR_TRACE
@@ -1290,6 +1276,7 @@ nmhandle_detach_cb(isc_nmhandle_t **handlep) {
 			 * The socket will be finally detached by the closecb
 			 * event handler.
 			 */
+			fprintf(stderr, "isc_nmhandle_detach(): attach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 			isc__nmsocket_attach(sock, &event->sock);
 			isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
 					       (isc__netievent_t *)event);
@@ -1300,6 +1287,8 @@ nmhandle_detach_cb(isc_nmhandle_t **handlep) {
 		/* statichandle is assigned, not attached. */
 		sock->statichandle = NULL;
 	}
+
+	fprintf(stderr, "isc_nmhandle_detach(): detach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 
 	isc__nmsocket_detach(&sock);
 }
@@ -1368,6 +1357,8 @@ isc__nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock) {
 
 	*req = (isc__nm_uvreq_t){ .magic = 0 };
 	req->uv_req.req.data = req;
+
+	fprintf(stderr, "isc__nm_uvreq_get(): attach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_attach(sock, &req->sock);
 	req->magic = UVREQ_MAGIC;
 
@@ -1405,6 +1396,7 @@ isc__nm_uvreq_put(isc__nm_uvreq_t **req0, isc_nmsocket_t *sock) {
 		isc_nmhandle_detach(&handle);
 	}
 
+	fprintf(stderr, "isc__nm_uvreq_put(): detach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 }
 
@@ -1510,15 +1502,18 @@ isc_nm_stoplistening(isc_nmsocket_t **sockp) {
 void
 isc__nm_async_closecb(isc__networker_t *worker, isc__netievent_t *ev0) {
 	isc__netievent_closecb_t *ievent = (isc__netievent_closecb_t *)ev0;
+	isc_nmsocket_t *sock = ievent->sock;
 
-	REQUIRE(VALID_NMSOCK(ievent->sock));
-	REQUIRE(ievent->sock->tid == isc_nm_tid());
-	REQUIRE(ievent->sock->closehandle_cb != NULL);
+	REQUIRE(VALID_NMSOCK(sock));
+	REQUIRE(sock->tid == isc_nm_tid());
+	REQUIRE(sock->closehandle_cb != NULL);
 
 	UNUSED(worker);
 
-	ievent->sock->closehandle_cb(ievent->sock);
-	isc__nmsocket_detach(&ievent->sock);
+	sock->closehandle_cb(sock);
+
+	fprintf(stderr, "isc__nm_async_closecb(): detach %p->references = %lu\n", sock, isc_refcount_current(&sock->references));
+	isc__nmsocket_detach(&sock);
 }
 
 void

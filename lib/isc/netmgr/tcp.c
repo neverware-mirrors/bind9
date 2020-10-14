@@ -397,7 +397,7 @@ isc__nm_async_tcplisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 	}
 	isc__nm_incstats(csock->mgr, csock->statsindex[STATID_OPEN]);
 
-	/* FIXME: Use attach here? */
+	isc__nmsocket_attach(ssock, &csock->parent);
 	uv_handle_set_data(&csock->uv_handle.handle, csock);
 
 	if (sa_family == AF_INET6) {
@@ -460,7 +460,6 @@ isc__nm_async_tcplisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 	}
 
 	csock->pquota = ssock->pquota;
-	csock->parent = ssock;
 	ssock->children[tid] = csock;
 	REQUIRE(csock->parent != NULL);
 	atomic_store(&csock->listening, true);
@@ -571,8 +570,6 @@ isc__nm_async_tcpstop(isc__networker_t *worker, isc__netievent_t *ev0) {
 	REQUIRE(sock->type == isc_nm_tcpsocket);
 	REQUIRE(sock->tid == isc_nm_tid());
 
-	sock->parent = NULL;
-
 	uv_close((uv_handle_t *)&sock->uv_handle.tcp, tcp_stop_cb);
 	isc__nm_incstats(sock->mgr, sock->statsindex[STATID_CLOSE]);
 }
@@ -588,6 +585,11 @@ tcp_stop_cb(uv_handle_t *handle) {
 	atomic_store(&sock->closed, true);
 	atomic_store(&sock->listening, false);
 	sock->pquota = NULL;
+
+	/* Detach from parent socket */
+	isc__nmsocket_detach(&sock->parent);
+
+	/* Detach the last reference to child socket to destroy it */
 	isc__nmsocket_detach(&sock);
 }
 
@@ -914,12 +916,12 @@ accept_tcp_child(isc_nmsocket_t *csock) {
 	accept_cb = csock->accept_cb;
 	accept_cbarg = csock->accept_cbarg;
 
-	fprintf(stderr, "accept_tcp_child: %p->references\n", csock, atomic_load(&csock->references));
+	fprintf(stderr, "accept_tcp_child: %p->references = %lu\n", csock, atomic_load(&csock->references));
 
 	csock->read_timeout = csock->mgr->init;
 	accept_cb(handle, ISC_R_SUCCESS, accept_cbarg);
 
-	fprintf(stderr, "accept_tcp_child: %p->references\n", csock, atomic_load(&csock->references));
+	fprintf(stderr, "accept_tcp_child: %p->references = %lu\n", csock, atomic_load(&csock->references));
 
 	/*
 	 * csock is now attached to the handle.
@@ -1092,15 +1094,9 @@ isc__nm_async_tcpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
 
 	REQUIRE(worker->id == ievent->sock->tid);
 
-	if (isc__nmsocket_active(ievent->sock)) {
-		result = tcp_send_direct(ievent->sock, ievent->req);
-		if (result != ISC_R_SUCCESS) {
-			ievent->req->cb.send(ievent->req->handle, result,
-					     ievent->req->cbarg);
-			isc__nm_uvreq_put(&ievent->req, ievent->req->handle->sock);
-		}
-	} else {
-		ievent->req->cb.send(ievent->req->handle, ISC_R_CANCELED,
+	result = tcp_send_direct(ievent->sock, ievent->req);
+	if (result != ISC_R_SUCCESS) {
+		ievent->req->cb.send(ievent->req->handle, result,
 				     ievent->req->cbarg);
 		isc__nm_uvreq_put(&ievent->req, ievent->req->handle->sock);
 	}
@@ -1112,6 +1108,11 @@ tcp_send_direct(isc_nmsocket_t *sock, isc__nm_uvreq_t *req) {
 
 	REQUIRE(sock->tid == isc_nm_tid());
 	REQUIRE(sock->type == isc_nm_tcpsocket);
+
+	if (!isc__nmsocket_active(sock)) {
+		return (ISC_R_CANCELED);
+	}
+
 	r = uv_write(&req->uv_req.write, &sock->uv_handle.stream, &req->uvbuf,
 		     1, tcp_send_cb);
 	if (r < 0) {
@@ -1134,7 +1135,7 @@ tcp_close_cb(uv_handle_t *uvhandle) {
 	atomic_store(&sock->closed, true);
 	atomic_store(&sock->connected, false);
 
-	fprintf(stderr, "tcp_close_cb(): detaching from %p->references = %u\n",
+	fprintf(stderr, "tcp_close_cb(): detaching from %p->references = %lu\n",
 		sock, atomic_load(&sock->references));
 
 	isc__nmsocket_prep_destroy(sock);

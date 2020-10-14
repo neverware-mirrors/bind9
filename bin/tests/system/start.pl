@@ -231,6 +231,9 @@ sub construct_ns_command {
 		}
 
 		$command .= "$NAMED -m none -M external ";
+	} elsif ($ENV{'USE_RR'}) {
+		$command = "rr record ";
+		$command .= "$NAMED -m none -M external ";
 	} else {
 		$command = "$NAMED ";
 	}
