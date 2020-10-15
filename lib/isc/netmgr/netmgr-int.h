@@ -73,13 +73,14 @@ isc__nm_dump_active(isc_nm_t *nm);
 #endif
 
 #define NETMGR_TRACE_LOG(format, ...)					\
-	fprintf(stderr, "%" PRIu32 ":%s:%lu:" format, gettid(), file, line, __VA_ARGS__)
+	fprintf(stderr, "%" PRIu32 ":%s:%u:" format, gettid(), file, line, __VA_ARGS__)
 
 #define FLARG_PASS , file, line
 #define FLARG	   , const char *file, unsigned int line
-#define FLARG_IEVENT \
-	const char *file = ievent->file; \
-	unsigned int line = ievent->line
+#define FLARG_IEVENT(ievent)						\
+	const char *file = ievent->file; unsigned int line = ievent->line;
+#define FLARG_IEVENT_PASS(ievent)			\
+	ievent->file = file; ievent->line = line;
 #define isc__nm_uvreq_get(sock) \
 	isc___nm_uvreq_get(sock, __FILE__, __LINE__)
 #define isc__nm_uvreq_put(req) \
@@ -97,7 +98,8 @@ isc__nm_dump_active(isc_nm_t *nm);
 #else
 #define FLARG_PASS
 #define FLARG
-#define FLARG_IEVENT
+#define FLARG_IEVENT(ievent)
+#define FLARG_IEVENT_PASS(ievent)
 #define isc__nm_uvreq_get(sock) \
 	isc___nm_uvreq_get(sock)
 #define isc__nm_uvreq_put(req) \
@@ -204,6 +206,8 @@ typedef enum isc__netievent_type {
 	netievent_shutdown,
 	netievent_stop,
 	netievent_pause,
+	netievent_detachhandle,
+	netievent_detachsocket,
 
 	netievent_prio = 0xff, /* event type values higher than this
 				* will be treated as high-priority
@@ -213,7 +217,6 @@ typedef enum isc__netievent_type {
 	netievent_udplisten,
 	netievent_tcplisten,
 	netievent_resume,
-	netievent_detach,
 } isc__netievent_type;
 
 typedef union {

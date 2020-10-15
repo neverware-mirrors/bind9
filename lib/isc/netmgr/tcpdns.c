@@ -553,6 +553,7 @@ isc__nm_async_tcpdnssend(isc__networker_t *worker, isc__netievent_t *ev0) {
 		isc_mem_put(sock->mgr->mctx, req->uvbuf.base, req->uvbuf.len);
 		isc__nm_uvreq_put(&req);
 	}
+	isc__nmsocket_detach(&ievent->sock);
 }
 
 /*
@@ -599,8 +600,8 @@ isc__nm_tcpdns_send(isc_nmhandle_t *handle, isc_region_t *region,
 		isc__netievent_tcpdnssend_t *ievent = NULL;
 
 		ievent = isc__nm_get_ievent(sock->mgr, netievent_tcpdnssend);
+		isc__nmsocket_attach(sock, &ievent->sock);
 		ievent->req = uvreq;
-		ievent->sock = sock;
 
 		isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
 				       (isc__netievent_t *)ievent);
@@ -655,8 +656,7 @@ isc__nm_tcpdns_close(isc_nmsocket_t *sock) {
 	} else {
 		isc__netievent_tcpdnsclose_t *ievent =
 			isc__nm_get_ievent(sock->mgr, netievent_tcpdnsclose);
-
-		ievent->sock = sock;
+		isc__nmsocket_attach(sock, &ievent->sock);
 		isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
 				       (isc__netievent_t *)ievent);
 	}
@@ -670,4 +670,5 @@ isc__nm_async_tcpdnsclose(isc__networker_t *worker, isc__netievent_t *ev0) {
 	REQUIRE(worker->id == ievent->sock->tid);
 
 	tcpdns_close_direct(ievent->sock);
+	isc__nmsocket_detach(&ievent->sock);
 }
