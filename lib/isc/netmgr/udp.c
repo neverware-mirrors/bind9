@@ -81,7 +81,6 @@ isc_nm_listenudp(isc_nm_t *mgr, isc_nmiface_t *iface, isc_nm_recv_cb_t cb,
 		isc__netievent_udplisten_t *ievent = NULL;
 		isc_nmsocket_t *csock = nsock->children[i] =
 			isc__nmsocket_get(mgr, isc_nm_udpsocket, iface);
-		fprintf(stderr, "isc_nm_listenudp(): %lu isc__nmsocket_attach(%p)->references = %lu\n", syscall(SYS_gettid), nsock, isc_refcount_current(&nsock->references));
 		isc__nmsocket_attach(nsock, &csock->parent);
 		csock->tid = i;
 		csock->extrahandlesize = extrahandlesize;
@@ -334,7 +333,6 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 	 * to ensure it won't be destroyed by the recv callback.
 	 */
 	sock = uv_handle_get_data((uv_handle_t *)handle);
-	fprintf(stderr, "udp_recv_cb(): %lu isc__nmsocket_attach(%p)->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	sock = NULL;
 	isc__nmsocket_attach(uv_handle_get_data((uv_handle_t *)handle), &sock);
 
@@ -359,7 +357,6 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 		if (free_buf) {
 			isc__nm_free_uvbuf(sock, buf);
 		}
-		fprintf(stderr, "udp_recv_cb(): %lu isc__nmsocket_detach(%p)->references = %lu, addr = %p, maxudp = %u, active = %s\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references), addr, maxudp, isc__nmsocket_active(sock)?"true":"false");
 		isc__nmsocket_detach(&sock);
 		return;
 	}
@@ -384,14 +381,12 @@ udp_recv_cb(uv_udp_t *handle, ssize_t nrecv, const uv_buf_t *buf,
 	/*
 	 * The sock is now attached to the handle, we can detach our ref.
 	 */
-	fprintf(stderr, "udp_recv_cb(): %lu isc__nmsocket_detach(%p)->references = %lu\n", syscall(SYS_gettid), sock, isc_refcount_current(&sock->references));
 	isc__nmsocket_detach(&sock);
 
 	/*
 	 * If the recv callback wants to hold on to the handle,
 	 * it needs to attach to it.
 	 */
-	fprintf(stderr, "udp_recv_cb(): %lu isc__nmhandle_detach(%p)->references = %lu\n", syscall(SYS_gettid), nmhandle, isc_refcount_current(&nmhandle->references));
 	isc_nmhandle_detach(&nmhandle);
 }
 

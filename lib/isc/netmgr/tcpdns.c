@@ -136,8 +136,6 @@ dnslisten_acceptcb(isc_nmhandle_t *handle, isc_result_t result, void *cbarg) {
 	dnssock = isc__nmsocket_get(handle->sock->mgr, isc_nm_tcpdnssocket,
 				    handle->sock->iface);
 
-	fprintf(stderr, "dnslisten_acceptcb(): dnssock = %p\n", dnssock);
-
 	dnssock->extrahandlesize = dnslistensock->extrahandlesize;
 	isc__nmsocket_attach(dnslistensock, &dnssock->listener);
 
@@ -572,7 +570,7 @@ isc__nm_tcpdns_send(isc_nmhandle_t *handle, isc_region_t *region,
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(sock->type == isc_nm_tcpdnssocket);
 
-	uvreq = isc__nm_uvreq_get(sock->mgr, sock);
+	uvreq = isc__nm_uvreq_get(sock);
 	isc_nmhandle_attach(handle, &uvreq->handle);
 	uvreq->cb.send = cb;
 	uvreq->cbarg = cbarg;

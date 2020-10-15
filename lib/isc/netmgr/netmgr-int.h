@@ -63,6 +63,55 @@
 void
 isc__nm_dump_active(isc_nm_t *nm);
 
+#if defined(__linux__)
+#include <syscall.h>
+#define gettid() (uint32_t)syscall(SYS_gettid)
+#elif defined(_WIN32)
+#define gettid() (uint32_t)GetCurrentThreadId()
+#else
+#define gettid() (uint32_t)pthread_self();
+#endif
+
+#define NETMGR_TRACE_LOG(format, ...)					\
+	fprintf(stderr, "%" PRIu32 ":%s:%lu:" format, gettid(), file, line, __VA_ARGS__)
+
+#define FLARG_PASS , file, line
+#define FLARG	   , const char *file, unsigned int line
+#define FLARG_IEVENT \
+	const char *file = ievent->file; \
+	unsigned int line = ievent->line
+#define isc__nm_uvreq_get(sock) \
+	isc___nm_uvreq_get(sock, __FILE__, __LINE__)
+#define isc__nm_uvreq_put(req) \
+	isc___nm_uvreq_put(req, __FILE__, __LINE__)
+#define isc__nmsocket_put(sockp) \
+	isc___nmsocket_put(sockp, __FILE__, __LINE__)
+#define isc__nmsocket_attach(sock, target) \
+	isc___nmsocket_attach(sock, target, __FILE__, __LINE__)
+#define isc__nmsocket_detach(socketp) \
+	isc___nmsocket_detach(socketp, __FILE__, __LINE__)
+#define isc__nmsocket_close(socketp) \
+	isc___nmsocket_close(socketp, __FILE__, __LINE__)
+#define isc__nm_uverr2result(err) \
+	isc___nm_uverr2result(err, true, __FILE__, __LINE__)
+#else
+#define FLARG_PASS
+#define FLARG
+#define FLARG_IEVENT
+#define isc__nm_uvreq_get(sock) \
+	isc___nm_uvreq_get(sock)
+#define isc__nm_uvreq_put(req) \
+	isc___nm_uvreq_put(req)
+#define isc__nmsocket_put(sockp) \
+	isc___nmsocket_put(sockp)
+#define isc__nmsocket_attach(sock, target) \
+	isc___nmsocket_attach(sock, target)
+#define isc__nmsocket_detach(socketp) \
+	isc___nmsocket_detach(socketp)
+#define isc__nmsocket_close(socketp) \
+	isc___nmsocket_close(socketp)
+#define isc__nm_uverr2result(err) \
+	isc___nm_uverr2result(err, true)
 #endif
 
 /*
@@ -206,9 +255,14 @@ typedef struct isc__nm_uvreq {
 	} uv_req;
 } isc__nm_uvreq_t;
 
+#define NETIEVENT__SOCKET			\
+	isc__netievent_type type;		\
+	isc_nmsocket_t *sock;			\
+	const char *file;			\
+	unsigned int line;
+
 typedef struct isc__netievent__socket {
-	isc__netievent_type type;
-	isc_nmsocket_t *sock;
+	NETIEVENT__SOCKET;
 } isc__netievent__socket_t;
 
 typedef isc__netievent__socket_t isc__netievent_udplisten_t;
@@ -222,8 +276,7 @@ typedef isc__netievent__socket_t isc__netievent_closecb_t;
 typedef isc__netievent__socket_t isc__netievent_tcpdnsclose_t;
 
 typedef struct isc__netievent__socket_req {
-	isc__netievent_type type;
-	isc_nmsocket_t *sock;
+	NETIEVENT__SOCKET;
 	isc__nm_uvreq_t *req;
 } isc__netievent__socket_req_t;
 
@@ -232,24 +285,21 @@ typedef isc__netievent__socket_req_t isc__netievent_tcpsend_t;
 typedef isc__netievent__socket_req_t isc__netievent_tcpdnssend_t;
 
 typedef struct isc__netievent__socket_handle {
-	isc__netievent_type type;
-	isc_nmsocket_t *sock;
+	NETIEVENT__SOCKET;
 	isc_nmhandle_t *handle;
 } isc__netievent__socket_handle_t;
 
 typedef isc__netievent__socket_handle_t isc__netievent_detach_t;
 
 typedef struct isc__netievent__socket_quota {
-	isc__netievent_type type;
-	isc_nmsocket_t *sock;
+	NETIEVENT__SOCKET;
 	isc_quota_t *quota;
 } isc__netievent__socket_quota_t;
 
 typedef isc__netievent__socket_quota_t isc__netievent_tcpaccept_t;
 
 typedef struct isc__netievent_udpsend {
-	isc__netievent_type type;
-	isc_nmsocket_t *sock;
+	NETIEVENT__SOCKET;
 	isc_sockaddr_t peer;
 	isc__nm_uvreq_t *req;
 } isc__netievent_udpsend_t;
@@ -596,21 +646,15 @@ isc__nmhandle_get(isc_nmsocket_t *sock, isc_sockaddr_t *peer,
  * to detach the socket afterward.
  */
 
-#define isc__nm_uvreq_get(sock) \
-	isc___nm_uvreq_get(sock, __FILE__, __LINE__)
-
 isc__nm_uvreq_t *
-isc___nm_uvreq_get(isc_nmsocket_t *sock, const char *file, unsigned int line);
+isc___nm_uvreq_get(isc_nmsocket_t *sock FLARG);
 /*%<
  * Get a UV request structure for the socket 'sock', allocating a
  * new one if there isn't one available in 'sock->inactivereqs'.
  */
 
-#define isc__nm_uvreq_put(req) \
-	isc___nm_uvreq_put(req, __FILE__, __LINE__)
-
 void
-isc___nm_uvreq_put(isc__nm_uvreq_t **req, const char *file, unsigned int line);
+isc___nm_uvreq_put(isc__nm_uvreq_t **req FLARG);
 /*%<
  * Completes the use of a UV request structure, setting '*req' to NULL.
  *
@@ -626,36 +670,24 @@ isc__nmsocket_get(isc_nm_t *mgr, isc_nmsocket_type type,
  * and its interface to 'iface'.
  */
 
-#define isc__nmsocket_put(sockp) \
-	isc___nmsocket_put(sockp, __FILE__, __LINE__)
+void
+isc___nmsocket_put(isc_nmsocket_t **sockp FLARG);
 
 void
-isc___nmsocket_put(isc_nmsocket_t **sockp, const char *file, unsigned int line);
-
-#define isc__nmsocket_attach(sock, target) \
-	isc___nmsocket_attach(sock, target, __FILE__, __LINE__)
-
-void
-isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target, const char *file, unsigned int line);
+isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target FLARG);
 /*%<
  * Attach to a socket, increasing refcount
  */
 
-#define isc__nmsocket_detach(socketp) \
-	isc___nmsocket_detach(socketp, __FILE__, __LINE__)
-
 void
-isc___nmsocket_detach(isc_nmsocket_t **socketp, const char *file, unsigned int line);
+isc___nmsocket_detach(isc_nmsocket_t **socketp FLARG);
 /*%<
  * Detach from socket, decreasing refcount and possibly destroying the
  * socket if it's no longer referenced.
  */
 
-#define isc__nmsocket_close(socketp) \
-	isc___nmsocket_close(socketp, __FILE__, __LINE__)
-
 void
-isc___nmsocket_close(isc_nmsocket_t **socketp, const char *file, unsigned int line);
+isc___nmsocket_close(isc_nmsocket_t **socketp FLARG);
 /*%<
  * Close from listening socket, this must be the last reference to it.
  */
@@ -807,11 +839,8 @@ isc__nm_async_tcpdnsclose(isc__networker_t *worker, isc__netievent_t *ev0);
 void
 isc__nm_async_tcpdnssend(isc__networker_t *worker, isc__netievent_t *ev0);
 
-#define isc__nm_uverr2result(x) \
-	isc___nm_uverr2result(x, true, __FILE__, __LINE__)
 isc_result_t
-isc___nm_uverr2result(int uverr, bool dolog, const char *file,
-		      unsigned int line);
+isc___nm_uverr2result(int uverr, bool dolog FLARG);
 /*%<
  * Convert a libuv error value into an isc_result_t.  The
  * list of supported error values is not complete; new users

@@ -12,7 +12,6 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <uv.h>
-#include <syscall.h>
 
 #include <isc/atomic.h>
 #include <isc/buffer.h>
@@ -36,6 +35,7 @@
 
 #ifdef NETMGR_TRACE
 #include <execinfo.h>
+#include <syscall.h>
 #endif
 
 /*%
@@ -150,7 +150,7 @@ static void
 isc__nm_async_detach(isc__networker_t *worker, isc__netievent_t *ev0);
 
 static void
-nmhandle_detach_cb(isc_nmhandle_t **handlep);
+nmhandle_detach_cb(isc_nmhandle_t **handlep FLARG);
 
 int
 isc_nm_tid(void) {
@@ -724,13 +724,13 @@ isc__nmsocket_active(isc_nmsocket_t *sock) {
 }
 
 void
-isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target, const char *file, unsigned int line) {
+isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target FLARG) {
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(target != NULL && *target == NULL);
 	uint_fast32_t refs;
 
 	refs = isc_refcount_increment(&sock->references);
-	fprintf(stderr, "%u:%s:%u:isc__nmsocket_attach(%p, %p)->references = %lu\n", syscall(SYS_gettid), file, line,
+	NETMGR_TRACE_LOG("isc__nmsocket_attach(%p, %p)->references = %" PRIuFAST32 "\n", syscall(SYS_gettid), file, line,
 		sock, &sock->uv_handle, refs);
 
 	*target = sock;
@@ -748,7 +748,7 @@ isc___nmsocket_attach(isc_nmsocket_t *sock, isc_nmsocket_t **target, const char 
  * Free all resources inside a socket (including its children if any).
  */
 void
-isc___nmsocket_put(isc_nmsocket_t **sockp, const char *file, unsigned int line) {
+isc___nmsocket_put(isc_nmsocket_t **sockp FLARG) {
 	isc_nmsocket_t *sock = *sockp;
 	isc_nmhandle_t *handle = NULL;
 	isc__nm_uvreq_t *uvreq = NULL;
@@ -770,11 +770,11 @@ isc___nmsocket_put(isc_nmsocket_t **sockp, const char *file, unsigned int line) 
 	sock->statichandle = NULL;
 
 	if (sock->outerhandle != NULL) {
-		isc__nmhandle_detach(&sock->outerhandle, file, line);
+		isc__nmhandle_detach(&sock->outerhandle FLARG_PASS);
 	}
 
 	if (sock->outer != NULL) {
-		isc___nmsocket_detach(&sock->outer, file, line);
+		isc___nmsocket_detach(&sock->outer FLARG_PASS);
 	}
 
 	while ((handle = isc_astack_pop(sock->inactivehandles)) != NULL) {
@@ -914,7 +914,7 @@ isc__nmsocket_prep_destroy(isc_nmsocket_t *sock) {
 }
 
 void
-isc___nmsocket_detach(isc_nmsocket_t **sockp, const char *file, unsigned int line) {
+isc___nmsocket_detach(isc_nmsocket_t **sockp FLARG) {
 	REQUIRE(sockp != NULL && *sockp != NULL);
 	REQUIRE(VALID_NMSOCK(*sockp));
 
@@ -924,8 +924,8 @@ isc___nmsocket_detach(isc_nmsocket_t **sockp, const char *file, unsigned int lin
 	uint_fast32_t refs;
 
 	refs = isc_refcount_decrement(&sock->references);
-	fprintf(stderr, "%u:%s:%u:nmsocket_detach(%p, %p)->references = %lu\n", syscall(SYS_gettid), file, line,
-		sock, &sock->uv_handle, refs);
+	NETMGR_TRACE_LOG("nmsocket_detach(%p, %p)->references = %" PRIuFAST32 "\n",
+			 sock, &sock->uv_handle, refs);
 
 	if (refs == 1) {
 		isc__nmsocket_prep_destroy(sock);
@@ -933,14 +933,14 @@ isc___nmsocket_detach(isc_nmsocket_t **sockp, const char *file, unsigned int lin
 }
 
 void
-isc___nmsocket_close(isc_nmsocket_t **sockp, const char *file, unsigned int line) {
+isc___nmsocket_close(isc_nmsocket_t **sockp FLARG) {
 	REQUIRE(sockp != NULL);
 	REQUIRE(VALID_NMSOCK(*sockp));
 	REQUIRE((*sockp)->type == isc_nm_udplistener ||
 		(*sockp)->type == isc_nm_tcplistener ||
 		(*sockp)->type == isc_nm_tcpdnslistener);
 
-	isc___nmsocket_detach(sockp, file, line);
+	isc___nmsocket_detach(sockp FLARG_PASS);
 }
 
 isc_nmsocket_t *
@@ -1157,13 +1157,13 @@ isc__nmhandle_get(isc_nmsocket_t *sock, isc_sockaddr_t *peer,
 }
 
 void
-isc__nmhandle_attach(isc_nmhandle_t *handle, isc_nmhandle_t **handlep, const char *file, unsigned int line) {
+isc__nmhandle_attach(isc_nmhandle_t *handle, isc_nmhandle_t **handlep FLARG) {
 	REQUIRE(VALID_NMHANDLE(handle));
 	REQUIRE(handlep != NULL && *handlep == NULL);
 	uint_fast32_t refs;
 
 	refs = isc_refcount_increment(&handle->references);
-	fprintf(stderr, "%u:%s:%u:isc__nmhandle_attach(%p)->references = %lu\n", syscall(SYS_gettid), file, line,
+	NETMGR_TRACE_LOG("isc__nmhandle_attach(%p)->references = %" PRIuFAST32 "\n", syscall(SYS_gettid), file, line,
 		handle, refs);
 	*handlep = handle;
 }
@@ -1225,7 +1225,7 @@ nmhandle_deactivate(isc_nmsocket_t *sock, isc_nmhandle_t *handle) {
 }
 
 void
-isc__nmhandle_detach(isc_nmhandle_t **handlep, const char *file, unsigned int line) {
+isc__nmhandle_detach(isc_nmhandle_t **handlep FLARG) {
 	isc_nmsocket_t *sock = NULL;
 	isc_nmhandle_t *handle = NULL;
 	uint_fast32_t refs;
@@ -1236,9 +1236,13 @@ isc__nmhandle_detach(isc_nmhandle_t **handlep, const char *file, unsigned int li
 	handle = *handlep;
 	*handlep = NULL;
 
+	refs = isc_refcount_current(&handle->references);
+	NETMGR_TRACE_LOG("isc__nmhandle_detach(%p)->references = %" PRIuFAST32 "\n", syscall(SYS_gettid), file, line,
+		handle, refs);
+
 	sock = handle->sock;
 	if (sock->tid == isc_nm_tid()) {
-		nmhandle_detach_cb(&handle);
+		nmhandle_detach_cb(&handle FLARG_PASS);
 	} else {
 		isc__netievent_detach_t *event =
 			isc__nm_get_ievent(sock->mgr, netievent_detach);
@@ -1250,23 +1254,8 @@ isc__nmhandle_detach(isc_nmhandle_t **handlep, const char *file, unsigned int li
 }
 
 static void
-nmhandle_detach_cb(isc_nmhandle_t **handlep) {
+nmhandle_destroy(isc_nmhandle_t *handle FLARG) {
 	isc_nmsocket_t *sock = NULL;
-	isc_nmhandle_t *handle = NULL;
-
-	REQUIRE(handlep != NULL);
-	REQUIRE(VALID_NMHANDLE(*handlep));
-
-	handle = *handlep;
-	*handlep = NULL;
-
-	refs = isc_refcount_decrement(&handle->references);
-	fprintf(stderr, "%u:%s:%u:isc__nmhandle_detach(%p)->references = %lu\n", syscall(SYS_gettid), file, line,
-		handle, refs);
-
-	if (refs > 1) {
-		return;
-	}
 
 	/* We need an acquire memory barrier here */
 	(void)isc_refcount_current(&handle->references);
@@ -1296,6 +1285,8 @@ nmhandle_detach_cb(isc_nmhandle_t **handlep) {
 			 * event handler.
 			 */
 			isc__nmsocket_attach(sock, &event->sock);
+			event->file = file;
+			event->line = line;
 			isc__nm_enqueue_ievent(&sock->mgr->workers[sock->tid],
 					       (isc__netievent_t *)event);
 		}
@@ -1306,7 +1297,22 @@ nmhandle_detach_cb(isc_nmhandle_t **handlep) {
 		sock->statichandle = NULL;
 	}
 
-	isc___nmsocket_detach(&sock, file, line);
+	isc___nmsocket_detach(&sock FLARG_PASS);
+}
+
+static void
+nmhandle_detach_cb(isc_nmhandle_t **handlep FLARG) {
+	isc_nmhandle_t *handle = NULL;
+
+	REQUIRE(handlep != NULL);
+	REQUIRE(VALID_NMHANDLE(*handlep));
+
+	handle = *handlep;
+	*handlep = NULL;
+
+	if (isc_refcount_decrement(&handle->references) == 1) {
+		nmhandle_destroy(handle FLARG_PASS);
+	}
 }
 
 void *
@@ -1356,7 +1362,7 @@ isc_nmhandle_netmgr(isc_nmhandle_t *handle) {
 }
 
 isc__nm_uvreq_t *
-isc___nm_uvreq_get(isc_nmsocket_t *sock, const char *file, unsigned int line) {
+isc___nm_uvreq_get(isc_nmsocket_t *sock FLARG) {
 	isc__nm_uvreq_t *req = NULL;
 
 	REQUIRE(VALID_NMSOCK(sock));
@@ -1374,14 +1380,14 @@ isc___nm_uvreq_get(isc_nmsocket_t *sock, const char *file, unsigned int line) {
 	*req = (isc__nm_uvreq_t){ .magic = 0 };
 	req->uv_req.req.data = req;
 
-	isc___nmsocket_attach(sock, &req->sock, file, line);
+	isc___nmsocket_attach(sock, &req->sock FLARG_PASS);
 	req->magic = UVREQ_MAGIC;
 
 	return (req);
 }
 
 void
-isc___nm_uvreq_put(isc__nm_uvreq_t **req0, const char *file, unsigned int line) {
+isc___nm_uvreq_put(isc__nm_uvreq_t **req0 FLARG) {
 	isc__nm_uvreq_t *req = NULL;
 	isc_nmhandle_t *handle = NULL;
 	isc_nmsocket_t *sock = NULL;
@@ -1405,10 +1411,10 @@ isc___nm_uvreq_put(isc__nm_uvreq_t **req0, const char *file, unsigned int line) 
 	}
 
 	if (handle != NULL) {
-		isc__nmhandle_detach(&handle, file, line);
+		isc__nmhandle_detach(&handle FLARG_PASS);
 	}
 
-	isc___nmsocket_detach(&sock, file, line);
+	isc___nmsocket_detach(&sock FLARG_PASS);
 }
 
 isc_result_t
@@ -1514,6 +1520,7 @@ void
 isc__nm_async_closecb(isc__networker_t *worker, isc__netievent_t *ev0) {
 	isc__netievent_closecb_t *ievent = (isc__netievent_closecb_t *)ev0;
 	isc_nmsocket_t *sock = ievent->sock;
+	FLARG_IEVENT;
 
 	REQUIRE(VALID_NMSOCK(sock));
 	REQUIRE(sock->tid == isc_nm_tid());
@@ -1523,12 +1530,14 @@ isc__nm_async_closecb(isc__networker_t *worker, isc__netievent_t *ev0) {
 
 	sock->closehandle_cb(sock);
 
-	isc__nmsocket_detach(&sock);
+	isc___nmsocket_detach(&sock FLARG_PASS);
 }
 
 void
 isc__nm_async_detach(isc__networker_t *worker, isc__netievent_t *ev0) {
 	isc__netievent_detach_t *ievent = (isc__netievent_detach_t *)ev0;
+	const char *file = ievent->file;
+	unsigned int line = ievent->line;
 
 	REQUIRE(VALID_NMSOCK(ievent->sock));
 	REQUIRE(ievent->sock->tid == isc_nm_tid());
@@ -1536,8 +1545,8 @@ isc__nm_async_detach(isc__networker_t *worker, isc__netievent_t *ev0) {
 
 	UNUSED(worker);
 
-	isc__nmsocket_detach(&ievent->sock);
-	nmhandle_detach_cb(&ievent->handle);
+	isc___nmsocket_detach(&ievent->sock FLARG_PASS);
+	nmhandle_detach_cb(&ievent->handle FLARG_PASS);
 }
 
 static void
@@ -1818,7 +1827,7 @@ static void
 nmhandle_dump(isc_nmhandle_t *handle) {
 	fprintf(stderr, "Active handle %p, refs %lu\n", handle,
 		isc_refcount_current(&handle->references));
-	fprintf(stderr, "Created by:\%lu n");
+	fprintf(stderr, "Created by:\n");
 	backtrace_symbols_fd(handle->backtrace, handle->backtrace_size,
 			     STDERR_FILENO);
 	fprintf(stderr, "\n\n");
