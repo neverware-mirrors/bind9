@@ -258,7 +258,7 @@ stop_udp_parent(isc_nmsocket_t *sock) {
 		if (csock != NULL) {
 			REQUIRE(VALID_NMSOCK(csock));
 
-			atomic_store(&sock->active, false);
+			atomic_store(&csock->active, false);
 
 			sock->children[i] = NULL;
 
@@ -266,6 +266,8 @@ stop_udp_parent(isc_nmsocket_t *sock) {
 			isc__nmsocket_attach(csock, &event->sock);
 			isc__nm_enqueue_ievent(&sock->mgr->workers[i],
 					       (isc__netievent_t *)event);
+		} else {
+			atomic_fetch_sub(&sock->rchildren, 1);
 		}
 	}
 
@@ -463,7 +465,8 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 			uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
 			isc__nm_uvreq_put(&uvreq); /* DETACH UVREQ 1 */
 		}
-		return (result);
+		/* We emulate returning the error via the callback */
+		return (ISC_R_SUCCESS);
 	}
 
 	/*

@@ -512,7 +512,7 @@ stop_tcp_parent(isc_nmsocket_t *sock) {
 		if (csock != NULL) {
 			REQUIRE(VALID_NMSOCK(csock));
 
-			atomic_store(&sock->active, false);
+			atomic_store(&csock->active, false);
 
 			sock->children[i] = NULL;
 
@@ -520,8 +520,17 @@ stop_tcp_parent(isc_nmsocket_t *sock) {
 			isc__nmsocket_attach(csock, &ievent->sock);
 			isc__nm_enqueue_ievent(&sock->mgr->workers[i],
 					       (isc__netievent_t *)ievent);
+		} else {
+			atomic_fetch_sub(&sock->rchildren, 1);
 		}
 	}
+
+	LOCK(&sock->lock);
+	while (sock->rchildren > 0) {
+		WAIT(&sock->cond, &sock->lock);
+	}
+	UNLOCK(&sock->lock);
+
 	/*
 	 * This was a parent socket; free the children.
 	 */
