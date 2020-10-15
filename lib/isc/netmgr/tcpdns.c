@@ -521,7 +521,7 @@ tcpdnssend_cb(isc_nmhandle_t *handle, isc_result_t result, void *cbarg) {
 
 	req->cb.send(req->handle, result, req->cbarg);
 	isc_mem_put(req->sock->mgr->mctx, req->uvbuf.base, req->uvbuf.len);
-	isc__nm_uvreq_put(&req, req->handle->sock);
+	isc__nm_uvreq_put(&req);
 	isc_nmhandle_detach(&handle);
 }
 
@@ -553,7 +553,7 @@ isc__nm_async_tcpdnssend(isc__networker_t *worker, isc__netievent_t *ev0) {
 	if (result != ISC_R_SUCCESS) {
 		req->cb.send(req->handle, result, req->cbarg);
 		isc_mem_put(sock->mgr->mctx, req->uvbuf.base, req->uvbuf.len);
-		isc__nm_uvreq_put(&req, sock);
+		isc__nm_uvreq_put(&req);
 	}
 }
 

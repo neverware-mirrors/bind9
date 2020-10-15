@@ -465,7 +465,7 @@ isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 		return (ISC_R_CANCELED);
 	}
 
-	uvreq = isc__nm_uvreq_get(sock->mgr, rsock);
+	uvreq = isc__nm_uvreq_get(rsock);
 	uvreq->uvbuf.base = (char *)region->base;
 	uvreq->uvbuf.len = region->length;
 
@@ -510,7 +510,7 @@ udp_send_cb(uv_udp_send_t *req, int status) {
 	}
 
 	uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
-	isc__nm_uvreq_put(&uvreq, uvreq->sock);
+	isc__nm_uvreq_put(&uvreq);
 }
 
 /*
@@ -529,7 +529,7 @@ isc__nm_async_udpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
 	result = udp_send_direct(sock, uvreq, &ievent->peer);
 	if (result != ISC_R_SUCCESS) {
 		uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
-		isc__nm_uvreq_put(&uvreq, uvreq->sock);
+		isc__nm_uvreq_put(&uvreq);
 	}
 }
 

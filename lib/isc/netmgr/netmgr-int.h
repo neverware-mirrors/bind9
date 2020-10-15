@@ -596,21 +596,21 @@ isc__nmhandle_get(isc_nmsocket_t *sock, isc_sockaddr_t *peer,
  * to detach the socket afterward.
  */
 
-#define isc__nm_uvreq_get(mgr, sock) \
-	isc___nm_uvreq_get(mgr, sock, __FILE__, __LINE__)
+#define isc__nm_uvreq_get(sock) \
+	isc___nm_uvreq_get(sock, __FILE__, __LINE__)
 
 isc__nm_uvreq_t *
-isc___nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock, const char *file, unsigned int line);
+isc___nm_uvreq_get(isc_nmsocket_t *sock, const char *file, unsigned int line);
 /*%<
  * Get a UV request structure for the socket 'sock', allocating a
  * new one if there isn't one available in 'sock->inactivereqs'.
  */
 
-#define isc__nm_uvreq_put(mgr, sock) \
-	isc___nm_uvreq_put(mgr, sock, __FILE__, __LINE__)
+#define isc__nm_uvreq_put(req) \
+	isc___nm_uvreq_put(req, __FILE__, __LINE__)
 
 void
-isc___nm_uvreq_put(isc__nm_uvreq_t **req, isc_nmsocket_t *sock, const char *file, unsigned int line);
+isc___nm_uvreq_put(isc__nm_uvreq_t **req, const char *file, unsigned int line);
 /*%<
  * Completes the use of a UV request structure, setting '*req' to NULL.
  *

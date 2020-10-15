@@ -1356,11 +1356,11 @@ isc_nmhandle_netmgr(isc_nmhandle_t *handle) {
 }
 
 isc__nm_uvreq_t *
-isc___nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock, const char *file, unsigned int line) {
+isc___nm_uvreq_get(isc_nmsocket_t *sock, const char *file, unsigned int line) {
 	isc__nm_uvreq_t *req = NULL;
 
-	REQUIRE(VALID_NM(mgr));
 	REQUIRE(VALID_NMSOCK(sock));
+	REQUIRE(VALID_NM(sock->mgr));
 
 	if (sock != NULL && atomic_load(&sock->active)) {
 		/* Try to reuse one */
@@ -1368,7 +1368,7 @@ isc___nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock, const char *file, unsign
 	}
 
 	if (req == NULL) {
-		req = isc_mempool_get(mgr->reqpool);
+		req = isc_mempool_get(sock->mgr->reqpool);
 	}
 
 	*req = (isc__nm_uvreq_t){ .magic = 0 };
@@ -1381,9 +1381,10 @@ isc___nm_uvreq_get(isc_nm_t *mgr, isc_nmsocket_t *sock, const char *file, unsign
 }
 
 void
-isc___nm_uvreq_put(isc__nm_uvreq_t **req0, isc_nmsocket_t *sock, const char *file, unsigned int line) {
+isc___nm_uvreq_put(isc__nm_uvreq_t **req0, const char *file, unsigned int line) {
 	isc__nm_uvreq_t *req = NULL;
 	isc_nmhandle_t *handle = NULL;
+	isc_nmsocket_t *sock = NULL;
 
 	REQUIRE(req0 != NULL);
 	REQUIRE(VALID_UVREQ(*req0));
@@ -1391,14 +1392,10 @@ isc___nm_uvreq_put(isc__nm_uvreq_t **req0, isc_nmsocket_t *sock, const char *fil
 	req = *req0;
 	*req0 = NULL;
 
-	INSIST(sock == req->sock);
-
 	req->magic = 0;
 
-	/*
-	 * We need to save this first to make sure that handle,
-	 * sock, and the netmgr won't all disappear.
-	 */
+	sock = req->sock;
+	req->sock = NULL;
 	handle = req->handle;
 	req->handle = NULL;
 

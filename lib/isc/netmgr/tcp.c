@@ -135,7 +135,8 @@ isc__nm_async_tcpconnect(isc__networker_t *worker, isc__netievent_t *ev0) {
 	r = tcp_connect_direct(sock, req);
 	if (r != 0) {
 		/* We need to issue callbacks ourselves */
-		tcp_connect_cb(&req->uv_req.connect, r);
+		req->cb.connect(NULL, isc__nm_uverr2result(r), req->cbarg);
+		isc__nm_uvreq_put(&req);
 		goto done;
 	}
 
@@ -161,7 +162,7 @@ tcp_connect_cb(uv_connect_t *uvreq, int status) {
 
 	if (status != 0) {
 		req->cb.connect(NULL, isc__nm_uverr2result(status), req->cbarg);
-		isc__nm_uvreq_put(&req, sock);
+		isc__nm_uvreq_put(&req);
 		return;
 	}
 
@@ -175,7 +176,7 @@ tcp_connect_cb(uv_connect_t *uvreq, int status) {
 	handle = isc__nmhandle_get(sock, NULL, NULL);
 	req->cb.connect(handle, ISC_R_SUCCESS, req->cbarg);
 
-	isc__nm_uvreq_put(&req, sock);
+	isc__nm_uvreq_put(&req);
 
 	atomic_init(&sock->client, true);
 
@@ -208,7 +209,7 @@ isc_nm_tcpconnect(isc_nm_t *mgr, isc_nmiface_t *local, isc_nmiface_t *peer,
 	nsock->extrahandlesize = extrahandlesize;
 	nsock->result = ISC_R_SUCCESS;
 
-	req = isc__nm_uvreq_get(mgr, nsock);
+	req = isc__nm_uvreq_get(nsock);
 	req->cb.connect = cb;
 	req->cbarg = cbarg;
 	req->peer = peer->addr;
@@ -1039,7 +1040,7 @@ isc__nm_tcp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
 		return (ISC_R_CANCELED);
 	}
 
-	uvreq = isc__nm_uvreq_get(sock->mgr, sock);
+	uvreq = isc__nm_uvreq_get(sock);
 	uvreq->uvbuf.base = (char *)region->base;
 	uvreq->uvbuf.len = region->length;
 
@@ -1074,7 +1075,7 @@ tcp_send_cb(uv_write_t *req, int status) {
 	}
 
 	uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
-	isc__nm_uvreq_put(&uvreq, uvreq->sock);
+	isc__nm_uvreq_put(&uvreq);
 }
 
 /*
@@ -1093,7 +1094,7 @@ isc__nm_async_tcpsend(isc__networker_t *worker, isc__netievent_t *ev0) {
 	result = tcp_send_direct(sock, uvreq);
 	if (result != ISC_R_SUCCESS) {
 		uvreq->cb.send(uvreq->handle, result, uvreq->cbarg);
-		isc__nm_uvreq_put(&uvreq, uvreq->sock);
+		isc__nm_uvreq_put(&uvreq);
 	}
 }
 
