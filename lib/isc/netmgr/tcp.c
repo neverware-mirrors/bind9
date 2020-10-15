@@ -525,11 +525,11 @@ stop_tcp_parent(isc_nmsocket_t *sock) {
 		}
 	}
 
-	LOCK(&sock->lock);
-	while (sock->rchildren > 0) {
-		WAIT(&sock->cond, &sock->lock);
-	}
-	UNLOCK(&sock->lock);
+	/* LOCK(&sock->lock); */
+	/* while (sock->rchildren > 0) { */
+	/* 	WAIT(&sock->cond, &sock->lock); */
+	/* } */
+	/* UNLOCK(&sock->lock); */
 
 	/*
 	 * This was a parent socket; free the children.
