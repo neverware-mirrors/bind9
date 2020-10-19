@@ -28,4 +28,5 @@ $DIG $DIGOPTS @10.53.0.1 example.net. a > dig.out || status=1
 digcomp noglue.good dig.out || status=1
 
 echo_i "exit status: $status"
+pkill -11 named
 [ $status -eq 0 ] || exit 1
