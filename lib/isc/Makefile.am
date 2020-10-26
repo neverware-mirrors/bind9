@@ -89,6 +89,7 @@ libisc_la_HEADERS =			\
 	include/isc/timer.h		\
 	include/isc/tm.h		\
 	include/isc/types.h		\
+	include/isc/url.h		\
 	include/isc/utf8.h		\
 	include/isc/util.h		\
 	pthreads/include/isc/condition.h\
@@ -123,6 +124,7 @@ libisc_la_SOURCES =		\
 	$(libisc_la_HEADERS)	\
 	$(pk11_HEADERS)		\
 	$(pkcs11_HEADERS)	\
+	netmgr/http.c		\
 	netmgr/netmgr-int.h	\
 	netmgr/netmgr.c		\
 	netmgr/tcp.c		\
@@ -149,6 +151,7 @@ libisc_la_SOURCES =		\
 	unix/stdtime.c		\
 	unix/syslog.c		\
 	unix/time.c		\
+	url.c			\
 	pk11.c			\
 	pk11_result.c		\
 	aes.c			\
