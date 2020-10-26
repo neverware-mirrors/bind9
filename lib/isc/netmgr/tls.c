@@ -659,7 +659,9 @@ isc_nm_tlsconnect(isc_nm_t *mgr, isc_nmiface_t *local, isc_nmiface_t *peer,
 	nsock->connect_cbarg = cbarg;
 	nsock->connect_timeout = timeout;
 	nsock->tls.ctx = ctx;
-	/* We need to initialize SSL now to reference SSL_CTX properly
+
+	/*
+	 * We need to initialize SSL now to reference SSL_CTX properly.
 	 */
 	nsock->tls.ssl = SSL_new(nsock->tls.ctx);
 	if (nsock->tls.ssl == NULL) {
@@ -744,8 +746,10 @@ isc__nm_async_tlsconnect(isc__networker_t *worker, isc__netievent_t *ev0) {
 				   tls_connect_cb, tlssock,
 				   tlssock->connect_timeout, 0);
 	if (result != ISC_R_SUCCESS) {
-		/* FIXME: We need to pass valid handle */
-		tlssock->connect_cb(NULL, result, tlssock->connect_cbarg);
+		isc_nmhandle_t *tlshandle = isc__nmhandle_get(tlssock, NULL,
+							      NULL);
+		tlssock->connect_cb(tlshandle, result, tlssock->connect_cbarg);
+		isc_nmhandle_detach(&tlshandle);
 		atomic_store(&tlssock->result, result);
 		atomic_store(&tlssock->connect_error, true);
 		tls_close_direct(tlssock);
