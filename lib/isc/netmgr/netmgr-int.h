@@ -66,6 +66,8 @@ isc__nm_dump_active(isc_nm_t *nm);
 
 #endif
 
+typedef struct isc_nm_http2_session isc_nm_http2_session_t;
+
 /*
  * Single network event loop worker.
  */
@@ -116,6 +118,8 @@ struct isc_nmhandle {
 	 */
 	isc_nmsocket_t *sock;
 	size_t ah_pos; /* Position in the socket's 'active handles' array */
+
+	isc_nm_http2_session_t *httpsession;
 
 	isc_sockaddr_t peer;
 	isc_sockaddr_t local;
@@ -190,10 +194,21 @@ typedef enum isc__netievent_type {
 
 typedef union {
 	isc_nm_recv_cb_t recv;
+	isc_nm_http_cb_t http;
 	isc_nm_cb_t send;
 	isc_nm_cb_t connect;
 	isc_nm_accept_cb_t accept;
 } isc__nm_cb_t;
+
+typedef struct isc_nm_http2_server_handler isc_nm_http2_server_handler_t;
+
+struct isc_nm_http2_server_handler {
+	char *path;
+	isc_nm_http_cb_t cb;
+	void *cbarg;
+	size_t extrahandlesize;
+	LINK(isc_nm_http2_server_handler_t) link;
+};
 
 /*
  * Wrapper around uv_req_t with 'our' fields in it.  req->data should
@@ -405,7 +420,9 @@ typedef enum isc_nmsocket_type {
 	isc_nm_tcpdnslistener,
 	isc_nm_tcpdnssocket,
 	isc_nm_tlslistener,
-	isc_nm_tlssocket
+	isc_nm_tlssocket,
+	isc_nm_httplistener,
+	isc_nm_httpstream
 } isc_nmsocket_type;
 
 /*%
@@ -447,12 +464,27 @@ struct isc_nmsocket_tls {
 	ISC_LIST(isc__nm_uvreq_t) sends;
 };
 
+typedef struct isc_nmsocket_h2 isc_nmsocket_h2_t;
+struct isc_nmsocket_h2 {
+	char *request_path;
+	char *query_data;
+	isc_nm_http2_server_handler_t *handler;
+
+	uint8_t buf[65535];
+	size_t bufsize;
+	size_t bufpos;
+
+	int32_t stream_id;
+	LINK(isc_nmsocket_t) link;
+};
+
 struct isc_nmsocket {
 	/*% Unlocked, RO */
 	int magic;
 	int tid;
 	isc_nmsocket_type type;
 	isc_nm_t *mgr;
+
 	/*% Parent socket for multithreaded listeners */
 	isc_nmsocket_t *parent;
 	/*% Listener socket this connection was accepted on */
@@ -463,6 +495,7 @@ struct isc_nmsocket {
 	/*% Type-specific stuff */
 	union {
 		struct isc_nmsocket_tls tls;
+		struct isc_nmsocket_h2 h2;
 	};
 
 	/*%
@@ -643,6 +676,9 @@ struct isc_nmsocket {
 
 	isc_nm_accept_cb_t accept_cb;
 	void *accept_cbarg;
+
+	ISC_LIST(isc_nm_http2_server_handler_t) handlers;
+
 #ifdef NETMGR_TRACE
 	void *backtrace[TRACE_SIZE];
 	int backtrace_size;
@@ -1064,6 +1100,10 @@ isc__nm_tls_resumeread(isc_nmsocket_t *sock);
 
 void
 isc__nm_tls_stoplistening(isc_nmsocket_t *sock);
+
+void
+isc__nm_http_send(isc_nmhandle_t *handle, const isc_region_t *region,
+		  isc_nm_cb_t cb, void *cbarg);
 
 #define isc__nm_uverr2result(x) \
 	isc___nm_uverr2result(x, true, __FILE__, __LINE__)
