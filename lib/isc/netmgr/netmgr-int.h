@@ -430,6 +430,19 @@ enum { STATID_OPEN = 0,
        STATID_RECVFAIL = 9,
        STATID_ACTIVE = 10 };
 
+struct isc_nmsocket_tls {
+	bool server;
+	BIO *app_bio;
+	SSL *ssl;
+	SSL_CTX *ctx;
+	BIO *ssl_bio;
+	enum { TLS_INIT, TLS_HANDSHAKE, TLS_IO, TLS_ERROR, TLS_CLOSING } state;
+	isc_region_t senddata;
+	bool sending;
+	/* List of active send requests. */
+	ISC_LIST(isc__nm_uvreq_t) sends;
+};
+
 struct isc_nmsocket {
 	/*% Unlocked, RO */
 	int magic;
@@ -443,23 +456,10 @@ struct isc_nmsocket {
 	/*% Self, for self-contained unreferenced sockets (tcpdns) */
 	isc_nmsocket_t *self;
 
-	/*% TLS stuff */
-	struct tls {
-		bool server;
-		BIO *app_bio;
-		SSL *ssl;
-		SSL_CTX *ctx;
-		BIO *ssl_bio;
-		enum { TLS_INIT,
-		       TLS_HANDSHAKE,
-		       TLS_IO,
-		       TLS_ERROR,
-		       TLS_CLOSING } state;
-		isc_region_t senddata;
-		bool sending;
-		/* List of active send requests. */
-		ISC_LIST(isc__nm_uvreq_t) sends;
-	} tls;
+	/*% Type-specific stuff */
+	union {
+		struct isc_nmsocket_tls tls;
+	};
 
 	/*%
 	 * quota is the TCP client, attached when a TCP connection
