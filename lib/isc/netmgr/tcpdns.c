@@ -657,7 +657,7 @@ isc__nm_async_tcpdnssend(isc__networker_t *worker, isc__netievent_t *ev0) {
  * isc__nm_tcp_send sends buf to a peer on a socket.
  */
 void
-isc__nm_tcpdns_send(isc_nmhandle_t *handle, isc_region_t *region,
+isc__nm_tcpdns_send(isc_nmhandle_t *handle, const isc_region_t *region,
 		    isc_nm_cb_t cb, void *cbarg) {
 	isc__nm_uvreq_t *uvreq = NULL;
 
