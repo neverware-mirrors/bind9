@@ -1529,7 +1529,7 @@ isc__nm_uvreq_put(isc__nm_uvreq_t **req0, isc_nmsocket_t *sock) {
 }
 
 void
-isc_nm_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
+isc_nm_send(isc_nmhandle_t *handle, const isc_region_t *region, isc_nm_cb_t cb,
 	    void *cbarg) {
 	REQUIRE(VALID_NMHANDLE(handle));
 

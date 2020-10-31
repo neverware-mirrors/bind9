@@ -1177,8 +1177,8 @@ accept_connection(isc_nmsocket_t *ssock, isc_quota_t *quota) {
 }
 
 void
-isc__nm_tcp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
-		 void *cbarg) {
+isc__nm_tcp_send(isc_nmhandle_t *handle, const isc_region_t *region,
+		 isc_nm_cb_t cb, void *cbarg) {
 	isc_nmsocket_t *sock = handle->sock;
 	isc__netievent_tcpsend_t *ievent = NULL;
 	isc__nm_uvreq_t *uvreq = NULL;

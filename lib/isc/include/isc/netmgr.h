@@ -271,7 +271,7 @@ isc_nm_resumeread(isc_nmhandle_t *handle);
  */
 
 void
-isc_nm_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
+isc_nm_send(isc_nmhandle_t *handle, const isc_region_t *region, isc_nm_cb_t cb,
 	    void *cbarg);
 /*%<
  * Send the data in 'region' via 'handle'. Afterward, the callback 'cb' is
