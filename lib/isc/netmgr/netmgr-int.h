@@ -1060,8 +1060,8 @@ isc__nm_async_shutdown(isc__networker_t *worker, isc__netievent_t *ev0);
  */
 
 void
-isc__nm_udp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
-		 void *cbarg);
+isc__nm_udp_send(isc_nmhandle_t *handle, const isc_region_t *region,
+		 isc_nm_cb_t cb, void *cbarg);
 /*%<
  * Back-end implementation of isc_nm_send() for UDP handles.
  */
@@ -1122,8 +1122,8 @@ isc__nm_async_udpclose(isc__networker_t *worker, isc__netievent_t *ev0);
  */
 
 void
-isc__nm_tcp_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
-		 void *cbarg);
+isc__nm_tcp_send(isc_nmhandle_t *handle, const isc_region_t *region,
+		 isc_nm_cb_t cb, void *cbarg);
 /*%<
  * Back-end implementation of isc_nm_send() for TCP handles.
  */
@@ -1290,6 +1290,10 @@ isc__nm_tcpdns_cancelread(isc_nmhandle_t *handle);
  */
 
 void
+isc__nm_tls_send(isc_nmhandle_t *handle, const isc_region_t *region,
+		 isc_nm_cb_t cb, void *cbarg);
+
+void
 isc__nm_tlsdns_send(isc_nmhandle_t *handle, isc_region_t *region,
 		    isc_nm_cb_t cb, void *cbarg);
 /*%<
@@ -1338,10 +1342,6 @@ isc__nm_tlsdns_cancelread(isc_nmhandle_t *handle);
 /*%<
  * Stop reading on a connected TLSDNS handle.
  */
-
-void
-isc__nm_tls_send(isc_nmhandle_t *handle, isc_region_t *region, isc_nm_cb_t cb,
-		 void *cbarg);
 
 void
 isc__nm_tls_read(isc_nmhandle_t *handle, isc_nm_recv_cb_t cb, void *cbarg);
