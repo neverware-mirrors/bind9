@@ -2,6 +2,8 @@
 			of the fetch to determine if a negative trust anchor
 			was still valid failed. [GL #2244]
 
+5526.	[bug]		Fix a race/NULL dereference in TCPDNS read. [GL #2227]
+
 5525.	[bug]		Change 5503 inadvertently broke cross-compilation by
 			replacing a call to AC_LINK_IFELSE() with a call to
 			AC_RUN_IFELSE() in configure.ac.  This has been fixed,
@@ -12,7 +14,7 @@
 			not found.  Subsequent lookups would succeed.
 			[GL #2236]
 
-5522.	[bug]		Fix a race/NULL dereference in TCPDNS. [GL #2227]
+5522.	[bug]		Fix a race/NULL dereference in TCPDNS send. [GL #2227]
 
 5520.	[bug]		Fixed a number of shutdown races, reference counting
 			errors, and spurious log messages that could occur
