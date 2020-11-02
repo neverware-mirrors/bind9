@@ -1183,10 +1183,14 @@ isc__nm_tcp_close(isc_nmsocket_t *sock) {
 void
 isc__nm_async_tcpclose(isc__networker_t *worker, isc__netievent_t *ev0) {
 	isc__netievent_tcpclose_t *ievent = (isc__netievent_tcpclose_t *)ev0;
+	isc_nmsocket_t *sock = ievent->sock;
 
-	REQUIRE(worker->id == ievent->sock->tid);
+	REQUIRE(VALID_NMSOCK(sock));
+	REQUIRE(sock->tid == isc_nm_tid());
 
-	tcp_close_direct(ievent->sock);
+	UNUSED(worker);
+
+	tcp_close_direct(sock);
 }
 
 void
