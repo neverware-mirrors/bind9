@@ -1015,6 +1015,7 @@ no_nsid:
 
 		isc_nm_tcp_gettimeouts(isc_nmhandle_netmgr(client->handle),
 				       NULL, NULL, NULL, &adv);
+		adv /= 100; /* convert from ms to tenths of seconds */
 		isc_buffer_init(&buf, advtimo, sizeof(advtimo));
 		isc_buffer_putuint16(&buf, (uint16_t)adv);
 		ednsopts[count].code = DNS_OPT_TCP_KEEPALIVE;

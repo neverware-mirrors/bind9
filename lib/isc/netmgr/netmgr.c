@@ -452,10 +452,10 @@ isc_nm_tcp_settimeouts(isc_nm_t *mgr, uint32_t init, uint32_t idle,
 		       uint32_t keepalive, uint32_t advertised) {
 	REQUIRE(VALID_NM(mgr));
 
-	mgr->init = init * 100;
-	mgr->idle = idle * 100;
-	mgr->keepalive = keepalive * 100;
-	mgr->advertised = advertised * 100;
+	mgr->init = init;
+	mgr->idle = idle;
+	mgr->keepalive = keepalive;
+	mgr->advertised = advertised;
 }
 
 void
@@ -464,19 +464,19 @@ isc_nm_tcp_gettimeouts(isc_nm_t *mgr, uint32_t *initial, uint32_t *idle,
 	REQUIRE(VALID_NM(mgr));
 
 	if (initial != NULL) {
-		*initial = mgr->init / 100;
+		*initial = mgr->init;
 	}
 
 	if (idle != NULL) {
-		*idle = mgr->idle / 100;
+		*idle = mgr->idle;
 	}
 
 	if (keepalive != NULL) {
-		*keepalive = mgr->keepalive / 100;
+		*keepalive = mgr->keepalive;
 	}
 
 	if (advertised != NULL) {
-		*advertised = mgr->advertised / 100;
+		*advertised = mgr->advertised;
 	}
 }
 

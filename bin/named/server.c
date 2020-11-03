@@ -8665,8 +8665,12 @@ load_configuration(const char *filename, named_server_t *server,
 		advertised = MAX_TCP_TIMEOUT;
 	}
 
-	isc_nm_tcp_settimeouts(named_g_nm, initial, idle, keepalive,
-			       advertised);
+	/*
+	 * These values are all expressed in the configuration as tenths of
+	 * seconds, but the timeouts are stored as milliseconds.
+	 */
+	isc_nm_tcp_settimeouts(named_g_nm, initial * 100, idle * 100,
+			       keepalive * 100, advertised * 100);
 
 	/*
 	 * Configure sets of UDP query source ports.
@@ -15969,6 +15973,7 @@ named_server_tcptimeouts(isc_lex_t *lex, isc_buffer_t **text) {
 		if (initial < 25) {
 			CHECK(ISC_R_RANGE);
 		}
+		initial *= 100; /* convert to ms */
 
 		ptr = next_token(lex, text);
 		if (ptr == NULL) {
@@ -15981,6 +15986,7 @@ named_server_tcptimeouts(isc_lex_t *lex, isc_buffer_t **text) {
 		if (idle < 1) {
 			CHECK(ISC_R_RANGE);
 		}
+		idle *= 100; /* convert to ms */
 
 		ptr = next_token(lex, text);
 		if (ptr == NULL) {
@@ -15993,6 +15999,7 @@ named_server_tcptimeouts(isc_lex_t *lex, isc_buffer_t **text) {
 		if (keepalive < 1) {
 			CHECK(ISC_R_RANGE);
 		}
+		keepalive *= 100; /* convert to ms */
 
 		ptr = next_token(lex, text);
 		if (ptr == NULL) {
@@ -16002,6 +16009,7 @@ named_server_tcptimeouts(isc_lex_t *lex, isc_buffer_t **text) {
 		if (advertised > MAX_TCP_TIMEOUT) {
 			CHECK(ISC_R_RANGE);
 		}
+		advertised *= 100; /* convert to ms */
 
 		result = isc_task_beginexclusive(named_g_server->task);
 		RUNTIME_CHECK(result == ISC_R_SUCCESS);
@@ -16012,13 +16020,16 @@ named_server_tcptimeouts(isc_lex_t *lex, isc_buffer_t **text) {
 		isc_task_endexclusive(named_g_server->task);
 	}
 
-	snprintf(msg, sizeof(msg), "tcp-initial-timeout=%u\n", initial);
+	/* Convert back to tenths of seconds for display */
+	snprintf(msg, sizeof(msg), "tcp-initial-timeout=%u\n", initial / 100);
 	CHECK(putstr(text, msg));
-	snprintf(msg, sizeof(msg), "tcp-idle-timeout=%u\n", idle);
+	snprintf(msg, sizeof(msg), "tcp-idle-timeout=%u\n", idle / 100);
 	CHECK(putstr(text, msg));
-	snprintf(msg, sizeof(msg), "tcp-keepalive-timeout=%u\n", keepalive);
+	snprintf(msg, sizeof(msg), "tcp-keepalive-timeout=%u\n",
+		 keepalive / 100);
 	CHECK(putstr(text, msg));
-	snprintf(msg, sizeof(msg), "tcp-advertised-timeout=%u", advertised);
+	snprintf(msg, sizeof(msg), "tcp-advertised-timeout=%u",
+		 advertised / 100);
 	CHECK(putstr(text, msg));
 
 cleanup:
