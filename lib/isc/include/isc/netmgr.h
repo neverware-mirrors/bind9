@@ -157,6 +157,18 @@ isc_nmhandle_settimeout(isc_nmhandle_t *handle, uint32_t timeout);
  * both socket layers.
  */
 
+void
+isc_nmhandle_keepalive(isc_nmhandle_t *handle, bool value);
+/*%<
+ * Enable/disable keepalive on this connection by setting it to 'value'.
+ *
+ * When keepalive is active, we switch to using the keepalive timeout
+ * to determine when to close a connection, rather than the idle timeout.
+ *
+ * This applies only to TCP-based DNS connections (i.e., TCPDNS);
+ * on other
+ */
+
 isc_sockaddr_t
 isc_nmhandle_peeraddr(isc_nmhandle_t *handle);
 /*%<
@@ -367,15 +379,6 @@ isc_nm_tcpdns_sequential(isc_nmhandle_t *handle);
  *
  * Also note: once this has been set, it cannot be reversed for a given
  * connection.
- */
-
-void
-isc_nm_tcpdns_keepalive(isc_nmhandle_t *handle, bool value);
-/*%<
- * Enable/disable keepalive on this connection by setting it to 'value'.
- *
- * When keepalive is active, we switch to using the keepalive timeout
- * to determine when to close a connection, rather than the idle timeout.
  */
 
 void

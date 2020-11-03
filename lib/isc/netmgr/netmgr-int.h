@@ -888,6 +888,12 @@ isc__nm_tcpdns_settimeout(isc_nmhandle_t *handle, uint32_t timeout);
  */
 
 void
+isc__nm_tcpdns_keepalive(isc_nmhandle_t *handle, bool value);
+/*%<
+ * Enable/disable keepalive on this connection by setting it to 'value'.
+ */
+
+void
 isc__nm_async_tcpdnscancel(isc__networker_t *worker, isc__netievent_t *ev0);
 void
 isc__nm_async_tcpdnsclose(isc__networker_t *worker, isc__netievent_t *ev0);

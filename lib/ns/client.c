@@ -1480,6 +1480,7 @@ process_opt(ns_client_t *client, dns_rdataset_t *opt) {
 				}
 				client->attributes |=
 					NS_CLIENTATTR_USEKEEPALIVE;
+				isc_nmhandle_keepalive(client->handle, true);
 				isc_buffer_forward(&optbuf, optlen);
 				break;
 			case DNS_OPT_PAD:
