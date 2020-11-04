@@ -1044,6 +1044,18 @@ check_cds() {
 	dig_with_opts "$ZONE" "@${SERVER}" "CDNSKEY" > "dig.out.$DIR.test$n.cdnskey" || log_error "dig ${ZONE} CDNSKEY failed"
 	grep "status: NOERROR" "dig.out.$DIR.test$n.cdnskey" > /dev/null || log_error "mismatch status in DNS response"
 
+	# The dnssec-policy "unsigned" is a special test case that we expect
+	# to have an empty keys clause, meaning we should publish the CDS and
+	# CDNSKEY DELETE records to signal the registry that we want our DS
+	# records to be removed from the parent zone.
+	if [ "${POLICY}" = "unsigned" ]; then
+		grep "CDS.*0 0 0 00" "dig.out.$DIR.test$n.cds" > /dev/null || log_error "missing CDS DELETE record in DNS response"
+		grep "CDNSKEY.*0 3 0 AA==" "dig.out.$DIR.test$n.cdnskey" > /dev/null || log_error "missing CDNSKEY DELETE record in DNS response"
+	else
+		grep "CDS.*0 0 0 00" "dig.out.$DIR.test$n.cds" > /dev/null && log_error "unexpected CDS DELETE record in DNS response"
+		grep "CDNSKEY.*0 3 0 AA==" "dig.out.$DIR.test$n.cdnskey" > /dev/null && log_error "unexpected CDNSKEY DELETE record in DNS response"
+	fi
+
 	if [ "$(key_get KEY1 STATE_DS)" = "rumoured" ] || [ "$(key_get KEY1 STATE_DS)" = "omnipresent" ]; then
 		response_has_cds_for_key KEY1 "dig.out.$DIR.test$n.cds" || log_error "missing CDS record in response for key $(key_get KEY1 ID)"
 		check_signatures "CDS" "dig.out.$DIR.test$n.cds" "KSK"
@@ -4452,6 +4464,65 @@ dnssec_verify
 _migratenomatch_alglen_ksk=$(key_get KEY1 ID)
 _migratenomatch_alglen_zsk=$(key_get KEY2 ID)
 
+#
+# Testing going insecure.
+#
+set_zone "step1.going-insecure.kasp"
+set_policy "migrate" "2" "7200"
+set_server "ns6" "10.53.0.6"
+
+# Policy parameters.
+# Lksk:      0
+# Lzsk:      60 days (5184000 seconds)
+# Iret(KSK): DS TTL (1d) + DprpP (1h) + retire-safety (1h)
+# Iret(KSK): 1d2h (93600 seconds)
+# Iret(ZSK): RRSIG TTL (1d) + Dprp (5m) + Dsgn (9d) + retire-safety (1h)
+# Iret(ZSK): 10d1h5m (867900 seconds)
+Lksk=0
+Lzsk=5184000
+IretKSK=93600
+IretZSK=867900
+
+init_migration_insecure() {
+	key_clear        "KEY1"
+	set_keyrole      "KEY1" "ksk"
+	set_keylifetime  "KEY1" "${Lksk}"
+	set_keyalgorithm "KEY1" "13" "ECDSAP256SHA256"
+	set_keysigning   "KEY1" "yes"
+	set_zonesigning  "KEY1" "no"
+
+	set_keystate "KEY1" "GOAL"         "omnipresent"
+	set_keystate "KEY1" "STATE_DNSKEY" "omnipresent"
+	set_keystate "KEY1" "STATE_KRRSIG" "omnipresent"
+	set_keystate "KEY1" "STATE_DS"     "omnipresent"
+
+	key_clear        "KEY2"
+	set_keyrole      "KEY2" "zsk"
+	set_keylifetime  "KEY2" "${Lzsk}"
+	set_keyalgorithm "KEY2" "13" "ECDSAP256SHA256"
+	set_keysigning   "KEY2" "no"
+	set_zonesigning  "KEY2" "yes"
+
+	set_keystate "KEY2" "GOAL"         "omnipresent"
+	set_keystate "KEY2" "STATE_DNSKEY" "omnipresent"
+	set_keystate "KEY2" "STATE_ZRRSIG" "omnipresent"
+
+	key_clear "KEY3"
+	key_clear "KEY4"
+}
+init_migration_insecure
+
+# Various signing policy checks.
+check_keys
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+
+# We have set the timing metadata to now - 10 days (864000 seconds).
+rollover_predecessor_keytimes -864000
+check_keytimes
+check_apex
+check_subdomain
+dnssec_verify
+
 # Reconfig dnssec-policy (triggering algorithm roll and other dnssec-policy
 # changes).
 echo_i "reconfig dnssec-policy to trigger algorithm rollover"
@@ -4500,6 +4571,76 @@ wait_for_done_signing() {
 	test "$ret" -eq 0 || echo_i "failed"
 	status=$((status+ret))
 }
+
+#
+# Testing going insecure.
+#
+
+#
+# Zone: step1.going-insecure.kasp
+#
+set_zone "step1.going-insecure.kasp"
+set_policy "unsigned" "2" "7200"
+set_server "ns6" "10.53.0.6"
+
+# Key goal states should be HIDDEN.
+init_migration_insecure
+set_keystate "KEY1" "GOAL" "hidden"
+set_keystate "KEY2" "GOAL" "hidden"
+# The DS may be removed if we are going insecure.
+set_keystate "KEY1" "STATE_DS" "unretentive"
+
+# Various signing policy checks.
+check_keys
+wait_for_done_signing
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+# Because this zone uses the "unsigned" policy, the check_apex function
+# will check that the CDS and CDNSKEY DELETE records are published.
+check_apex
+check_subdomain
+dnssec_verify
+
+# Tell named that the DS has been removed.
+rndc_checkds "$SERVER" "$DIR" "KEY1" "now" "withdrawn" "$ZONE"
+wait_for_done_signing
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+check_apex
+check_subdomain
+dnssec_verify
+
+# Next key event is when the DS becomes HIDDEN. This happens after the
+# parent propagation delay, retire safety delay, and DS TTL:
+# 1h + 1h + 1d = 26h = 93600 seconds.
+check_next_key_event 93600
+
+#
+# Zone: step2.going-insecure.kasp
+#
+set_zone "step2.going-insecure.kasp"
+set_policy "unsigned" "2" "7200"
+set_server "ns6" "10.53.0.6"
+
+# The DS is long enough removed from the zone to be considered HIDDEN.
+# This means the DNSKEY and the KSK signatures can be removed.
+set_keystate     "KEY1" "STATE_DS"     "hidden"
+set_keystate     "KEY1" "STATE_DNSKEY" "unretentive"
+set_keystate     "KEY1" "STATE_KRRSIG" "unretentive"
+set_keysigning   "KEY1" "no"
+
+set_keystate     "KEY2" "STATE_DNSKEY" "unretentive"
+set_keystate     "KEY2" "STATE_ZRRSIG" "unretentive"
+set_zonesigning  "KEY2" "no"
+
+# Various signing policy checks.
+check_keys
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+check_apex
+check_subdomain
+
+# Next key event is when the DNSKEY becomes HIDDEN. This happens after the
+# propagation delay, plus DNSKEY TTL:
+# 5m + 2h = 125m =  7500 seconds.
+check_next_key_event 7500
 
 #
 # Testing migration.
