@@ -4897,6 +4897,12 @@ The following options can be specified in a ``dnssec-policy`` statement:
        example for the second and third keys, an appropriate
        default size for the algorithm is used.
 
+       The key list may be empty. You should only leave ``keys``
+       empty if you need your zone to go back to insecure mode
+       without going bogus. By doing so, a special CDS and
+       CDNSKEY record will be published in the zone, telling the
+       parent to remove the CDS record for this zone.
+
     ``publish-safety``
        This is a margin that is added to the pre-publication
        interval in rollover timing calculations, to give some

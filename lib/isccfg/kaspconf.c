@@ -333,7 +333,11 @@ cfg_kasp_fromconfig(const cfg_obj_t *config, isc_mem_t *mctx, isc_log_t *logctx,
 			}
 		}
 	}
-	INSIST(!(dns_kasp_keylist_empty(kasp)));
+	if (dns_kasp_keylist_empty(kasp)) {
+		cfg_obj_log(keys, logctx, ISC_LOG_WARNING,
+			    "dnssec-policy: key list is empty, zones "
+			    "with this policy will be insecure");
+	}
 
 	/* Configuration: NSEC3 */
 	(void)confget(maps, "nsec3param", &nsec3);
