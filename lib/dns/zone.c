@@ -19843,6 +19843,8 @@ zone_rekey(dns_zone_t *zone) {
 	}
 
 	if (result == ISC_R_SUCCESS) {
+		bool dnssec_insecure = false;
+
 		result = dns_dnssec_updatekeys(&dnskeys, &keys, &rmkeys,
 					       &zone->origin, ttl, &diff, mctx,
 					       dnssec_report);
@@ -19866,6 +19868,25 @@ zone_rekey(dns_zone_t *zone) {
 		if (result != ISC_R_SUCCESS) {
 			dnssec_log(zone, ISC_LOG_ERROR,
 				   "zone_rekey:couldn't update CDS/CDNSKEY: %s",
+				   isc_result_totext(result));
+			goto failure;
+		}
+
+		/*
+		 * This zone may be explicitly set to go insecure. Check the
+		 * policy and if the list of configured kasp keys is empty,
+		 * we should publish the CDS and CDNSKEY Delete records.
+		 */
+		if (kasp != NULL && dns_kasp_keylist_empty(kasp)) {
+			dnssec_insecure = true;
+		}
+		result = dns_dnssec_syncdelete(
+			&cdsset, &cdnskeyset, &zone->origin, zone->rdclass, ttl,
+			&diff, mctx, dnssec_insecure);
+		if (result != ISC_R_SUCCESS) {
+			dnssec_log(zone, ISC_LOG_ERROR,
+				   "zone_rekey:couldn't update CDS/CDNSKEY "
+				   "DELETE records: %s",
 				   isc_result_totext(result));
 			goto failure;
 		}

@@ -2126,6 +2126,93 @@ failure:
 	return (result);
 }
 
+isc_result_t
+dns_dnssec_syncdelete(dns_rdataset_t *cds, dns_rdataset_t *cdnskey,
+		      dns_name_t *origin, dns_rdataclass_t zclass,
+		      dns_ttl_t ttl, dns_diff_t *diff, isc_mem_t *mctx,
+		      bool dnssec_insecure) {
+	unsigned char dsbuf[5];
+	unsigned char keybuf[5];
+	char namebuf[DNS_NAME_FORMATSIZE];
+	dns_rdata_t cds_delete = DNS_RDATA_INIT;
+	dns_rdata_t cdnskey_delete = DNS_RDATA_INIT;
+	isc_buffer_t kb;
+	isc_buffer_t db;
+	isc_region_t r;
+	isc_result_t result;
+
+	isc_buffer_init(&kb, keybuf, sizeof(keybuf));
+	isc_buffer_putuint16(&kb, 0);
+	isc_buffer_putuint8(&kb, 3);
+	isc_buffer_putuint8(&kb, 0);
+	isc_buffer_putuint8(&kb, 0);
+	dns_rdata_reset(&cdnskey_delete);
+	isc_buffer_usedregion(&kb, &r);
+	dns_rdata_fromregion(&cdnskey_delete, zclass, dns_rdatatype_cdnskey,
+			     &r);
+
+	isc_buffer_init(&db, dsbuf, sizeof(dsbuf));
+	isc_buffer_putuint16(&db, 0);
+	isc_buffer_putuint8(&db, 0);
+	isc_buffer_putuint8(&db, 0);
+	isc_buffer_putuint8(&db, 0);
+	dns_rdata_reset(&cds_delete);
+	isc_buffer_usedregion(&db, &r);
+	dns_rdata_fromregion(&cds_delete, zclass, dns_rdatatype_cds, &r);
+
+	dns_name_format(origin, namebuf, sizeof(namebuf));
+
+	if (dnssec_insecure) {
+		if (!dns_rdataset_isassociated(cdnskey) ||
+		    !exists(cdnskey, &cdnskey_delete)) {
+			isc_log_write(dns_lctx, DNS_LOGCATEGORY_GENERAL,
+				      DNS_LOGMODULE_DNSSEC, ISC_LOG_INFO,
+				      "CDNSKEY (DELETE) for zone %s is now "
+				      "published",
+				      namebuf);
+			RETERR(addrdata(&cdnskey_delete, diff, origin, ttl,
+					mctx));
+		}
+
+		if (!dns_rdataset_isassociated(cds) ||
+		    !exists(cds, &cds_delete)) {
+			isc_log_write(dns_lctx, DNS_LOGCATEGORY_GENERAL,
+				      DNS_LOGMODULE_DNSSEC, ISC_LOG_INFO,
+				      "CDS (DELETE) for zone %s is now "
+				      "published",
+				      namebuf);
+			RETERR(addrdata(&cds_delete, diff, origin, ttl, mctx));
+		}
+	} else {
+		if (dns_rdataset_isassociated(cdnskey) &&
+		    exists(cdnskey, &cdnskey_delete)) {
+			isc_log_write(dns_lctx, DNS_LOGCATEGORY_GENERAL,
+				      DNS_LOGMODULE_DNSSEC, ISC_LOG_INFO,
+				      "CDNSKEY (DELETE) for zone %s is now "
+				      "deleted",
+				      namebuf);
+			RETERR(delrdata(&cdnskey_delete, diff, origin,
+					cdnskey->ttl, mctx));
+		}
+
+		if (dns_rdataset_isassociated(cds) && exists(cds, &cds_delete))
+		{
+			isc_log_write(dns_lctx, DNS_LOGCATEGORY_GENERAL,
+				      DNS_LOGMODULE_DNSSEC, ISC_LOG_INFO,
+				      "CDS (DELETE) for zone %s is now "
+				      "deleted",
+				      namebuf);
+			RETERR(delrdata(&cds_delete, diff, origin, cds->ttl,
+					mctx));
+		}
+	}
+
+	result = ISC_R_SUCCESS;
+
+failure:
+	return (result);
+}
+
 /*
  * Update 'keys' with information from 'newkeys'.
  *
