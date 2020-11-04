@@ -2010,24 +2010,50 @@ dns_dnssec_syncupdate(dns_dnsseckeylist_t *keys, dns_dnsseckeylist_t *rmkeys,
 			}
 		}
 
-		if (dns_rdataset_isassociated(cds) && syncdelete(key->key, now))
-		{
-			/* Delete both SHA-1 and SHA-256 */
-			if (exists(cds, &cds_sha1)) {
-				RETERR(delrdata(&cds_sha1, diff, origin,
-						cds->ttl, mctx));
-			}
-			if (exists(cds, &cds_sha256)) {
-				RETERR(delrdata(&cds_sha256, diff, origin,
-						cds->ttl, mctx));
-			}
-		}
+		if (syncdelete(key->key, now)) {
+			char keystr[DST_KEY_FORMATSIZE];
+			dst_key_format(key->key, keystr, sizeof(keystr));
 
-		if (dns_rdataset_isassociated(cdnskey) &&
-		    syncdelete(key->key, now)) {
-			if (exists(cdnskey, &cdnskeyrdata)) {
-				RETERR(delrdata(&cdnskeyrdata, diff, origin,
-						cdnskey->ttl, mctx));
+			if (dns_rdataset_isassociated(cds)) {
+				/* Delete both SHA-1 and SHA-256 */
+				if (exists(cds, &cds_sha1)) {
+					isc_log_write(dns_lctx,
+						      DNS_LOGCATEGORY_GENERAL,
+						      DNS_LOGMODULE_DNSSEC,
+						      ISC_LOG_INFO,
+						      "CDS (SHA-1) for key %s "
+						      "is now deleted",
+						      keystr);
+					RETERR(delrdata(&cds_sha1, diff, origin,
+							cds->ttl, mctx));
+				}
+				if (exists(cds, &cds_sha256)) {
+					isc_log_write(dns_lctx,
+						      DNS_LOGCATEGORY_GENERAL,
+						      DNS_LOGMODULE_DNSSEC,
+						      ISC_LOG_INFO,
+						      "CDS (SHA-256) for key "
+						      "%s is now deleted",
+						      keystr);
+					RETERR(delrdata(&cds_sha256, diff,
+							origin, cds->ttl,
+							mctx));
+				}
+			}
+
+			if (dns_rdataset_isassociated(cdnskey)) {
+				if (exists(cdnskey, &cdnskeyrdata)) {
+					isc_log_write(dns_lctx,
+						      DNS_LOGCATEGORY_GENERAL,
+						      DNS_LOGMODULE_DNSSEC,
+						      ISC_LOG_INFO,
+						      "CDNSKEY for key %s is "
+						      "now deleted",
+						      keystr);
+					RETERR(delrdata(&cdnskeyrdata, diff,
+							origin, cdnskey->ttl,
+							mctx));
+				}
 			}
 		}
 	}
@@ -2047,6 +2073,9 @@ dns_dnssec_syncupdate(dns_dnsseckeylist_t *keys, dns_dnsseckeylist_t *rmkeys,
 		dns_rdata_t cdnskeyrdata = DNS_RDATA_INIT;
 		dns_name_t *origin = dst_key_name(key->key);
 
+		char keystr[DST_KEY_FORMATSIZE];
+		dst_key_format(key->key, keystr, sizeof(keystr));
+
 		RETERR(make_dnskey(key->key, keybuf, sizeof(keybuf),
 				   &cdnskeyrdata));
 
@@ -2058,10 +2087,21 @@ dns_dnssec_syncupdate(dns_dnsseckeylist_t *keys, dns_dnsseckeylist_t *rmkeys,
 						 DNS_DSDIGEST_SHA256, dsbuf2,
 						 &cds_sha256));
 			if (exists(cds, &cds_sha1)) {
+				isc_log_write(
+					dns_lctx, DNS_LOGCATEGORY_GENERAL,
+					DNS_LOGMODULE_DNSSEC, ISC_LOG_INFO,
+					"CDS (SHA-1) for key %s is now deleted",
+					keystr);
 				RETERR(delrdata(&cds_sha1, diff, origin,
 						cds->ttl, mctx));
 			}
 			if (exists(cds, &cds_sha256)) {
+				isc_log_write(dns_lctx, DNS_LOGCATEGORY_GENERAL,
+					      DNS_LOGMODULE_DNSSEC,
+					      ISC_LOG_INFO,
+					      "CDS (SHA-256) for key %s is now "
+					      "deleted",
+					      keystr);
 				RETERR(delrdata(&cds_sha256, diff, origin,
 						cds->ttl, mctx));
 			}
@@ -2069,6 +2109,11 @@ dns_dnssec_syncupdate(dns_dnsseckeylist_t *keys, dns_dnsseckeylist_t *rmkeys,
 
 		if (dns_rdataset_isassociated(cdnskey)) {
 			if (exists(cdnskey, &cdnskeyrdata)) {
+				isc_log_write(
+					dns_lctx, DNS_LOGCATEGORY_GENERAL,
+					DNS_LOGMODULE_DNSSEC, ISC_LOG_INFO,
+					"CDNSKEY for key %s is now deleted",
+					keystr);
 				RETERR(delrdata(&cdnskeyrdata, diff, origin,
 						cdnskey->ttl, mctx));
 			}
