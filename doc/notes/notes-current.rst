@@ -45,6 +45,11 @@ Feature Changes
   configuration. A new option 'nsec3param' can be used to set the desired
   NSEC3 parameters, and will detect collisions when resalting. [GL #1620].
 
+- Enable users to go back to insecure mode without going bogus. Changing
+  to 'dnssec-policy none;' will also publish CDS and CDNSKEY DELETE to signal
+  that the entire DS RRset at the parent must be removed, as described in
+  RFC 8078. [GL #1750].
+
 - Adjust the ``max-recursion-queries`` default from 75 to 100. Since the
   queries sent towards root and TLD servers are now included in the
   count (as a result of the fix for CVE-2020-8616), ``max-recursion-queries``
