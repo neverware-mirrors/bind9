@@ -4487,7 +4487,7 @@ init_migration_insecure() {
 	key_clear        "KEY1"
 	set_keyrole      "KEY1" "ksk"
 	set_keylifetime  "KEY1" "${Lksk}"
-	set_keyalgorithm "KEY1" "13" "ECDSAP256SHA256"
+	set_keyalgorithm "KEY1" "$DEFAULT_ALGORITHM_NUMBER" "$DEFAULT_ALGORITHM" "$DEFAULT_BITS"
 	set_keysigning   "KEY1" "yes"
 	set_zonesigning  "KEY1" "no"
 
@@ -4499,7 +4499,7 @@ init_migration_insecure() {
 	key_clear        "KEY2"
 	set_keyrole      "KEY2" "zsk"
 	set_keylifetime  "KEY2" "${Lzsk}"
-	set_keyalgorithm "KEY2" "13" "ECDSAP256SHA256"
+	set_keyalgorithm "KEY2" "$DEFAULT_ALGORITHM_NUMBER" "$DEFAULT_ALGORITHM" "$DEFAULT_BITS"
 	set_keysigning   "KEY2" "no"
 	set_zonesigning  "KEY2" "yes"
 
