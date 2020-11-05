@@ -160,6 +160,13 @@ static isc_result_t
 txt_fromwire(isc_buffer_t *source, isc_buffer_t *target);
 
 static isc_result_t
+commatxt_fromtext(isc_textregion_t *source, bool comma, isc_buffer_t *target);
+
+static isc_result_t
+commatxt_totext(isc_region_t *source, bool quote, bool comma,
+		isc_buffer_t *target);
+
+static isc_result_t
 multitxt_totext(isc_region_t *source, isc_buffer_t *target);
 
 static isc_result_t
@@ -301,6 +308,22 @@ static isc_result_t generic_fromstruct_tlsa(ARGS_FROMSTRUCT);
 static isc_result_t generic_tostruct_tlsa(ARGS_TOSTRUCT);
 
 static void generic_freestruct_tlsa(ARGS_FREESTRUCT);
+
+static isc_result_t generic_fromtext_in_svcb(ARGS_FROMTEXT);
+static isc_result_t generic_totext_in_svcb(ARGS_TOTEXT);
+static isc_result_t generic_fromwire_in_svcb(ARGS_FROMWIRE);
+static isc_result_t generic_towire_in_svcb(ARGS_TOWIRE);
+static isc_result_t generic_fromstruct_in_svcb(ARGS_FROMSTRUCT);
+static isc_result_t generic_tostruct_in_svcb(ARGS_TOSTRUCT);
+static void generic_freestruct_in_svcb(ARGS_FREESTRUCT);
+static isc_result_t generic_additionaldata_in_svcb(ARGS_ADDLDATA);
+static bool generic_checknames_in_svcb(ARGS_CHECKNAMES);
+static isc_result_t
+generic_rdata_in_svcb_first(dns_rdata_in_svcb_t *);
+static isc_result_t
+generic_rdata_in_svcb_next(dns_rdata_in_svcb_t *);
+static void
+generic_rdata_in_svcb_current(dns_rdata_in_svcb_t *, isc_region_t *);
 
 /*% INT16 Size */
 #define NS_INT16SZ 2
@@ -1414,7 +1437,8 @@ name_length(const dns_name_t *name) {
 }
 
 static isc_result_t
-txt_totext(isc_region_t *source, bool quote, isc_buffer_t *target) {
+commatxt_totext(isc_region_t *source, bool quote, bool comma,
+		isc_buffer_t *target) {
 	unsigned int tl;
 	unsigned int n;
 	unsigned char *sp;
@@ -1459,10 +1483,12 @@ txt_totext(isc_region_t *source, bool quote, isc_buffer_t *target) {
 		/*
 		 * Escape double quote and backslash.  If we are not
 		 * enclosing the string in double quotes also escape
-		 * at sign and semicolon.
+		 * at sign and semicolon unless comma is set.  If
+		 * comma is set then escape commas.
 		 */
-		if (*sp == 0x22 || *sp == 0x5c ||
-		    (!quote && (*sp == 0x40 || *sp == 0x3b))) {
+		if (*sp == 0x22 || *sp == 0x5c || (comma && *sp == 0x2c) ||
+		    (!comma && !quote && (*sp == 0x40 || *sp == 0x3b)))
+		{
 			if (tl < 2) {
 				return (ISC_R_NOSPACE);
 			}
@@ -1489,9 +1515,14 @@ txt_totext(isc_region_t *source, bool quote, isc_buffer_t *target) {
 }
 
 static isc_result_t
-txt_fromtext(isc_textregion_t *source, isc_buffer_t *target) {
+txt_totext(isc_region_t *source, bool quote, isc_buffer_t *target) {
+	return (commatxt_totext(source, quote, false, target));
+}
+
+static isc_result_t
+commatxt_fromtext(isc_textregion_t *source, bool comma, isc_buffer_t *target) {
 	isc_region_t tregion;
-	bool escape;
+	bool escape, seen_comma = false;
 	unsigned int n, nrem;
 	char *s;
 	unsigned char *t;
@@ -1520,6 +1551,10 @@ txt_fromtext(isc_textregion_t *source, isc_buffer_t *target) {
 	}
 	while (n-- != 0) {
 		c = (*s++) & 0xff;
+		if (comma && !escape && c == ',') {
+			seen_comma = true;
+			break;
+		}
 		if (escape && (d = decvalue((char)c)) != -1) {
 			c = d;
 			if (n == 0) {
@@ -1558,9 +1593,30 @@ txt_fromtext(isc_textregion_t *source, isc_buffer_t *target) {
 	if (escape) {
 		return (DNS_R_SYNTAX);
 	}
+	if (comma) {
+		/*
+		 * Disallow empty ALPN at start or in the middle.
+		 */
+		if (s == source->base || (seen_comma && s == source->base + 1))
+		{
+			return (DNS_R_SYNTAX);
+		}
+		isc_textregion_consume(source, s - source->base);
+		/*
+		 * Disallow empty ALPN at end.
+		 */
+		if (seen_comma && source->length == 0) {
+			return (DNS_R_SYNTAX);
+		}
+	}
 	*tregion.base = (unsigned char)(t - tregion.base - 1);
 	isc_buffer_add(target, *tregion.base + 1);
 	return (ISC_R_SUCCESS);
+}
+
+static isc_result_t
+txt_fromtext(isc_textregion_t *source, isc_buffer_t *target) {
+	return (commatxt_fromtext(source, false, target));
 }
 
 static isc_result_t
