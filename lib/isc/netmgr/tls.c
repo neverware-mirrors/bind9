@@ -346,6 +346,7 @@ tlslisten_acceptcb(isc_nmhandle_t *handle, isc_result_t result, void *cbarg) {
 	ISC_LIST_INIT(tlssock->tls.sends);
 	if (tlssock->tls.ssl == NULL) {
 		atomic_store(&tlssock->closed, true);
+		atomic_store(&tlssock->connected, false);
 		isc__nmsocket_detach(&tlssock);
 		return (ISC_R_TLSERROR);
 	}
@@ -380,6 +381,7 @@ isc_nm_listentls(isc_nm_t *mgr, isc_nmiface_t *iface,
 	tlssock->tls.ssl = SSL_new(tlssock->tls.ctx);
 	if (tlssock->tls.ssl == NULL) {
 		atomic_store(&tlssock->closed, true);
+		atomic_store(&tlssock->connected, false);
 		isc__nmsocket_detach(&tlssock);
 		return (ISC_R_TLSERROR);
 	}
@@ -397,6 +399,7 @@ isc_nm_listentls(isc_nm_t *mgr, isc_nmiface_t *iface,
 		return (ISC_R_SUCCESS);
 	} else {
 		atomic_store(&tlssock->closed, true);
+		atomic_store(&tlssock->connected, false);
 		isc__nmsocket_detach(&tlssock);
 		return (result);
 	}
@@ -584,6 +587,7 @@ tls_close_direct(isc_nmsocket_t *sock) {
 			sock->tls.app_bio = NULL;
 		}
 		atomic_store(&sock->closed, true);
+		atomic_store(&sock->connected, false);
 		isc__nmsocket_detach(&sock);
 	}
 }
@@ -626,6 +630,7 @@ isc__nm_tls_stoplistening(isc_nmsocket_t *sock) {
 
 	atomic_store(&sock->listening, false);
 	atomic_store(&sock->closed, true);
+	atomic_store(&sock->connected, false);
 	sock->recv_cb = NULL;
 	sock->recv_cbarg = NULL;
 	if (sock->tls.ssl != NULL) {
@@ -663,6 +668,7 @@ isc_nm_tlsconnect(isc_nm_t *mgr, isc_nmiface_t *local, isc_nmiface_t *peer,
 	nsock->tls.ssl = SSL_new(nsock->tls.ctx);
 	if (nsock->tls.ssl == NULL) {
 		atomic_store(&nsock->closed, true);
+		atomic_store(&nsock->connected, false);
 		isc__nmsocket_detach(&nsock);
 		return (ISC_R_TLSERROR);
 	}
@@ -688,11 +694,41 @@ isc_nm_tlsconnect(isc_nm_t *mgr, isc_nmiface_t *local, isc_nmiface_t *peer,
 		nsock->tid = isc_random_uniform(mgr->nworkers);
 		isc__nm_enqueue_ievent(&mgr->workers[nsock->tid],
 				       (isc__netievent_t *)ievent);
+
+		LOCK(&nsock->lock);
+		while (!atomic_load(&nsock->connected) &&
+		       !atomic_load(&nsock->connect_error)) {
+			WAIT(&nsock->cond, &nsock->lock);
+		}
+		UNLOCK(&nsock->lock);
 	}
+
+	result = atomic_load(&nsock->result);
 
 	isc__nmsocket_detach(&tmp);
 
 	return (result);
+}
+
+static void
+failed_connect(isc_nmsocket_t *sock, isc_result_t result) {
+	isc__nm_uvreq_t *req = isc__nm_uvreq_get(sock->mgr, sock);
+
+	req->handle = isc__nmhandle_get(sock, NULL, NULL);
+	req->cb.connect = sock->connect_cb;
+	req->cbarg = sock->connect_cbarg;
+
+	isc__nmsocket_clearcb(sock);
+
+	if (req->cb.connect != NULL) {
+		isc__nm_connectcb(sock, req, result);
+	} else {
+		isc__nm_uvreq_put(&req, sock);
+	}
+
+	atomic_store(&sock->result, result);
+	atomic_store(&sock->connect_error, true);
+	tls_close_direct(sock);
 }
 
 static void
@@ -702,10 +738,7 @@ tls_connect_cb(isc_nmhandle_t *handle, isc_result_t result, void *cbarg) {
 	REQUIRE(VALID_NMSOCK(tlssock));
 
 	if (result != ISC_R_SUCCESS) {
-		tlssock->connect_cb(handle, result, tlssock->connect_cbarg);
-		atomic_store(&tlssock->result, result);
-		atomic_store(&tlssock->connect_error, true);
-		tls_close_direct(tlssock);
+		failed_connect(tlssock, result);
 		return;
 	}
 
@@ -715,13 +748,11 @@ tls_connect_cb(isc_nmhandle_t *handle, isc_result_t result, void *cbarg) {
 	isc_nmhandle_attach(handle, &tlssock->outerhandle);
 	result = initialize_tls(tlssock, false);
 	if (result != ISC_R_SUCCESS) {
-		tlssock->connect_cb(handle, result, tlssock->connect_cbarg);
-		atomic_store(&tlssock->result, result);
-		atomic_store(&tlssock->connect_error, true);
-		tls_close_direct(tlssock);
+		failed_connect(tlssock, result);
 		return;
 	}
 }
+
 void
 isc__nm_async_tlsconnect(isc__networker_t *worker, isc__netievent_t *ev0) {
 	isc__netievent_tlsconnect_t *ievent =
@@ -742,14 +773,17 @@ isc__nm_async_tlsconnect(isc__networker_t *worker, isc__netievent_t *ev0) {
 				   (isc_nmiface_t *)&ievent->peer,
 				   tls_connect_cb, tlssock,
 				   tlssock->connect_timeout, 0);
+	atomic_store(&tlssock->result, result);
 	if (result != ISC_R_SUCCESS) {
-		/* FIXME: We need to pass valid handle */
-		tlssock->connect_cb(NULL, result, tlssock->connect_cbarg);
-		atomic_store(&tlssock->result, result);
 		atomic_store(&tlssock->connect_error, true);
-		tls_close_direct(tlssock);
-		return;
+		failed_connect(tlssock, result);
 	}
+
+	atomic_store(&tlssock->connected, true);
+
+	LOCK(&tlssock->lock);
+	SIGNAL(&tlssock->cond);
+	UNLOCK(&tlssock->lock);
 }
 
 void

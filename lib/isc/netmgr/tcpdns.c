@@ -872,9 +872,6 @@ isc_nm_tlsdnsconnect(isc_nm_t *mgr, isc_nmiface_t *local, isc_nmiface_t *peer,
 	result = isc_nm_tlsconnect(mgr, local, peer, tcpdnsconnect_cb, conn,
 				   ctx, timeout, 0);
 	SSL_CTX_free(ctx);
-	if (result != ISC_R_SUCCESS) {
-		isc_mem_putanddetach(&conn->mctx, conn, sizeof(*conn));
-	}
 	return (result);
 }
 

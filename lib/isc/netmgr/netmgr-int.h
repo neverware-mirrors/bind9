@@ -761,7 +761,7 @@ isc__nmsocket_deactivate(isc_nmsocket_t *sock);
 void
 isc__nmsocket_clearcb(isc_nmsocket_t *sock);
 /*%<
- * Clear the recv and accept callbacks in 'sock'.
+ * Clear the recv, accept and connect callbacks in 'sock'.
  */
 
 void
