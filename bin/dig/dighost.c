@@ -2747,12 +2747,24 @@ tcp_connected(isc_nmhandle_t *handle, isc_result_t eresult, void *arg);
 static void
 start_tcp(dig_query_t *query) {
 	isc_result_t result;
-	dig_query_t *next;
+	dig_query_t *next = NULL;
+	isc_region_t r;
+
 	REQUIRE(DIG_VALID_QUERY(query));
 
 	debug("start_tcp(%p)", query);
 
 	query_attach(query, &query->lookup->current_query);
+
+	// HERE
+	isc_buffer_usedregion(&query->sendbuf, &r);
+	debug("sending an HTTPS request");
+	TIME_NOW(&query->time_sent);
+
+	result = isc_nm_doh_request(netmgr,
+				    "https://cloudflare-dns.com/dns-query", &r,
+				    recv_done, query, NULL);
+	return;
 
 	/*
 	 * For TLS connections, we want to override the default
@@ -3555,9 +3567,9 @@ static void
 recv_done(isc_nmhandle_t *handle, isc_result_t eresult, isc_region_t *region,
 	  void *arg) {
 	dig_query_t *query = (dig_query_t *)arg;
+	isc_result_t result;
 	isc_buffer_t b;
 	dns_message_t *msg = NULL;
-	isc_result_t result;
 	dig_lookup_t *n = NULL;
 	dig_lookup_t *l = NULL;
 	bool docancel = false;
@@ -3571,9 +3583,9 @@ recv_done(isc_nmhandle_t *handle, isc_result_t eresult, isc_region_t *region,
 	isc_sockaddr_t peer;
 
 	REQUIRE(DIG_VALID_QUERY(query));
-	INSIST(query->readhandle != NULL);
-	INSIST(handle == query->readhandle);
-	INSIST(!free_now);
+	REQUIRE(handle != NULL);
+	REQUIRE(handle == query->readhandle);
+	REQUIRE(!free_now);
 
 	debug("recv_done(%p, %s, %p, %p)", handle, isc_result_totext(eresult),
 	      region, arg);
@@ -3694,8 +3706,8 @@ recv_done(isc_nmhandle_t *handle, isc_result_t eresult, isc_region_t *region,
 
 	if (!match) {
 		/*
-		 * We are still attached to query and the query->readhandle is
-		 * also attached
+		 * We are still attached to query and query->readhandle
+		 * is also attached.
 		 */
 		isc_refcount_increment0(&recvcount);
 		debug("recvcount=%" PRIuFAST32,
