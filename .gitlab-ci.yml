@@ -227,6 +227,7 @@ stages:
     --with-json-c \
     --prefix="${BIND_INSTALL_PATH}" \
     $EXTRA_CONFIGURE \
+    --disable-warn-error \
     || cat config.log
 
 .check_readline_setup: &check_readline_setup |
