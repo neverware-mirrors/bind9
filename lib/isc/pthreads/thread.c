@@ -132,8 +132,25 @@ isc_result_t
 isc_thread_setaffinity(int cpu) {
 #if defined(HAVE_CPUSET_SETAFFINITY)
 	cpuset_t cpuset;
+	int cpu_id = -1, cpu_aff_ok_counter = -1;
+
+	if (cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1,
+			       sizeof(cpuset), &cpuset) != 0)
+	{
+		return (ISC_R_FAILURE);
+	}
+	while (cpu_aff_ok_counter < cpu) {
+		cpu_id++;
+		if (cpu_id >= CPU_SETSIZE) {
+			return (ISC_R_FAILURE);
+		}
+		/* true if process affinity allows using cpu */
+		if (CPU_ISSET(cpu_id, &cpuset)) {
+			cpu_aff_ok_counter++;
+		}
+	}
 	CPU_ZERO(&cpuset);
-	CPU_SET(cpu, &cpuset);
+	CPU_SET(cpu_id, &cpuset);
 	if (cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1,
 			       sizeof(cpuset), &cpuset) != 0)
 	{
@@ -142,11 +159,29 @@ isc_thread_setaffinity(int cpu) {
 #elif defined(HAVE_PTHREAD_SETAFFINITY_NP)
 #if defined(__NetBSD__)
 	cpuset_t *cset;
+	int cpu_id = -1, cpu_aff_ok_counter = -1, n;
 	cset = cpuset_create();
 	if (cset == NULL) {
 		return (ISC_R_FAILURE);
 	}
-	cpuset_set(cpu, cset);
+	if (pthread_getaffinity_np(pthread_self(), cpuset_size(cset), cset) !=
+	    0) {
+		return (ISC_R_FAILURE);
+	}
+	while (cpu_aff_ok_counter < cpu) {
+		cpu_id++;
+		/*
+		 * Returns the positive number if set, zero if not set,
+		 * and -1 if cpu is invalid.
+		 */
+		if ((n = cpuset_isset(cpu_id, cset)) > 0) {
+			cpu_aff_ok_counter++;
+		} else if (n < 0) {
+			return (ISC_R_FAILURE);
+		}
+	}
+	cpuset_zero(cset);
+	cpuset_set(cpu_id, cset);
 	if (pthread_setaffinity_np(pthread_self(), cpuset_size(cset), cset) !=
 	    0) {
 		cpuset_destroy(cset);
@@ -155,8 +190,24 @@ isc_thread_setaffinity(int cpu) {
 	cpuset_destroy(cset);
 #else  /* linux? */
 	cpu_set_t set;
+	int cpu_id = -1, cpu_aff_ok_counter = -1;
+
+	if (pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &set) !=
+	    0) {
+		return (ISC_R_FAILURE);
+	}
+	while (cpu_aff_ok_counter < cpu) {
+		cpu_id++;
+		if (cpu_id >= CPU_SETSIZE) {
+			return (ISC_R_FAILURE);
+		}
+		/* true if process affinity allows using cpu */
+		if (CPU_ISSET(cpu_id, &set)) {
+			cpu_aff_ok_counter++;
+		}
+	}
 	CPU_ZERO(&set);
-	CPU_SET(cpu, &set);
+	CPU_SET(cpu_id, &set);
 	if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &set) !=
 	    0) {
 		return (ISC_R_FAILURE);
