@@ -1254,7 +1254,9 @@ rndc_checkds() {
 
 	rndccmd $_server dnssec -checkds $_keycmd $_whencmd $_what $_zone in $_view > rndc.dnssec.checkds.out.$_zone.$n || log_error "command 'rndc dnssec -checkds${_keycmd}${_whencmd} ${_what} ${_zone}' failed"
 
-	test "$ret" -eq 0 && (_loadkeys_on $_server $_dir $_zone || log_error "loadkeys zone ${_zone} failed ($n)")
+	if [ "$ret" -eq 0 ]; then
+		 _loadkeys_on $_server $_dir $_zone || log_error "loadkeys zone ${_zone} failed ($n)"
+	fi
 
 	test "$ret" -eq 0 || echo_i "failed"
 	status=$((status+ret))
