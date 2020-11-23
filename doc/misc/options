@@ -444,6 +444,7 @@ server <netprefix> {
         request-ixfr <boolean>;
         request-nsid <boolean>;
         request-sit <boolean>; // obsolete
+        require-cookie <boolean>;
         send-cookie <boolean>;
         support-ixfr <boolean>; // obsolete
         tcp-keepalive <boolean>;
@@ -741,6 +742,7 @@ view <string> [ <class> ] {
                 request-ixfr <boolean>;
                 request-nsid <boolean>;
                 request-sit <boolean>; // obsolete
+                require-cookie <boolean>;
                 send-cookie <boolean>;
                 support-ixfr <boolean>; // obsolete
                 tcp-keepalive <boolean>;

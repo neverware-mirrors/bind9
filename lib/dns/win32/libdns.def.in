@@ -704,6 +704,7 @@ dns_peer_getquerysource
 dns_peer_getrequestexpire
 dns_peer_getrequestixfr
 dns_peer_getrequestnsid
+dns_peer_getrequirecookie
 dns_peer_getsendcookie
 dns_peer_getsupportedns
 dns_peer_gettcpkeepalive
@@ -729,6 +730,7 @@ dns_peer_setquerysource
 dns_peer_setrequestexpire
 dns_peer_setrequestixfr
 dns_peer_setrequestnsid
+dns_peer_setrequirecookie
 dns_peer_setsendcookie
 dns_peer_setsupportedns
 dns_peer_settcpkeepalive

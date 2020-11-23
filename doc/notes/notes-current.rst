@@ -29,6 +29,12 @@ New Features
   IPv6-only link, using DNS64/NAT64 or 464XLAT for IPv4aaS (IPv4 as a
   Service). [GL #1154]
 
+- A new configuration option ``require-cookie`` has been introduced, it
+  specifies if there should be a DNS COOKIE in the response for a given
+  prefix and if not named falls back to TCP.  This is useful if you know
+  a given server support DNS COOKIE.  It can also be used to force all
+  non DNS COOKIE responses to fall back to TCP.  [GL #2295]
+
 Removed Features
 ~~~~~~~~~~~~~~~~
 

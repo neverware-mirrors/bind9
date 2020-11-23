@@ -2458,6 +2458,7 @@ static cfg_clausedef_t server_clauses[] = {
 	{ "request-ixfr", &cfg_type_boolean, 0 },
 	{ "request-nsid", &cfg_type_boolean, 0 },
 	{ "request-sit", &cfg_type_boolean, CFG_CLAUSEFLAG_OBSOLETE },
+	{ "require-cookie", &cfg_type_boolean, 0 },
 	{ "send-cookie", &cfg_type_boolean, 0 },
 	{ "support-ixfr", &cfg_type_boolean, CFG_CLAUSEFLAG_OBSOLETE },
 	{ "tcp-keepalive", &cfg_type_boolean, 0 },

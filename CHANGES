@@ -1,3 +1,8 @@
+5537.	[func]		You can now specify if a server must return a DNS
+			COOKIE before accepting the response. [GL #2295]
+
+			server <prefix> { require-cookie <yes_or_no>; };
+
 5539.	[bug]		Tighten handling of missing DNS COOKIE responses over
 			UDP by falling back to TCP. [GL #2275]
 
