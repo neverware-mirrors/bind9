@@ -448,6 +448,7 @@ isc_nm_cancelread
 isc_nm_closedown
 isc_nm_destroy
 isc_nm_detach
+isc_nm_doh_request
 isc_nm_listenhttps
 isc_nm_listentcpdns
 isc_nm_listentlsdns
