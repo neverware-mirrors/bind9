@@ -1,7 +1,7 @@
-5540.	[func]		When switching to 'dnssec-policy none;', allow for a
-			safe transition to insecure mode andpublish the CDS
-			and CDNSKEY DELETE records, as described in RFC 8078.
-			[GL #1750]
+5540.	[func]		When switching to 'dnssec-policy none;' named now
+			permits a safe transition to insecure mode and
+			publishes the CDS and CDNSKEY DELETE records, as
+			described in RFC 8078. [GL #1750]
 
 5543.	[bug]		Restore the UDP performance after the user netmgr
 			callbacks have been made asynchronous. [GL #2320]
