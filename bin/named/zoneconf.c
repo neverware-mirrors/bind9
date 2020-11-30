@@ -1556,7 +1556,7 @@ named_zone_configure(const cfg_obj_t *config, const cfg_obj_t *vconfig,
 		bool allow = false, maint = false;
 		bool sigvalinsecs;
 
-		if (kasp != NULL) {
+		if (dns_kasp_enabled(kasp)) {
 			if (dns_kasp_nsec3(kasp)) {
 				result = dns_zone_setnsec3param(
 					zone, 1, dns_kasp_nsec3flags(kasp),
@@ -1570,7 +1570,7 @@ named_zone_configure(const cfg_obj_t *config, const cfg_obj_t *vconfig,
 			INSIST(result == ISC_R_SUCCESS);
 		}
 
-		if (kasp != NULL) {
+		if (dns_kasp_enabled(kasp)) {
 			seconds = (uint32_t)dns_kasp_sigvalidity_dnskey(kasp);
 		} else {
 			obj = NULL;
@@ -1581,7 +1581,7 @@ named_zone_configure(const cfg_obj_t *config, const cfg_obj_t *vconfig,
 		}
 		dns_zone_setkeyvalidityinterval(zone, seconds);
 
-		if (kasp != NULL) {
+		if (dns_kasp_enabled(kasp)) {
 			seconds = (uint32_t)dns_kasp_sigvalidity(kasp);
 			dns_zone_setsigvalidityinterval(zone, seconds);
 			seconds = (uint32_t)dns_kasp_sigrefresh(kasp);
@@ -1668,7 +1668,8 @@ named_zone_configure(const cfg_obj_t *config, const cfg_obj_t *vconfig,
 
 		obj = NULL;
 		result = cfg_map_get(zoptions, "auto-dnssec", &obj);
-		if (dns_zone_getkasp(zone) != NULL) {
+
+		if (dns_kasp_enabled(kasp)) {
 			dns_zone_setkeyopt(zone, DNS_ZONEKEY_ALLOW, true);
 			dns_zone_setkeyopt(zone, DNS_ZONEKEY_CREATE, true);
 			dns_zone_setkeyopt(zone, DNS_ZONEKEY_MAINTAIN, true);

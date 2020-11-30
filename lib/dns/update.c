@@ -1097,7 +1097,7 @@ add_sigs(dns_update_log_t *log, dns_zone_t *zone, dns_db_t *db,
 	bool added_sig = false;
 	isc_mem_t *mctx = diff->mctx;
 
-	if (kasp != NULL) {
+	if (dns_kasp_enabled(kasp)) {
 		check_ksk = false;
 		keyset_kskonly = true;
 	}
@@ -1174,7 +1174,7 @@ add_sigs(dns_update_log_t *log, dns_zone_t *zone, dns_db_t *db,
 			}
 		}
 
-		if (kasp != NULL) {
+		if (dns_kasp_enabled(kasp)) {
 			/*
 			 * A dnssec-policy is found. Check what RRsets this
 			 * key should sign.

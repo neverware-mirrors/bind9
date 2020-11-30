@@ -425,6 +425,7 @@ dns_kasp_create
 dns_kasp_detach
 dns_kasp_dnskeyttl
 dns_kasp_dsttl
+dns_kasp_enabled
 dns_kasp_freeze
 dns_kasp_getname
 dns_kasp_key_algorithm

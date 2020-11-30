@@ -115,6 +115,17 @@ dns_kasp_getname(dns_kasp_t *kasp) {
 	return (kasp->name);
 }
 
+bool
+dns_kasp_enabled(dns_kasp_t *kasp) {
+	if (kasp == NULL) {
+		return (false);
+	}
+	if (DNS_KASP_VALID(kasp)) {
+		return (strcmp(kasp->name, "none") != 0);
+	}
+	return (false);
+}
+
 void
 dns_kasp_freeze(dns_kasp_t *kasp) {
 	REQUIRE(DNS_KASP_VALID(kasp));

@@ -213,6 +213,17 @@ dns_kasp_getname(dns_kasp_t *kasp);
  *\li   name of 'kasp'.
  */
 
+bool
+dns_kasp_enabled(dns_kasp_t *kasp);
+/*%<
+ * Is kasp enabled?
+ *
+ * Returns:
+ *
+ *\li   false if 'kasp' is NULL or the kasp name is equal to "none"
+ *\li   true  otherwise
+ */
+
 uint32_t
 dns_kasp_signdelay(dns_kasp_t *kasp);
 /*%<

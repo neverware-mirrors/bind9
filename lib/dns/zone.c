@@ -1830,7 +1830,7 @@ dns_zone_isdynamic(dns_zone_t *zone, bool ignore_freeze) {
 	}
 
 	/* Kasp zones are always dynamic. */
-	if (dns_zone_getkasp(zone) != NULL) {
+	if (dns_kasp_enabled(dns_zone_getkasp(zone))) {
 		return (true);
 	}
 
@@ -6785,7 +6785,7 @@ add_sigs(dns_db_t *db, dns_dbversion_t *ver, dns_name_t *name, dns_zone_t *zone,
 	isc_buffer_t buffer;
 	unsigned int i, j;
 
-	if (kasp != NULL) {
+	if (dns_kasp_enabled(kasp)) {
 		check_ksk = false;
 		keyset_kskonly = true;
 	}
@@ -6866,7 +6866,7 @@ add_sigs(dns_db_t *db, dns_dbversion_t *ver, dns_name_t *name, dns_zone_t *zone,
 			}
 		}
 
-		if (kasp != NULL) {
+		if (dns_kasp_enabled(kasp)) {
 			/*
 			 * A dnssec-policy is found. Check what RRsets this
 			 * key should sign.
@@ -7301,7 +7301,7 @@ signed_with_good_key(dns_zone_t *zone, dns_db_t *db, dns_dbnode_t *node,
 		dns_rdata_reset(&rdata);
 	}
 
-	if (kasp) {
+	if (dns_kasp_enabled(kasp)) {
 		dns_kasp_key_t *kkey;
 		int zsk_count = 0;
 		bool approved;
@@ -7514,7 +7514,7 @@ sign_a_node(dns_db_t *db, dns_zone_t *zone, dns_name_t *name,
 		} else if (is_zsk && !dst_key_is_signing(key, DST_BOOL_ZSK,
 							 inception, &when)) {
 			/* Only applies to dnssec-policy. */
-			if (kasp != NULL) {
+			if (dns_kasp_enabled(kasp)) {
 				goto next_rdataset;
 			}
 		}
@@ -9251,10 +9251,10 @@ zone_sign(dns_zone_t *zone) {
 	signing = ISC_LIST_HEAD(zone->signing);
 	first = true;
 
-	check_ksk = (kasp != NULL)
+	check_ksk = (dns_kasp_enabled(kasp))
 			    ? false
 			    : DNS_ZONE_OPTION(zone, DNS_ZONEOPT_UPDATECHECKKSK);
-	keyset_kskonly = (kasp != NULL)
+	keyset_kskonly = (dns_kasp_enabled(kasp))
 				 ? true
 				 : DNS_ZONE_OPTION(zone,
 						   DNS_ZONEOPT_DNSKEYKSKONLY);
@@ -9445,7 +9445,7 @@ zone_sign(dns_zone_t *zone) {
 					}
 				}
 			}
-			if (kasp != NULL) {
+			if (dns_kasp_enabled(kasp)) {
 				/*
 				 * A dnssec-policy is found. Check what
 				 * RRsets this key can sign.
@@ -16454,7 +16454,7 @@ copy_non_dnssec_records(dns_zone_t *zone, dns_db_t *db, dns_db_t *version,
 			 * Allow DNSSEC records with dnssec-policy.
 			 * WMM: Perhaps add config option for it.
 			 */
-			if (dns_zone_getkasp(zone) == NULL) {
+			if (!dns_kasp_enabled(dns_zone_getkasp(zone))) {
 				dns_rdataset_disassociate(&rdataset);
 				continue;
 			}
@@ -19813,7 +19813,7 @@ zone_rekey(dns_zone_t *zone) {
 	kasp = dns_zone_getkasp(zone);
 	fullsign = DNS_ZONEKEY_OPTION(zone, DNS_ZONEKEY_FULLSIGN);
 
-	if (kasp != NULL) {
+	if (dns_kasp_enabled(kasp)) {
 		LOCK(&kasp->lock);
 	}
 
@@ -19838,7 +19838,7 @@ zone_rekey(dns_zone_t *zone) {
 		}
 	}
 
-	if (kasp != NULL) {
+	if (dns_kasp_enabled(kasp)) {
 		UNLOCK(&kasp->lock);
 	}
 
@@ -20076,7 +20076,7 @@ zone_rekey(dns_zone_t *zone) {
 	/*
 	 * If keymgr provided a next time, use the calculated next rekey time.
 	 */
-	if (kasp != NULL) {
+	if (dns_kasp_enabled(kasp)) {
 		isc_time_t timenext;
 		uint32_t nexttime_seconds;
 
