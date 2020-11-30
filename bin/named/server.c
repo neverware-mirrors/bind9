@@ -14734,7 +14734,7 @@ named_server_dnssec(named_server_t *server, isc_lex_t *lex,
 
 	/* Get dnssec-policy. */
 	kasp = dns_zone_getkasp(zone);
-	if (!dns_kasp_enabled(kasp)) {
+	if (kasp == NULL) {
 		msg = "Zone does not have dnssec-policy";
 		goto cleanup;
 	}

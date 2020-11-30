@@ -19825,9 +19825,9 @@ zone_rekey(dns_zone_t *zone) {
 			   isc_result_totext(result));
 	}
 
-	if (kasp != NULL &&
-	    (result == ISC_R_SUCCESS || result == ISC_R_NOTFOUND)) {
-		ttl = dns_kasp_dnskeyttl(kasp);
+	if ((dns_kasp_enabled(kasp) || dns_dnssec_statefile_exists(&keys)) &&
+	    (result == ISC_R_SUCCESS || result == ISC_R_NOTFOUND))
+	{
 		result = dns_keymgr_run(&zone->origin, zone->rdclass, dir, mctx,
 					&keys, kasp, now, &nexttime);
 		if (result != ISC_R_SUCCESS) {
@@ -19839,6 +19839,9 @@ zone_rekey(dns_zone_t *zone) {
 	}
 
 	if (dns_kasp_enabled(kasp)) {
+		/* Update DNSKEY TTL according to policy. */
+		ttl = dns_kasp_dnskeyttl(kasp);
+
 		UNLOCK(&kasp->lock);
 	}
 
@@ -19873,11 +19876,14 @@ zone_rekey(dns_zone_t *zone) {
 		}
 
 		/*
-		 * This zone may be explicitly set to go insecure. Check the
-		 * policy and if the list of configured kasp keys is empty,
-		 * we should publish the CDS and CDNSKEY Delete records.
+		 * This zone may be explicitly set to go insecure. Check if
+		 * there are key state files. If so, this once was a
+		 * kasp-enabled zone, but is now configured to have no
+		 * "dnssec-policy" and we should publish the CDS and CDNSKEY
+		 * Delete records.
 		 */
-		if (kasp != NULL && dns_kasp_keylist_empty(kasp)) {
+		if (!dns_kasp_enabled(kasp) &&
+		    dns_dnssec_statefile_exists(&keys)) {
 			dnssec_insecure = true;
 		}
 		result = dns_dnssec_syncdelete(

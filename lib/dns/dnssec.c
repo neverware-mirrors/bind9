@@ -1538,6 +1538,21 @@ failure:
 	return (result);
 }
 
+bool
+dns_dnssec_statefile_exists(dns_dnsseckeylist_t *keylist) {
+	dns_dnsseckey_t *key = NULL;
+
+	REQUIRE(keylist != NULL);
+
+	for (key = ISC_LIST_HEAD(*keylist); key != NULL;
+	     key = ISC_LIST_NEXT(key, link)) {
+		if (dst_key_haskasp(key->key)) {
+			return (true);
+		}
+	}
+	return false;
+}
+
 /*%
  * Add 'newkey' to 'keylist' if it's not already there.
  *

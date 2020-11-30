@@ -485,6 +485,16 @@ dst_key_isexternal(dst_key_t *key) {
 	return (key->external);
 }
 
+void
+dst_key_setkasp(dst_key_t *key, bool value) {
+	key->kasp = value;
+}
+
+bool
+dst_key_haskasp(dst_key_t *key) {
+	return (key->kasp);
+}
+
 isc_result_t
 dst_key_getfilename(dns_name_t *name, dns_keytag_t id, unsigned int alg,
 		    int type, const char *directory, isc_mem_t *mctx,
@@ -652,7 +662,10 @@ dst_key_fromnamedfile(const char *filename, const char *dirname, int type,
 		result = dst_key_read_state(newfilename, mctx, &key);
 		if (result == ISC_R_FILENOTFOUND) {
 			/* Having no state is valid. */
+			key->kasp = false;
 			result = ISC_R_SUCCESS;
+		} else if (result == ISC_R_SUCCESS) {
+			key->kasp = true;
 		}
 
 		isc_mem_put(mctx, newfilename, newfilenamelen);

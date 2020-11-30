@@ -1103,6 +1103,24 @@ dst_key_isexternal(dst_key_t *key);
  *	'key' to be valid.
  */
 
+void
+dst_key_setkasp(dst_key_t *key, bool value);
+/*%<
+ * Set whether this key uses kasp.
+ *
+ * Requires:
+ *	'key' to be valid.
+ */
+
+bool
+dst_key_haskasp(dst_key_t *key);
+/*%<
+ * Check if this key uses kasp.
+ *
+ * Requires:
+ *	'key' to be valid.
+ */
+
 bool
 dst_key_is_unused(dst_key_t *key);
 /*%<

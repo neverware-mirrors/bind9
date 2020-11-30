@@ -302,6 +302,19 @@ dns_dnssec_findmatchingkeys(const dns_name_t *origin, const char *directory,
  *\li		On error, keylist is unchanged
  */
 
+bool
+dns_dnssec_statefile_exists(dns_dnsseckeylist_t *keylist);
+/*%<
+ * Walk the 'keylist' and see if any of the keys has a state file.
+ *
+ *	Requires:
+ *\li		'keylist' is not NULL
+ *
+ *	Returns:
+ *\li		#true  if at least one key has a state file
+ *\li		#false otherwise
+ */
+
 isc_result_t
 dns_dnssec_keylistfromrdataset(const dns_name_t *origin, const char *directory,
 			       isc_mem_t *mctx, dns_rdataset_t *keyset,
