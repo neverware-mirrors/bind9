@@ -617,27 +617,31 @@ load_privkey_from_privstruct(EC_KEY *eckey, dst_private_t *priv) {
 
 #if !defined(OPENSSL_NO_ENGINE)
 static isc_result_t
-load_pubkey_from_engine(EC_KEY *eckey, const char *engine, const char *label) {
+load_pubkey_from_engine(EC_KEY **eckey, const char *engine, const char *label) {
+	ENGINE *ep;
+	EVP_PKEY *pubkey;
+
+	REQUIRE(eckey != NULL);
+
 	if (engine == NULL || label == NULL) {
 		return (DST_R_NOENGINE);
 	}
 
-	ENGINE *ep = dst__openssl_getengine(engine);
-	;
+	ep = dst__openssl_getengine(engine);
 	if (ep == NULL) {
 		return (DST_R_NOENGINE);
 	}
 
-	EVP_PKEY *pubkey = ENGINE_load_public_key(ep, label, NULL, NULL);
+	pubkey = ENGINE_load_public_key(ep, label, NULL, NULL);
 	if (pubkey == NULL) {
 		return (dst__openssl_toresult2("ENGINE_load_public_key",
 					       ISC_R_NOTFOUND));
 	}
 
-	eckey = EVP_PKEY_get1_EC_KEY(pubkey);
+	*eckey = EVP_PKEY_get1_EC_KEY(pubkey);
 	EVP_PKEY_free(pubkey);
 
-	if (eckey == NULL) {
+	if (*eckey == NULL) {
 		return (dst__openssl_toresult(DST_R_OPENSSLFAILURE));
 	}
 
@@ -645,27 +649,33 @@ load_pubkey_from_engine(EC_KEY *eckey, const char *engine, const char *label) {
 }
 
 static isc_result_t
-load_privkey_from_engine(EC_KEY *eckey, const char *engine, const char *label) {
+load_privkey_from_engine(EC_KEY **eckey, const char *engine,
+			 const char *label) {
+	ENGINE *ep;
+	EVP_PKEY *privkey;
+
+	REQUIRE(eckey != NULL);
+
 	if (engine == NULL || label == NULL) {
 		return (DST_R_NOENGINE);
 	}
 
-	ENGINE *ep = dst__openssl_getengine(engine);
-	;
+	ep = dst__openssl_getengine(engine);
 	if (ep == NULL) {
 		return (DST_R_NOENGINE);
 	}
 
-	EVP_PKEY *privkey = ENGINE_load_private_key(ep, label, NULL, NULL);
+	privkey = ENGINE_load_private_key(ep, label, NULL, NULL);
 	if (privkey == NULL) {
 		return (dst__openssl_toresult2("ENGINE_load_private_key",
 					       ISC_R_NOTFOUND));
 	}
 
-	eckey = EVP_PKEY_get1_EC_KEY(privkey);
+	*eckey = EVP_PKEY_get1_EC_KEY(privkey);
+
 	EVP_PKEY_free(privkey);
 
-	if (eckey == NULL) {
+	if (*eckey == NULL) {
 		return (dst__openssl_toresult(DST_R_OPENSSLFAILURE));
 	}
 
@@ -673,7 +683,7 @@ load_privkey_from_engine(EC_KEY *eckey, const char *engine, const char *label) {
 }
 #else
 static isc_result_t
-load_pubkey_from_engine(EC_KEY *eckey, const char *engine, const char *label) {
+load_pubkey_from_engine(EC_KEY **eckey, const char *engine, const char *label) {
 	UNUSED(eckey);
 	UNUSED(engine);
 	UNUSED(label);
@@ -695,7 +705,7 @@ static isc_result_t
 load_privkey(EC_KEY *eckey, dst_private_t *priv, const char **engine,
 	     const char **label) {
 	if (uses_engine(priv, engine, label)) {
-		return (load_privkey_from_engine(eckey, *engine, *label));
+		return (load_privkey_from_engine(&eckey, *engine, *label));
 	} else {
 		return (load_privkey_from_privstruct(eckey, priv));
 	}
@@ -846,12 +856,12 @@ opensslecdsa_fromlabel(dst_key_t *key, const char *engine, const char *label,
 		goto end;
 	}
 
-	result = load_pubkey_from_engine(pubeckey, engine, label);
+	result = load_pubkey_from_engine(&pubeckey, engine, label);
 	if (result != ISC_R_SUCCESS) {
 		goto end;
 	}
 
-	result = load_privkey_from_engine(eckey, engine, label);
+	result = load_privkey_from_engine(&eckey, engine, label);
 	if (result != ISC_R_SUCCESS) {
 		return (result);
 	}
