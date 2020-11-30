@@ -1248,19 +1248,14 @@ named_zone_configure(const cfg_obj_t *config, const cfg_obj_t *vconfig,
 		result = named_config_get(maps, "dnssec-policy", &obj);
 		if (result == ISC_R_SUCCESS) {
 			kaspname = cfg_obj_asstring(obj);
-			if (strcmp(kaspname, "none") != 0) {
-				result = dns_kasplist_find(kasplist, kaspname,
-							   &kasp);
-				if (result != ISC_R_SUCCESS) {
-					cfg_obj_log(obj, named_g_lctx,
-						    ISC_LOG_ERROR,
-						    "'dnssec-policy '%s' not "
-						    "found ",
-						    kaspname);
-					RETERR(result);
-				}
-				dns_zone_setkasp(zone, kasp);
+			result = dns_kasplist_find(kasplist, kaspname, &kasp);
+			if (result != ISC_R_SUCCESS) {
+				cfg_obj_log(obj, named_g_lctx, ISC_LOG_ERROR,
+					    "'dnssec-policy '%s' not found ",
+					    kaspname);
+				RETERR(result);
 			}
+			dns_zone_setkasp(zone, kasp);
 		}
 
 		obj = NULL;

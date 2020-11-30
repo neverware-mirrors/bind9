@@ -178,6 +178,8 @@ set_policy() {
 	POLICY=$1
 	NUM_KEYS=$2
 	DNSKEY_TTL=$3
+	# Default wether to expect CDS and CDNSKEY Delete record is "no".
+	CDS_DELETE="no"
 }
 
 # Set key properties for testing keys.
@@ -1044,16 +1046,12 @@ check_cds() {
 	dig_with_opts "$ZONE" "@${SERVER}" "CDNSKEY" > "dig.out.$DIR.test$n.cdnskey" || log_error "dig ${ZONE} CDNSKEY failed"
 	grep "status: NOERROR" "dig.out.$DIR.test$n.cdnskey" > /dev/null || log_error "mismatch status in DNS response"
 
-	# The dnssec-policy "unsigned" is a special test case that we expect
-	# to have an empty keys clause, meaning we should publish the CDS and
-	# CDNSKEY DELETE records to signal the registry that we want our DS
-	# records to be removed from the parent zone.
-	if [ "${POLICY}" = "unsigned" ]; then
-		grep "CDS.*0 0 0 00" "dig.out.$DIR.test$n.cds" > /dev/null || log_error "missing CDS DELETE record in DNS response"
-		grep "CDNSKEY.*0 3 0 AA==" "dig.out.$DIR.test$n.cdnskey" > /dev/null || log_error "missing CDNSKEY DELETE record in DNS response"
-	else
+	if [ "$CDS_DELETE" = "no" ]; then
 		grep "CDS.*0 0 0 00" "dig.out.$DIR.test$n.cds" > /dev/null && log_error "unexpected CDS DELETE record in DNS response"
 		grep "CDNSKEY.*0 3 0 AA==" "dig.out.$DIR.test$n.cdnskey" > /dev/null && log_error "unexpected CDNSKEY DELETE record in DNS response"
+	else
+		grep "CDS.*0 0 0 00" "dig.out.$DIR.test$n.cds" > /dev/null || log_error "missing CDS DELETE record in DNS response"
+		grep "CDNSKEY.*0 3 0 AA==" "dig.out.$DIR.test$n.cdnskey" > /dev/null || log_error "missing CDNSKEY DELETE record in DNS response"
 	fi
 
 	if [ "$(key_get KEY1 STATE_DS)" = "rumoured" ] || [ "$(key_get KEY1 STATE_DS)" = "omnipresent" ]; then
@@ -4582,7 +4580,7 @@ wait_for_done_signing() {
 # Zone: step1.going-insecure.kasp
 #
 set_zone "step1.going-insecure.kasp"
-set_policy "unsigned" "2" "7200"
+set_policy "none" "2" "7200"
 set_server "ns6" "10.53.0.6"
 
 # Key goal states should be HIDDEN.
@@ -4592,12 +4590,14 @@ set_keystate "KEY2" "GOAL" "hidden"
 # The DS may be removed if we are going insecure.
 set_keystate "KEY1" "STATE_DS" "unretentive"
 
+# Set CDSDELETE to yes, so that the check_apex function will check that the
+# CDS and CDNSKEY DELETE records are published.
+CDS_DELETE="yes"
+
 # Various signing policy checks.
 check_keys
 wait_for_done_signing
 check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
-# Because this zone uses the "unsigned" policy, the check_apex function
-# will check that the CDS and CDNSKEY DELETE records are published.
 check_apex
 check_subdomain
 dnssec_verify
@@ -4632,6 +4632,10 @@ set_keysigning   "KEY1" "no"
 set_keystate     "KEY2" "STATE_DNSKEY" "unretentive"
 set_keystate     "KEY2" "STATE_ZRRSIG" "unretentive"
 set_zonesigning  "KEY2" "no"
+
+# Set CDSDELETE to yes, so that the check_apex function will check that the
+# CDS and CDNSKEY DELETE records are published.
+CDS_DELETE="yes"
 
 # Various signing policy checks.
 check_keys

@@ -61,13 +61,13 @@ zone "migrate-nomatch-alglen.kasp" {
 zone "step1.going-insecure.kasp" {
         type master;
         file "step1.going-insecure.kasp.db";
-        dnssec-policy "unsigned";
+        dnssec-policy "none";
 };
 
 zone "step2.going-insecure.kasp" {
         type master;
         file "step2.going-insecure.kasp.db";
-        dnssec-policy "unsigned";
+        dnssec-policy "none";
 };
 
 /*

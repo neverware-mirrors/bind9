@@ -56,13 +56,6 @@ dnssec-policy "migrate" {
 	};
 };
 
-dnssec-policy "unsigned" {
-	dnskey-ttl 7200;
-
-	keys {
-	};
-};
-
 /*
  * This policy tests migration from existing keys with 1024 bits RSASHA1 keys
  * to ECDSAP256SHA256 keys.
