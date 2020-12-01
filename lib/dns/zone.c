@@ -6770,6 +6770,68 @@ failure:
 	return (result);
 }
 
+static void
+clear_keylist(dns_dnsseckeylist_t *list, isc_mem_t *mctx) {
+	dns_dnsseckey_t *key;
+	while (!ISC_LIST_EMPTY(*list)) {
+		key = ISC_LIST_HEAD(*list);
+		ISC_LIST_UNLINK(*list, key, link);
+		dns_dnsseckey_destroy(mctx, &key);
+	}
+}
+
+static void
+zone_ksk_options(dns_zone_t *zone, bool *check_ksk, bool *keyset_kskonly) {
+	dns_kasp_t *kasp;
+	dns_dnsseckeylist_t keys;
+	isc_stdtime_t now = 0;
+	isc_time_t timenow;
+	isc_result_t result;
+	bool has_statefile;
+
+	/* Set initially to the legacy zone options. */
+	*check_ksk = (DNS_ZONE_OPTION(zone, DNS_ZONEOPT_UPDATECHECKKSK));
+	*keyset_kskonly = (DNS_ZONE_OPTION(zone, DNS_ZONEOPT_DNSKEYKSKONLY));
+
+	/* If we have a dnssec-policy, override with false/true. */
+	kasp = dns_zone_getkasp(zone);
+	if (dns_kasp_enabled(kasp)) {
+		*check_ksk = false;
+		*keyset_kskonly = true;
+		return;
+	}
+	if (kasp == NULL) {
+		return;
+	}
+
+	/*
+	 * Perhaps this zone was once signed with dnssec-policy, in that case
+	 * allow for a safe transition to insecure without going bogus.
+	 */
+	INSIST(strcmp(dns_kasp_getname(kasp), "none") == 0);
+
+	ISC_LIST_INIT(keys);
+
+	TIME_NOW(&timenow);
+	now = isc_time_seconds(&timenow);
+
+	LOCK(&kasp->lock);
+	result = dns_dnssec_findmatchingkeys(&zone->origin, zone->keydirectory,
+					     now, zone->mctx, &keys);
+	has_statefile = dns_dnssec_statefile_exists(&keys);
+	if (result == ISC_R_SUCCESS && has_statefile) {
+		/*
+		 * This zone used to have dnssec-policy, override
+		 * KSK options with true/true.
+		 */
+		*check_ksk = true;
+		*keyset_kskonly = true;
+	}
+	UNLOCK(&kasp->lock);
+
+	clear_keylist(&keys, zone->mctx);
+}
+
 static isc_result_t
 add_sigs(dns_db_t *db, dns_dbversion_t *ver, dns_name_t *name, dns_zone_t *zone,
 	 dns_rdatatype_t type, dns_diff_t *diff, dst_key_t **keys,
@@ -6784,11 +6846,6 @@ add_sigs(dns_db_t *db, dns_dbversion_t *ver, dns_name_t *name, dns_zone_t *zone,
 	unsigned char data[1024]; /* XXX */
 	isc_buffer_t buffer;
 	unsigned int i, j;
-
-	if (dns_kasp_enabled(kasp)) {
-		check_ksk = false;
-		keyset_kskonly = true;
-	}
 
 	dns_rdataset_init(&rdataset);
 	isc_buffer_init(&buffer, data, sizeof(data));
@@ -7069,8 +7126,7 @@ zone_resigninc(dns_zone_t *zone) {
 	}
 	stop = now + 5;
 
-	check_ksk = DNS_ZONE_OPTION(zone, DNS_ZONEOPT_UPDATECHECKKSK);
-	keyset_kskonly = DNS_ZONE_OPTION(zone, DNS_ZONEOPT_DNSKEYKSKONLY);
+	zone_ksk_options(zone, &check_ksk, &keyset_kskonly);
 
 	name = dns_fixedname_initname(&fixed);
 	result = dns_db_getsigningtime(db, &rdataset, name);
@@ -8256,8 +8312,7 @@ zone_nsec3chain(dns_zone_t *zone) {
 		expire = soaexpire - 1;
 	}
 
-	check_ksk = DNS_ZONE_OPTION(zone, DNS_ZONEOPT_UPDATECHECKKSK);
-	keyset_kskonly = DNS_ZONE_OPTION(zone, DNS_ZONEOPT_DNSKEYKSKONLY);
+	zone_ksk_options(zone, &check_ksk, &keyset_kskonly);
 
 	/*
 	 * We keep pulling nodes off each iterator in turn until
@@ -9251,13 +9306,7 @@ zone_sign(dns_zone_t *zone) {
 	signing = ISC_LIST_HEAD(zone->signing);
 	first = true;
 
-	check_ksk = (dns_kasp_enabled(kasp))
-			    ? false
-			    : DNS_ZONE_OPTION(zone, DNS_ZONEOPT_UPDATECHECKKSK);
-	keyset_kskonly = (dns_kasp_enabled(kasp))
-				 ? true
-				 : DNS_ZONE_OPTION(zone,
-						   DNS_ZONEOPT_DNSKEYKSKONLY);
+	zone_ksk_options(zone, &check_ksk, &keyset_kskonly);
 
 	/* Determine which type of chain to build */
 	if (dns_kasp_enabled(kasp)) {
@@ -19306,16 +19355,6 @@ cleanup:
 	return (result);
 }
 
-static void
-clear_keylist(dns_dnsseckeylist_t *list, isc_mem_t *mctx) {
-	dns_dnsseckey_t *key;
-	while (!ISC_LIST_EMPTY(*list)) {
-		key = ISC_LIST_HEAD(*list);
-		ISC_LIST_UNLINK(*list, key, link);
-		dns_dnsseckey_destroy(mctx, &key);
-	}
-}
-
 /* Called once; *timep should be set to the current time. */
 static isc_result_t
 next_keyevent(dst_key_t *key, isc_stdtime_t *timep) {
@@ -19536,8 +19575,7 @@ sign_apex(dns_zone_t *zone, dns_db_t *db, dns_dbversion_t *ver,
 		keyexpire += now;
 	}
 
-	check_ksk = DNS_ZONE_OPTION(zone, DNS_ZONEOPT_UPDATECHECKKSK);
-	keyset_kskonly = DNS_ZONE_OPTION(zone, DNS_ZONEOPT_DNSKEYKSKONLY);
+	zone_ksk_options(zone, &check_ksk, &keyset_kskonly);
 
 	/*
 	 * See if dns__zone_updatesigs() will update DNSKEY/CDS/CDNSKEY
@@ -19739,6 +19777,7 @@ zone_rekey(dns_zone_t *zone) {
 	dns__zonediff_t zonediff;
 	bool commit = false, newactive = false;
 	bool newalg = false;
+	bool has_statefile = false;
 	bool fullsign;
 	dns_ttl_t ttl = 3600;
 	const char *dir = NULL;
@@ -19824,8 +19863,11 @@ zone_rekey(dns_zone_t *zone) {
 			   "zone_rekey:dns_dnssec_findmatchingkeys failed: %s",
 			   isc_result_totext(result));
 	}
+	if (dns_dnssec_statefile_exists(&keys)) {
+		has_statefile = true;
+	}
 
-	if ((dns_kasp_enabled(kasp) || dns_dnssec_statefile_exists(&keys)) &&
+	if ((dns_kasp_enabled(kasp) || has_statefile) &&
 	    (result == ISC_R_SUCCESS || result == ISC_R_NOTFOUND))
 	{
 		result = dns_keymgr_run(&zone->origin, zone->rdclass, dir, mctx,
@@ -19882,8 +19924,7 @@ zone_rekey(dns_zone_t *zone) {
 		 * "dnssec-policy" and we should publish the CDS and CDNSKEY
 		 * Delete records.
 		 */
-		if (!dns_kasp_enabled(kasp) &&
-		    dns_dnssec_statefile_exists(&keys)) {
+		if (!dns_kasp_enabled(kasp) && has_statefile) {
 			dnssec_insecure = true;
 		}
 		result = dns_dnssec_syncdelete(
@@ -20082,7 +20123,7 @@ zone_rekey(dns_zone_t *zone) {
 	/*
 	 * If keymgr provided a next time, use the calculated next rekey time.
 	 */
-	if (dns_kasp_enabled(kasp)) {
+	if (dns_kasp_enabled(kasp) || has_statefile) {
 		isc_time_t timenext;
 		uint32_t nexttime_seconds;
 
