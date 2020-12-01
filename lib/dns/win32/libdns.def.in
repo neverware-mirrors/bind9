@@ -1476,6 +1476,7 @@ dst_key_read_public
 dst_key_read_state
 dst_key_restore
 dst_key_rid
+dst_key_role
 dst_key_secretsize
 dst_key_setbits
 dst_key_setbool

@@ -9260,7 +9260,7 @@ zone_sign(dns_zone_t *zone) {
 						   DNS_ZONEOPT_DNSKEYKSKONLY);
 
 	/* Determine which type of chain to build */
-	if (kasp != NULL) {
+	if (dns_kasp_enabled(kasp)) {
 		build_nsec3 = dns_kasp_nsec3(kasp);
 		build_nsec = !build_nsec3;
 	} else {

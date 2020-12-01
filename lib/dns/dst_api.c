@@ -2386,9 +2386,11 @@ dst_key_is_unused(dst_key_t *key) {
 	return (true);
 }
 
-static void
-get_ksk_zsk(dst_key_t *key, bool *ksk, bool *zsk) {
+void
+dst_key_role(dst_key_t *key, bool *ksk, bool *zsk) {
 	bool k = false, z = false;
+
+	REQUIRE(VALID_KEY(key));
 
 	if (dst_key_getbool(key, DST_BOOL_KSK, &k) == ISC_R_SUCCESS) {
 		*ksk = k;
@@ -2458,7 +2460,7 @@ dst_key_is_active(dst_key_t *key, isc_stdtime_t now) {
 		time_ok = (when <= now);
 	}
 
-	get_ksk_zsk(key, &ksk, &zsk);
+	dst_key_role(key, &ksk, &zsk);
 
 	/* Check key states:
 	 * KSK: If the DS is RUMOURED or OMNIPRESENT the key is considered
@@ -2519,7 +2521,7 @@ dst_key_is_signing(dst_key_t *key, int role, isc_stdtime_t now,
 		time_ok = (when <= now);
 	}
 
-	get_ksk_zsk(key, &ksk, &zsk);
+	dst_key_role(key, &ksk, &zsk);
 
 	/* Check key states:
 	 * If the RRSIG state is RUMOURED or OMNIPRESENT, it means the key

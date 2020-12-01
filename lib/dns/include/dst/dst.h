@@ -1190,6 +1190,15 @@ dst_key_goal(dst_key_t *key);
  */
 
 void
+dst_key_role(dst_key_t *key, bool *ksk, bool *zsk);
+/*%<
+ * Get the key role. Store whether this key acts as 'ksk' and/or 'zsk'.
+ *
+ * Requires:
+ *	'key' to be valid.
+ */
+
+void
 dst_key_copy_metadata(dst_key_t *to, dst_key_t *from);
 /*%<
  * Copy key metadata from one key to another.

@@ -1332,12 +1332,20 @@ dns_dnsseckey_destroy(isc_mem_t *mctx, dns_dnsseckey_t **dkp) {
 void
 dns_dnssec_get_hints(dns_dnsseckey_t *key, isc_stdtime_t now) {
 	isc_stdtime_t publish = 0, active = 0, revoke = 0, remove = 0;
+	bool ksk = false, zsk = false;
 
 	REQUIRE(key != NULL && key->key != NULL);
 
+	dst_key_role(key->key, &ksk, &zsk);
+
 	key->hint_publish = dst_key_is_published(key->key, now, &publish);
-	key->hint_sign = dst_key_is_signing(key->key, DST_BOOL_ZSK, now,
-					    &active);
+	if (zsk) {
+		key->hint_sign = dst_key_is_signing(key->key, DST_BOOL_ZSK, now,
+						    &active);
+	} else if (ksk) {
+		key->hint_sign = dst_key_is_signing(key->key, DST_BOOL_KSK, now,
+						    &active);
+	}
 	key->hint_revoke = dst_key_is_revoked(key->key, now, &revoke);
 	key->hint_remove = dst_key_is_removed(key->key, now, &remove);
 
