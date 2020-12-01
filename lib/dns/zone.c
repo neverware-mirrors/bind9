@@ -19849,13 +19849,12 @@ zone_rekey(dns_zone_t *zone) {
 	 * True when called from "rndc sign".  Indicates the zone should be
 	 * fully signed now.
 	 */
-	kasp = dns_zone_getkasp(zone);
 	fullsign = DNS_ZONEKEY_OPTION(zone, DNS_ZONEKEY_FULLSIGN);
 
-	if (dns_kasp_enabled(kasp)) {
+	kasp = dns_zone_getkasp(zone);
+	if (kasp != NULL) {
 		LOCK(&kasp->lock);
 	}
-
 	result = dns_dnssec_findmatchingkeys(&zone->origin, dir, now, mctx,
 					     &keys);
 	if (result != ISC_R_SUCCESS) {
@@ -19883,7 +19882,9 @@ zone_rekey(dns_zone_t *zone) {
 	if (dns_kasp_enabled(kasp)) {
 		/* Update DNSKEY TTL according to policy. */
 		ttl = dns_kasp_dnskeyttl(kasp);
+	}
 
+	if (kasp != NULL) {
 		UNLOCK(&kasp->lock);
 	}
 
