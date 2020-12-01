@@ -641,6 +641,7 @@ make_empty_lookup(void) {
 	looknew->tcp_keepalive = false;
 	looknew->padding = 0;
 	looknew->header_only = false;
+	looknew->showbadcookie = false;
 	looknew->sendcookie = false;
 	looknew->seenbadcookie = false;
 	looknew->badcookie = true;
@@ -787,6 +788,7 @@ clone_lookup(dig_lookup_t *lookold, bool servers) {
 	looknew->nsid = lookold->nsid;
 	looknew->tcp_keepalive = lookold->tcp_keepalive;
 	looknew->header_only = lookold->header_only;
+	looknew->showbadcookie = lookold->showbadcookie;
 	looknew->sendcookie = lookold->sendcookie;
 	looknew->seenbadcookie = lookold->seenbadcookie;
 	looknew->badcookie = lookold->badcookie;
@@ -3860,9 +3862,15 @@ recv_done(isc_nmhandle_t *handle, isc_result_t eresult, isc_region_t *region,
 	{
 		process_opt(l, msg);
 		if (msg->cc_ok) {
-			dighost_comments(l, "BADCOOKIE, retrying%s.",
-					 l->seenbadcookie ? " in TCP mode"
-							  : "");
+			if (l->showbadcookie) {
+				dighost_printmessage(query, &b, msg, true);
+				dighost_received(isc_buffer_usedlength(&b),
+						 &peer, query);
+			} else {
+				dighost_comments(
+					l, "BADCOOKIE, retrying%s.",
+					l->seenbadcookie ? " in TCP mode" : "");
+			}
 			n = requeue_lookup(l, true);
 			if (l->seenbadcookie) {
 				n->tcp_mode = true;

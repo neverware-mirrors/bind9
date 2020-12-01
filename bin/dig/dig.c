@@ -278,6 +278,7 @@ help(void) {
 	       "short\n"
 	       "                                      form of answers - global "
 	       "option)\n"
+	       "                 +[no]showbadcookie  (Show BADCOOKIE message)\n"
 	       "                 +[no]showsearch     (Search with intermediate "
 	       "results)\n"
 	       "                 +[no]split=##       (Split hex/base64 fields "
@@ -1715,10 +1716,20 @@ plus_option(char *option, bool is_batchfile, bool *need_clone,
 				}
 				break;
 			case 'w': /* showsearch */
-				FULLCHECK("showsearch");
-				if (!lookup->trace) {
-					showsearch = state;
-					usesearch = state;
+				switch (cmd[4]) {
+				case 'b':
+					FULLCHECK("showbadcookie");
+					lookup->showbadcookie = state;
+					break;
+				case 's':
+					FULLCHECK("showsearch");
+					if (!lookup->trace) {
+						showsearch = state;
+						usesearch = state;
+					}
+					break;
+				default:
+					goto invalid_option;
 				}
 				break;
 			default:
