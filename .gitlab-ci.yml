@@ -1094,6 +1094,29 @@ unit:gcc:noatomics:
     - job: gcc:noatomics
       artifacts: true
 
+# Jobs for builds without threads
+
+gcc:nothreads:
+  variables:
+    CC: gcc
+    EXTRA_CONFIGURE: "--disable-threads"
+  <<: *base_image
+  <<: *build_job
+
+system:gcc:nothreads:
+  <<: *base_image
+  <<: *system_test_job
+  needs:
+    - job: gcc:nothreads
+      artifacts: true
+
+unit:gcc:nothreads:
+  <<: *base_image
+  <<: *unit_test_job
+  needs:
+    - job: gcc:nothreads
+      artifacts: true
+
 # Jobs for Clang builds on Debian Buster (amd64)
 
 clang:buster:amd64:
