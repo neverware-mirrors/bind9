@@ -73,3 +73,5 @@ Bug Fixes
   thus both UDP and TCP performance was limited to a single-thread on systems
   without load-balancing socket support. This has been fixed on all platforms
   except Windows. [GL #2137]
+
+- Only assign threads to cpus in the cpu affinity set. [GL #2245]
