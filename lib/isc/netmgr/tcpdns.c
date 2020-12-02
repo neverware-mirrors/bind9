@@ -421,8 +421,8 @@ isc_nm_tcpdnsconnect(isc_nm_t *mgr, isc_nmiface_t *local, isc_nmiface_t *peer,
 	return (result);
 }
 
-static isc_result_t
-isc__nm_tcpdns_lb_socket(sa_family_t sa_family, uv_os_sock_t *sockp) {
+static uv_os_sock_t
+isc__nm_tcpdns_lb_socket(sa_family_t sa_family) {
 	isc_result_t result;
 	uv_os_sock_t sock;
 
@@ -434,14 +434,14 @@ isc__nm_tcpdns_lb_socket(sa_family_t sa_family, uv_os_sock_t *sockp) {
 	/* FIXME: set mss */
 
 	result = isc__nm_socket_reuse(sock);
-	REQUIRE(result == ISC_R_SUCCESS || result == ISC_R_NOTIMPLEMENTED);
+	REQUIRE(result == ISC_R_SUCCESS);
 
+#if HAVE_SO_REUSEPORT_LB
 	result = isc__nm_socket_reuse_lb(sock);
-	REQUIRE(result == ISC_R_SUCCESS || result == ISC_R_NOTIMPLEMENTED);
+	REQUIRE(result == ISC_R_SUCCESS);
+#endif
 
-	*sockp = sock;
-
-	return (result);
+	return (sock);
 }
 
 isc_result_t
@@ -454,6 +454,7 @@ isc_nm_listentcpdns(isc_nm_t *mgr, isc_nmiface_t *iface,
 	isc_nmsocket_t *sock = NULL;
 	sa_family_t sa_family = iface->addr.type.sa.sa_family;
 	size_t children_size = 0;
+	uv_os_sock_t fd = -1;
 
 	REQUIRE(VALID_NM(mgr));
 
@@ -461,7 +462,11 @@ isc_nm_listentcpdns(isc_nm_t *mgr, isc_nmiface_t *iface,
 	isc__nmsocket_init(sock, mgr, isc_nm_tcpdnslistener, iface);
 
 	sock->rchildren = 0;
+#if defined(WIN32)
+	sock->nchildren = 1;
+#else
 	sock->nchildren = mgr->nworkers;
+#endif
 	children_size = sock->nchildren * sizeof(sock->children[0]);
 	sock->children = isc_mem_get(mgr->mctx, children_size);
 	memset(sock->children, 0, children_size);
@@ -469,6 +474,10 @@ isc_nm_listentcpdns(isc_nm_t *mgr, isc_nmiface_t *iface,
 	sock->result = ISC_R_DEFAULT;
 	sock->tid = isc_random_uniform(mgr->nworkers);
 	sock->fd = -1;
+
+#if !HAVE_SO_REUSEPORT_LB && !defined(WIN32)
+	fd = isc__nm_tcpdns_lb_socket(sa_family);
+#endif
 
 	for (size_t i = 0; i < mgr->nworkers; i++) {
 		isc__netievent_tcpdnslisten_t *ievent = NULL;
@@ -490,15 +499,21 @@ isc_nm_listentcpdns(isc_nm_t *mgr, isc_nmiface_t *iface,
 		csock->pquota = quota;
 		isc_quota_cb_init(&csock->quotacb, quota_accept_cb, csock);
 
-		result = isc__nm_tcpdns_lb_socket(sa_family, &csock->fd);
-		REQUIRE(result == ISC_R_SUCCESS ||
-			result == ISC_R_NOTIMPLEMENTED);
+#if HAVE_SO_REUSEPORT_LB || defined(WIN32)
+		csock->fd = isc__nm_tcpdns_lb_socket(sa_family);
+#else
+		csock->fd = dup(fd);
+#endif
 		REQUIRE(csock->fd >= 0);
 
 		ievent = isc__nm_get_netievent_tcpdnslisten(mgr, csock);
 		isc__nm_enqueue_ievent(&mgr->workers[i],
 				       (isc__netievent_t *)ievent);
 	}
+
+#if !HAVE_SO_REUSEPORT_LB && !defined(WIN32)
+	isc__nm_closesocket(fd);
+#endif
 
 	LOCK(&sock->lock);
 	while (sock->rchildren != mgr->nworkers) {
@@ -531,6 +546,7 @@ isc__nm_async_tcpdnslisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 	int r;
 	int flags = 0;
 	isc_nmsocket_t *sock = NULL;
+	isc_result_t result = ISC_R_DEFAULT;
 
 	REQUIRE(VALID_NMSOCK(ievent->sock));
 	REQUIRE(ievent->sock->tid == isc_nm_tid());
@@ -557,6 +573,8 @@ isc__nm_async_tcpdnslisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 	RUNTIME_CHECK(r == 0);
 	uv_handle_set_data((uv_handle_t *)&sock->timer, sock);
 
+	LOCK(&sock->parent->lock);
+
 	r = uv_tcp_open(&sock->uv_handle.tcp, sock->fd);
 	if (r < 0) {
 		isc__nm_closesocket(sock->fd);
@@ -569,12 +587,29 @@ isc__nm_async_tcpdnslisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 		flags = UV_TCP_IPV6ONLY;
 	}
 
+#if HAVE_SO_REUSEPORT_LB || defined(WIN32)
 	r = isc_uv_tcp_freebind(&sock->uv_handle.tcp,
 				&sock->iface->addr.type.sa, flags);
-	if (r < 0 && r != UV_EINVAL) {
+	if (r < 0) {
 		isc__nm_incstats(sock->mgr, sock->statsindex[STATID_BINDFAIL]);
 		goto failure;
 	}
+#else
+	if (sock->parent->fd == -1) {
+		r = isc_uv_tcp_freebind(&sock->uv_handle.tcp,
+					&sock->iface->addr.type.sa, flags);
+		if (r < 0) {
+			isc__nm_incstats(sock->mgr,
+					 sock->statsindex[STATID_BINDFAIL]);
+			goto failure;
+		}
+		sock->parent->uv_handle.tcp.flags = sock->uv_handle.tcp.flags;
+		sock->parent->fd = sock->fd;
+	} else {
+		/* The socket is already bound, just copy the flags */
+		sock->uv_handle.tcp.flags = sock->parent->uv_handle.tcp.flags;
+	}
+#endif
 
 	/*
 	 * The callback will run in the same thread uv_listen() was called
@@ -593,27 +628,17 @@ isc__nm_async_tcpdnslisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 
 	atomic_store(&sock->listening, true);
 
-	LOCK(&sock->parent->lock);
-	sock->parent->rchildren += 1;
-	if (sock->parent->result == ISC_R_DEFAULT) {
-		sock->parent->result = ISC_R_SUCCESS;
-	}
-	SIGNAL(&sock->parent->cond);
-	if (!atomic_load(&sock->parent->active)) {
-		WAIT(&sock->parent->scond, &sock->parent->lock);
-	}
-	INSIST(atomic_load(&sock->parent->active));
-	UNLOCK(&sock->parent->lock);
+	result = ISC_R_SUCCESS;
 
-	return;
+	goto done;
 
 failure:
+	result = isc__nm_uverr2result(r);
 	sock->pquota = NULL;
-
-	LOCK(&sock->parent->lock);
+done:
 	sock->parent->rchildren += 1;
 	if (sock->parent->result == ISC_R_DEFAULT) {
-		sock->parent->result = isc__nm_uverr2result(r);
+		sock->parent->result = result;
 	}
 	SIGNAL(&sock->parent->cond);
 	if (!atomic_load(&sock->parent->active)) {
@@ -1049,14 +1074,15 @@ free:
 static void
 quota_accept_cb(isc_quota_t *quota, void *sock0) {
 	isc_nmsocket_t *sock = (isc_nmsocket_t *)sock0;
-	isc__netievent_tcpdnsaccept_t *ievent = NULL;
 
 	REQUIRE(VALID_NMSOCK(sock));
 
 	/*
 	 * Create a tcpdnsaccept event and pass it using the async channel.
 	 */
-	ievent = isc__nm_get_netievent_tcpdnsaccept(sock->mgr, sock, quota);
+
+	isc__netievent_tcpdnsaccept_t *ievent =
+		isc__nm_get_netievent_tcpdnsaccept(sock->mgr, sock, quota);
 	isc__nm_maybe_enqueue_ievent(&sock->mgr->workers[sock->tid],
 				     (isc__netievent_t *)ievent);
 }
@@ -1068,15 +1094,14 @@ void
 isc__nm_async_tcpdnsaccept(isc__networker_t *worker, isc__netievent_t *ev0) {
 	isc__netievent_tcpdnsaccept_t *ievent =
 		(isc__netievent_tcpdnsaccept_t *)ev0;
-	isc_nmsocket_t *sock = ievent->sock;
 	isc_result_t result;
 
 	UNUSED(worker);
 
-	REQUIRE(VALID_NMSOCK(sock));
-	REQUIRE(sock->tid == isc_nm_tid());
+	REQUIRE(VALID_NMSOCK(ievent->sock));
+	REQUIRE(ievent->sock->tid == isc_nm_tid());
 
-	result = accept_connection(sock, ievent->quota);
+	result = accept_connection(ievent->sock, ievent->quota);
 	if (result != ISC_R_SUCCESS && result != ISC_R_NOCONN) {
 		if ((result != ISC_R_QUOTA && result != ISC_R_SOFTQUOTA) ||
 		    can_log_tcpdns_quota())
