@@ -22,6 +22,7 @@
 
 #include <dns/acl.h>
 #include <dns/db.h>
+#include <dns/dnssec.h>
 #include <dns/fixedname.h>
 #include <dns/ipkeylist.h>
 #include <dns/journal.h>
@@ -877,6 +878,55 @@ process_notifytype(dns_notifytype_t ntype, dns_zonetype_t ztype,
 	return (dns_notifytype_explicit);
 }
 
+/*%
+ * Corner-case for KASP zones: When a zone is no longer being DNSSEC maintained,
+ * but does have key state files associated, keep treating the zone as
+ * DNSSEC maintained, to allow for a graceful transition to insecure without
+ * going bogus.
+ */
+static bool
+dnssec_secure_to_insecure(dns_zone_t *zone, dns_kasp_t *kasp) {
+	bool insecure = false;
+
+	if (kasp == NULL || strcmp(dns_kasp_getname(kasp), "none") == 0) {
+		/*
+		 * It is possible that we have key files, but reconfigure
+		 * zone turned off DNSSEC signing. Check for key files.
+		 */
+		const char *dir = dns_zone_getkeydirectory(zone);
+		isc_result_t ret;
+		dns_dnsseckeylist_t keys;
+		dns_dnsseckey_t *key = NULL;
+		isc_stdtime_t now;
+		isc_time_t timenow;
+
+		TIME_NOW(&timenow);
+		now = isc_time_seconds(&timenow);
+
+		ISC_LIST_INIT(keys);
+		ret = dns_dnssec_findmatchingkeys(dns_zone_getorigin(zone), dir,
+						  now, dns_zone_getmctx(zone),
+						  &keys);
+		if (ret == ISC_R_SUCCESS) {
+			/*
+			 * If there is a key that "has kasp", allow rekey so
+			 * that we can go to insecure safely, without going
+			 * bogus.
+			 */
+			if (dns_dnssec_statefile_exists(&keys)) {
+				insecure = true;
+			}
+		}
+
+		while (!ISC_LIST_EMPTY(keys)) {
+			key = ISC_LIST_HEAD(keys);
+			ISC_LIST_UNLINK(keys, key, link);
+			dns_dnsseckey_destroy(dns_zone_getmctx(zone), &key);
+		}
+	}
+	return (insecure);
+}
+
 isc_result_t
 named_zone_configure(const cfg_obj_t *config, const cfg_obj_t *vconfig,
 		     const cfg_obj_t *zconfig, cfg_aclconfctx_t *ac,
@@ -1688,6 +1738,12 @@ named_zone_configure(const cfg_obj_t *config, const cfg_obj_t *vconfig,
 			dns_zone_setkeyopt(zone, DNS_ZONEKEY_ALLOW, allow);
 			dns_zone_setkeyopt(zone, DNS_ZONEKEY_CREATE, false);
 			dns_zone_setkeyopt(zone, DNS_ZONEKEY_MAINTAIN, maint);
+		} else {
+			bool insecure = dnssec_secure_to_insecure(zone, kasp);
+			dns_zone_setkeyopt(zone, DNS_ZONEKEY_ALLOW, insecure);
+			dns_zone_setkeyopt(zone, DNS_ZONEKEY_CREATE, false);
+			dns_zone_setkeyopt(zone, DNS_ZONEKEY_MAINTAIN,
+					   insecure);
 		}
 	}
 
@@ -2139,7 +2195,11 @@ named_zone_inlinesigning(dns_zone_t *zone, const cfg_obj_t *zconfig,
 	const cfg_obj_t *voptions = NULL;
 	const cfg_obj_t *options = NULL;
 	const cfg_obj_t *signing = NULL;
+	const cfg_obj_t *allowupdate = NULL;
+	const cfg_obj_t *updatepolicy = NULL;
+	isc_result_t res;
 	bool inline_signing;
+	bool zone_is_dynamic = false;
 
 	(void)cfg_map_get(config, "options", &options);
 
@@ -2159,53 +2219,46 @@ named_zone_inlinesigning(dns_zone_t *zone, const cfg_obj_t *zconfig,
 	 * the zone with dnssec-policy allows updates.  If not, enable
 	 * inline-signing.
 	 */
+	if (cfg_map_get(zoptions, "update-policy", &updatepolicy) ==
+	    ISC_R_SUCCESS) {
+		zone_is_dynamic = true;
+	} else {
+		res = cfg_map_get(zoptions, "allow-update", &allowupdate);
+		if (res != ISC_R_SUCCESS && voptions != NULL) {
+			res = cfg_map_get(voptions, "allow-update",
+					  &allowupdate);
+		}
+		if (res != ISC_R_SUCCESS && options != NULL) {
+			res = cfg_map_get(options, "allow-update",
+					  &allowupdate);
+		}
+		if (res == ISC_R_SUCCESS) {
+			dns_acl_t *acl = NULL;
+			cfg_aclconfctx_t *actx = NULL;
+			res = cfg_acl_fromconfig(
+				allowupdate, config, named_g_lctx, actx,
+				dns_zone_getmctx(zone), 0, &acl);
+			if (res == ISC_R_SUCCESS && acl != NULL &&
+			    !dns_acl_isnone(acl)) {
+				zone_is_dynamic = true;
+			}
+			if (acl != NULL) {
+				dns_acl_detach(&acl);
+			}
+		}
+	}
+
 	signing = NULL;
 	if (!inline_signing &&
 	    cfg_map_get(zoptions, "dnssec-policy", &signing) == ISC_R_SUCCESS &&
-	    signing != NULL && strcmp(cfg_obj_asstring(signing), "none") != 0)
+	    signing != NULL)
 	{
-		{
-			isc_result_t res;
-			bool zone_is_dynamic = false;
-			const cfg_obj_t *au = NULL;
-			const cfg_obj_t *up = NULL;
-
-			if (cfg_map_get(zoptions, "update-policy", &up) ==
-			    ISC_R_SUCCESS) {
-				zone_is_dynamic = true;
-			} else {
-				res = cfg_map_get(zoptions, "allow-update",
-						  &au);
-				if (res != ISC_R_SUCCESS && voptions != NULL) {
-					res = cfg_map_get(voptions,
-							  "allow-update", &au);
-				}
-				if (res != ISC_R_SUCCESS && options != NULL) {
-					res = cfg_map_get(options,
-							  "allow-update", &au);
-				}
-				if (res == ISC_R_SUCCESS) {
-					dns_acl_t *acl = NULL;
-					cfg_aclconfctx_t *actx = NULL;
-					res = cfg_acl_fromconfig(
-						au, config, named_g_lctx, actx,
-						dns_zone_getmctx(zone), 0,
-						&acl);
-					if (res == ISC_R_SUCCESS &&
-					    acl != NULL && !dns_acl_isnone(acl))
-					{
-						zone_is_dynamic = true;
-					}
-					if (acl != NULL) {
-						dns_acl_detach(&acl);
-					}
-				}
-			}
-
-			if (!zone_is_dynamic) {
-				inline_signing = true;
-			}
+		if (!zone_is_dynamic) {
+			inline_signing = true;
 		}
+	}
+	if (zone_is_dynamic || inline_signing) {
+		return (inline_signing);
 	}
 
 	return (inline_signing);

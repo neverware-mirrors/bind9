@@ -58,6 +58,8 @@ named_zone_inlinesigning(dns_zone_t *zone, const cfg_obj_t *zconfig,
 /*%<
  * Determine if zone uses inline-signing. This is true if inline-signing
  * is set to yes, or if there is a dnssec-policy on a non-dynamic zone.
+ * Also use inline-signing if the zone previously used dnssec-policy, but
+ * turned it off.
  */
 
 isc_result_t
