@@ -39,6 +39,17 @@
 
 #define ISC_NETMGR_TID_UNKNOWN -1
 
+/*
+ * These are for networking stack tuning, please be aware that larger doesn't
+ * mean better here.  Generally, if the buffers are too big and they get filled,
+ * nobody will every care about the DNS messages that are delayed, so it will
+ * just make named process DNS queries that had timeouted on the sender side.
+ */
+#define ISC_UDP_RECV_BUFFER_SIZE 4096
+#define ISC_UDP_SEND_BUFFER_SIZE 4096
+#define ISC_TCP_RECV_BUFFER_SIZE 4096
+#define ISC_TCP_SEND_BUFFER_SIZE sizeof(uint16_t) + UINT16_MAX
+
 #if !defined(WIN32)
 /*
  * New versions of libuv support recvmmsg on unices.

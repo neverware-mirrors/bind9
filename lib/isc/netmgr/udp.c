@@ -297,14 +297,13 @@ isc__nm_async_udplisten(isc__networker_t *worker, isc__netievent_t *ev0) {
 	}
 #endif
 
-#ifdef ISC_RECV_BUFFER_SIZE
-	uv_recv_buffer_size(&sock->uv_handle.handle,
-			    &(int){ ISC_RECV_BUFFER_SIZE });
-#endif
-#ifdef ISC_SEND_BUFFER_SIZE
-	uv_send_buffer_size(&sock->uv_handle.handle,
-			    &(int){ ISC_SEND_BUFFER_SIZE });
-#endif
+	r = uv_recv_buffer_size(&sock->uv_handle.handle,
+				&(int){ ISC_UDP_RECV_BUFFER_SIZE });
+	REQUIRE(r == 0);
+	r = uv_send_buffer_size(&sock->uv_handle.handle,
+				&(int){ ISC_UDP_SEND_BUFFER_SIZE });
+	REQUIRE(r == 0);
+
 	r = uv_udp_recv_start(&sock->uv_handle.udp, udp_alloc_cb, udp_recv_cb);
 	if (r != 0) {
 		isc__nm_incstats(sock->mgr, sock->statsindex[STATID_BINDFAIL]);
@@ -691,14 +690,10 @@ udp_connect_direct(isc_nmsocket_t *sock, isc__nm_uvreq_t *req) {
 	isc__nm_incstats(sock->mgr, sock->statsindex[STATID_CONNECT]);
 	atomic_store(&sock->connecting, false);
 
-#ifdef ISC_RECV_BUFFER_SIZE
 	uv_recv_buffer_size(&sock->uv_handle.handle,
-			    &(int){ ISC_RECV_BUFFER_SIZE });
-#endif
-#ifdef ISC_SEND_BUFFER_SIZE
+			    &(int){ ISC_UDP_RECV_BUFFER_SIZE });
 	uv_send_buffer_size(&sock->uv_handle.handle,
-			    &(int){ ISC_SEND_BUFFER_SIZE });
-#endif
+			    &(int){ ISC_UDP_SEND_BUFFER_SIZE });
 
 	atomic_store(&sock->connected, true);
 
