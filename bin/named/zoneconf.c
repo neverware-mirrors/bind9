@@ -2257,9 +2257,6 @@ named_zone_inlinesigning(dns_zone_t *zone, const cfg_obj_t *zconfig,
 			inline_signing = true;
 		}
 	}
-	if (zone_is_dynamic || inline_signing) {
-		return (inline_signing);
-	}
 
 	return (inline_signing);
 }

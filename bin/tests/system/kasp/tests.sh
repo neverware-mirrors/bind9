@@ -172,7 +172,14 @@ set_server() {
 # Set zone name for testing keys.
 set_zone() {
 	ZONE=$1
+	DYNAMIC="no"
 }
+# By default zones are considered static
+# When testing dynamic zones, call 'set_dynamic' after 'set_zone'.
+set_dynamic() {
+	DYNAMIC="yes"
+}
+
 # Set policy settings (name $1, number of keys $2, dnskey ttl $3) for testing keys.
 set_policy() {
 	POLICY=$1
@@ -1216,7 +1223,11 @@ _loadkeys_on() {
 
 	nextpart $_dir/named.run > /dev/null
 	rndccmd $_server loadkeys $_zone in $_view > rndc.dnssec.loadkeys.out.$_zone.$n
-	wait_for_log 20 "zone ${_zone}/IN (signed): next key event" $_dir/named.run || return 1
+	if [ "${DYNAMIC}" = "yes" ]; then
+		wait_for_log 20 "zone ${_zone}/IN: next key event" $_dir/named.run || return 1
+	else
+		wait_for_log 20 "zone ${_zone}/IN (signed): next key event" $_dir/named.run || return 1
+	fi
 }
 
 # Tell named that the DS for the key in given zone has been seen in the
@@ -1354,6 +1365,7 @@ status=$((status+ret))
 # Zone: dynamic.kasp
 #
 set_zone "dynamic.kasp"
+set_dynamic
 set_policy "default" "1" "3600"
 set_server "ns3" "10.53.0.3"
 # Key properties, timings and states same as above.
@@ -1386,6 +1398,7 @@ status=$((status+ret))
 # Zone: dynamic-inline-signing.kasp
 #
 set_zone "dynamic-inline-signing.kasp"
+set_dynamic
 set_policy "default" "1" "3600"
 set_server "ns3" "10.53.0.3"
 # Key properties, timings and states same as above.
@@ -2945,7 +2958,11 @@ check_next_key_event() {
 	grep "zone ${ZONE}.*: next key event in .* seconds" "${DIR}/named.run" > "keyevent.out.$ZONE.test$n" || log_error "no next key event for zone ${ZONE}"
 
 	# Get the latest next key event.
-	_time=$(awk '{print $10}' < "keyevent.out.$ZONE.test$n" | tail -1)
+	if [ "${DYNAMIC}" = "yes" ]; then
+		_time=$(awk '{print $9}' < "keyevent.out.$ZONE.test$n" | tail -1)
+	else
+		_time=$(awk '{print $10}' < "keyevent.out.$ZONE.test$n" | tail -1)
+	fi
 
 	# The next key event time must within threshold of the
 	# expected time.
@@ -4463,6 +4480,10 @@ _migratenomatch_alglen_zsk=$(key_get KEY2 ID)
 #
 # Testing going insecure.
 #
+
+#
+# Zone step1.going-insecure.kasp
+#
 set_zone "step1.going-insecure.kasp"
 set_policy "migrate" "2" "7200"
 set_server "ns6" "10.53.0.6"
@@ -4506,6 +4527,27 @@ init_migration_insecure() {
 	key_clear "KEY3"
 	key_clear "KEY4"
 }
+init_migration_insecure
+
+# Various signing policy checks.
+check_keys
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+
+# We have set the timing metadata to now - 10 days (864000 seconds).
+rollover_predecessor_keytimes -864000
+check_keytimes
+check_apex
+check_subdomain
+dnssec_verify
+
+#
+# Zone step1.going-insecure-dynamic.kasp
+#
+
+set_zone "step1.going-insecure-dynamic.kasp"
+set_dynamic
+set_policy "migrate" "2" "7200"
+set_server "ns6" "10.53.0.6"
 init_migration_insecure
 
 # Various signing policy checks.
@@ -4615,6 +4657,80 @@ check_next_key_event 93600
 # Zone: step2.going-insecure.kasp
 #
 set_zone "step2.going-insecure.kasp"
+set_policy "none" "2" "7200"
+set_server "ns6" "10.53.0.6"
+
+# The DS is long enough removed from the zone to be considered HIDDEN.
+# This means the DNSKEY and the KSK signatures can be removed.
+set_keystate     "KEY1" "STATE_DS"     "hidden"
+set_keystate     "KEY1" "STATE_DNSKEY" "unretentive"
+set_keystate     "KEY1" "STATE_KRRSIG" "unretentive"
+set_keysigning   "KEY1" "no"
+
+set_keystate     "KEY2" "STATE_DNSKEY" "unretentive"
+set_keystate     "KEY2" "STATE_ZRRSIG" "unretentive"
+set_zonesigning  "KEY2" "no"
+
+# Set CDSDELETE to yes, so that the check_apex function will check that the
+# CDS and CDNSKEY DELETE records are published.
+CDS_DELETE="yes"
+
+# Various signing policy checks.
+check_keys
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+check_apex
+check_subdomain
+
+# Next key event is when the DNSKEY becomes HIDDEN. This happens after the
+# propagation delay, plus DNSKEY TTL:
+# 5m + 2h = 125m =  7500 seconds.
+check_next_key_event 7500
+
+#
+# Zone: step1.going-insecure-dynamic.kasp
+#
+set_zone "step1.going-insecure-dynamic.kasp"
+set_dynamic
+set_policy "none" "2" "7200"
+set_server "ns6" "10.53.0.6"
+
+# Key goal states should be HIDDEN.
+init_migration_insecure
+set_keystate "KEY1" "GOAL" "hidden"
+set_keystate "KEY2" "GOAL" "hidden"
+# The DS may be removed if we are going insecure.
+set_keystate "KEY1" "STATE_DS" "unretentive"
+
+# Set CDSDELETE to yes, so that the check_apex function will check that the
+# CDS and CDNSKEY DELETE records are published.
+CDS_DELETE="yes"
+
+# Various signing policy checks.
+check_keys
+wait_for_done_signing
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+check_apex
+check_subdomain
+dnssec_verify
+
+# Tell named that the DS has been removed.
+rndc_checkds "$SERVER" "$DIR" "KEY1" "now" "withdrawn" "$ZONE"
+wait_for_done_signing
+check_dnssecstatus "$SERVER" "$POLICY" "$ZONE"
+check_apex
+check_subdomain
+dnssec_verify
+
+# Next key event is when the DS becomes HIDDEN. This happens after the
+# parent propagation delay, retire safety delay, and DS TTL:
+# 1h + 1h + 1d = 26h = 93600 seconds.
+check_next_key_event 93600
+
+#
+# Zone: step2.going-insecure-dynamic.kasp
+#
+set_zone "step2.going-insecure-dynamic.kasp"
+set_dynamic
 set_policy "none" "2" "7200"
 set_server "ns6" "10.53.0.6"
 

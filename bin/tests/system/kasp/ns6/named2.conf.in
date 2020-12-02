@@ -70,6 +70,20 @@ zone "step2.going-insecure.kasp" {
         dnssec-policy "none";
 };
 
+zone "step1.going-insecure-dynamic.kasp" {
+        type master;
+        file "step1.going-insecure-dynamic.kasp.db";
+        dnssec-policy "none";
+	allow-update { any; };
+};
+
+zone "step2.going-insecure-dynamic.kasp" {
+        type master;
+        file "step2.going-insecure-dynamic.kasp.db";
+        dnssec-policy "none";
+	allow-update { any; };
+};
+
 /*
  * Zones for testing KSK/ZSK algorithm roll.
  */

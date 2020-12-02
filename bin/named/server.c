@@ -14484,7 +14484,7 @@ named_server_signing(named_server_t *server, isc_lex_t *lex,
 	}
 
 	kasp = dns_zone_getkasp(zone);
-	if (kasp != NULL) {
+	if (dns_kasp_enabled(kasp)) {
 		(void)putstr(text, "zone uses dnssec-policy, use rndc dnssec "
 				   "command instead");
 		(void)putnull(text);
