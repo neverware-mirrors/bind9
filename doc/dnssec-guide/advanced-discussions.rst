@@ -11,12 +11,12 @@
 .. _dnssec_advanced_discussions:
 
 Advanced Discussions
-====================
+--------------------
 
 .. _signature_validity_periods:
 
 Signature Validity Periods and Zone Re-Signing Intervals
---------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In :ref:`how_are_answers_verified`, we saw that record signatures
 have a validity period outside of which they are not valid. This means
@@ -60,7 +60,7 @@ BIND 9 default policy sets the signature refresh interval to 5 days.
 .. _advanced_discussions_proof_of_nonexistence:
 
 Proof of Non-Existence (NSEC and NSEC3)
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 How do you prove that something does not exist? This zen-like question
 is an interesting one, and in this section we provide an overview
@@ -102,7 +102,7 @@ look at the first one, NSEC, next.
 .. _advanced_discussions_nsec:
 
 NSEC
-~~~~
+^^^^
 
 The NSEC record is used to prove that something does not exist, by
 providing the name before it and the name after it. Using our tiny
@@ -176,7 +176,7 @@ child zones, such as ``.com``. To learn more about opt-out, please see
 .. _advanced_discussions_nsec3:
 
 NSEC3
-~~~~~
+^^^^^
 
 NSEC3 adds two additional features that NSEC does not have:
 
@@ -251,7 +251,7 @@ ease of display):
 .. _advanced_discussions_nsec3param:
 
 NSEC3PARAM
-^^^^^^^^^^
+++++++++++
 
 The above NSEC3 examples used four parameters: 1, 0, 10, and
 1234567890ABCDEF. 1 represents the algorithm, 0 represents the opt-out
@@ -299,7 +299,7 @@ To set the opt-out flag, 15 iterations, and no salt, use:
 .. _advanced_discussions_nsec3_optout:
 
 NSEC3 Opt-Out
-^^^^^^^^^^^^^
++++++++++++++
 
 One of the advantages of NSEC3 over NSEC is the ability for a parent zone
 to publish less information about its child or delegated zones. Why
@@ -327,7 +327,7 @@ To learn more about how to configure NSEC3 opt-out, please see
 .. _advanced_discussions_nsec3_salt:
 
 NSEC3 Salt
-^^^^^^^^^^
+++++++++++
 
 As described in :ref:`advanced_discussions_nsec3`, while NSEC3
 does not put your zone data in plain public display, it is still not
@@ -351,7 +351,7 @@ To learn more about the steps to take to change NSEC3, please see
 .. _advanced_discussions_nsec_or_nsec3:
 
 NSEC or NSEC3?
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 So which one should you choose: NSEC or NSEC3? There is not a
 single right answer here that fits everyone; it comes down to your
@@ -377,10 +377,10 @@ as of version 9.16.9.
 .. _advanced_discussions_key_generation:
 
 DNSSEC Keys
------------
+~~~~~~~~~~~
 
 Types of Keys
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 Although DNSSEC
 documentation talks about three types of keys, they are all the same
@@ -500,7 +500,7 @@ As with many questions related to the choice of DNSSEC policy, the
 decision on which is "best" is not clear and depends on your circumstances.
 
 Which Algorithm?
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 There are three algorithm choices for DNSSEC as of this writing
 (mid-2020):
@@ -525,7 +525,7 @@ area. For details about rolling over DNSKEYs to a new algorithm, see
 .. _key_sizes:
 
 Key Sizes
-~~~~~~~~~
+^^^^^^^^^
 
 If using RSA keys, the choice of key sizes is a classic issue of finding
 the balance between performance and security. The larger the key size,
@@ -562,10 +562,10 @@ an ECDSA key length of 224 bits provides the same level of security as a
 .. _advanced_discussions_key_storage:
 
 Key Storage
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 Public Key Storage
-^^^^^^^^^^^^^^^^^^
+++++++++++++++++++
 
 The beauty of a public key cryptography system is that the public key
 portion can and should be distributed to as many people as possible. As
@@ -579,7 +579,7 @@ parent zone (see :ref:`working_with_parent_zone` for more details),
 and is published by the parent zone as DS records.
 
 Private Key Storage
-^^^^^^^^^^^^^^^^^^^
++++++++++++++++++++
 
 Ideally, private keys should be stored offline, in secure devices such
 as a smart card. Operationally, however, this creates certain
@@ -606,7 +606,7 @@ For more information on changing keys, please see
 .. _hardware_security_modules:
 
 Hardware Security Modules (HSMs)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++++++
 
 A Hardware Security Module (HSM) may come in different shapes and sizes,
 but as the name indicates, it is a physical device or devices, usually
@@ -630,12 +630,12 @@ Manual <https://bind9.readthedocs.io/en/latest/index.html>`_.
 .. _advanced_discussions_key_management:
 
 Rollovers
----------
+~~~~~~~~~
 
 .. _key_rollovers:
 
 Key Rollovers
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 A key rollover is where one key in a zone is replaced by a new one.
 There are arguments for and against regularly rolling keys. In essence
@@ -734,7 +734,7 @@ to roll a ZSK, a KSK, or a CSK.
 .. _zsk_rollover_methods:
 
 ZSK Rollover Methods
-^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++
 
 The ZSK can be rolled in one of the following two ways:
 
@@ -763,7 +763,7 @@ The ZSK can be rolled in one of the following two ways:
 .. _ksk_rollover_methods:
 
 KSK Rollover Methods
-^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++
 
 Rolling the KSK requires interaction with the parent zone, so
 operationally this may be more complex than rolling ZSKs. There are
@@ -806,7 +806,7 @@ three methods of rolling the KSK:
 .. _csk_rollover_methods:
 
 CSK Rollover Methods
-^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++
 
 Rolling the CSK is more complex than rolling either the ZSK or KSK, as
 the timing constraints relating to both the parent zone and the caching
@@ -818,7 +818,7 @@ combination of ZSK Pre-Publication and Double-KSK rollover.
 .. _advanced_discussions_emergency_rollovers:
 
 Emergency Key Rollovers
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Keys are generally rolled on a regular schedule - if you choose
 to roll them at all. But sometimes, you may have to rollover keys
@@ -856,7 +856,7 @@ considerations, please check out :rfc:`7583`.
 .. _advanced_discussions_DNSKEY_algorithm_rollovers:
 
 Algorithm Rollovers
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 From time to time, new digital signature algorithms with improved
 security are introduced, and it may be desirable for administrators to
@@ -921,10 +921,10 @@ from the zone, the final (optional) step is to remove the key files for
 the old algorithm from the key directory.
 
 Other Topics
-------------
+~~~~~~~~~~~~
 
 DNSSEC and Dynamic Updates
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Dynamic DNS (DDNS) is actually independent of DNSSEC. DDNS provides a
 mechanism, separate from editing the zone file or zone database, to edit DNS
@@ -959,7 +959,7 @@ to (re)generate signatures and NSEC or NSEC3 records.
 .. _dnssec_on_private_networks:
 
 DNSSEC on Private Networks
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's clarify what we mean: in this section, "private networks" really refers to
 a private or internal DNS view. Most DNS products offer the ability to
@@ -984,7 +984,7 @@ that they may have cached records from the wrong zone.
 .. _introduction_to_dane:
 
 Introduction to DANE
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 With your DNS infrastructure secured with DNSSEC, information can
 now be stored in DNS and its integrity and authenticity can be proved.
@@ -1001,7 +1001,7 @@ number of ways, including:
 -  A secure way of getting public PGP keys (:rfc:`7929`).
 
 Disadvantages of DNSSEC
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 DNSSEC, like many things in this world, is not without its problems.
 Below are a few challenges and disadvantages that DNSSEC faces.

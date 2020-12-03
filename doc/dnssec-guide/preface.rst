@@ -9,12 +9,12 @@
    information regarding copyright ownership.
 
 Preface
-=======
+-------
 
 .. _preface_organization:
 
 Organization
-------------
+~~~~~~~~~~~~
 
 This document provides introductory information on how DNSSEC works, how
 to configure BIND 9 to support some common DNSSEC features, and
@@ -53,7 +53,7 @@ questions and answers about DNSSEC.
 .. _preface_acknowledgement:
 
 Acknowledgements
-----------------
+~~~~~~~~~~~~~~~~
 
 This document was originally authored by Josh Kuo of `DeepDive
 Networking <https://www.deepdivenetworking.com/>`__. He can be reached

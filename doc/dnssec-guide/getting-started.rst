@@ -11,17 +11,17 @@
 .. _getting_started:
 
 Getting Started
-===============
+---------------
 
 .. _software_requirements:
 
 Software Requirements
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 .. _bind_version:
 
 BIND Version
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 Most configuration examples given in this document require BIND version
 9.16.0 or newer (although many do work with all versions of BIND
@@ -42,7 +42,7 @@ DNSSEC configuration, as well as the latest security fixes.
 .. _dnssec_support_in_bind:
 
 DNSSEC Support in BIND
-~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^
 
 All versions of BIND 9 since BIND 9.7 can support DNSSEC, as currently
 deployed in the global DNS, so the BIND software you are running most
@@ -85,7 +85,7 @@ made to the software in recent years.
 .. _system_entropy:
 
 System Entropy
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 To deploy DNSSEC to your authoritative server, you
 need to generate cryptographic keys. The amount of time it takes to
@@ -106,12 +106,12 @@ the hardware-based solutions.
 .. _hardware_requirements:
 
 Hardware Requirements
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 .. _recursive_server_hardware:
 
 Recursive Server Hardware
-~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enabling DNSSEC validation on a recursive server makes it a *validating
 resolver*. The job of a validating resolver is to fetch additional
@@ -147,7 +147,7 @@ validation.
 .. _authoritative_server_hardware:
 
 Authoritative Server Hardware
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 On the authoritative server side, DNSSEC is enabled on a zone-by-zone
 basis. When a zone is DNSSEC-enabled, it is also known as "signed."
@@ -189,7 +189,7 @@ increased system load and possibly network traffic.
 .. _network_requirements:
 
 Network Requirements
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 From a network perspective, DNS and DNSSEC packets are very similar;
 DNSSEC packets are just bigger, which means DNS is more likely to use
@@ -209,12 +209,12 @@ network is ready for DNSSEC:
 .. _operational_requirements:
 
 Operational Requirements
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _parent_zone:
 
 Parent Zone
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 Before starting your DNSSEC deployment, check with your parent zone
 administrators to make sure they support DNSSEC. This may or may not be
@@ -226,7 +226,7 @@ does not yet support DNSSEC, contact that administrator to voice your concerns.
 .. _security_requirements:
 
 Security Requirements
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 Some organizations may be subject to stricter security requirements than
 others. Check to see if your organization requires stronger

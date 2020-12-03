@@ -11,12 +11,12 @@
 .. _introduction:
 
 Introduction
-============
+------------
 
 .. _who_should_read:
 
 Who Should Read this Guide?
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This guide is intended as an introduction to DNSSEC for the DNS
 administrator who is already comfortable working with the existing BIND and DNS
@@ -37,7 +37,7 @@ related technology such as public key cryptography.
 .. _who_should_not_read:
 
 Who May Not Want to Read this Guide?
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you are already operating a DNSSEC-signed zone, you may not learn
 much from the first half of this document, and you may want to start with 
@@ -71,7 +71,7 @@ exception of a brief discussion in :ref:`dnssec_on_private_networks`.
 .. _what_is_dnssec:
 
 What is DNSSEC?
----------------
+~~~~~~~~~~~~~~~
 
 The Domain Name System (DNS) was designed in a day and age when the
 Internet was a friendly and trusting place. The protocol itself provides
@@ -118,7 +118,7 @@ tasks and considerations.
 .. _what_does_dnssec_add_to_dns:
 
 What Does DNSSEC Add to DNS?
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
 
@@ -193,7 +193,7 @@ Below is a short introduction on each of the new record types:
 .. _how_does_dnssec_change_dns_lookup:
 
 How Does DNSSEC Change DNS Lookup?
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Traditional (insecure) DNS lookup is simple: a recursive name server
 receives a query from a client to lookup a name like ``www.isc.org``. The
@@ -218,7 +218,7 @@ trust one key: the root key.
 .. _dnssec_12_steps:
 
 The 12-Step DNSSEC Validation Process (Simplified)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following example shows the 12 steps of the DNSSEC validating process 
 at a very high level, looking up the name ``www.isc.org`` :
@@ -302,7 +302,7 @@ at a very high level, looking up the name ``www.isc.org`` :
 .. _chain_of_trust:
 
 Chain of Trust
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 But what about the root server itself? Who do we go to verify root's
 keys? There's no parent zone for root. In security, you have to trust
@@ -324,7 +324,7 @@ technical details.
 .. _why_is_dnssec_important:
 
 Why is DNSSEC Important? (Why Should I Care?)
----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You might be thinking to yourself: all this DNSSEC stuff sounds
 wonderful, but why should I care? Below are some reasons why you may
@@ -377,7 +377,7 @@ want to consider deploying DNSSEC:
 .. _how_does_dnssec_change_my_job:
 
 How Does DNSSEC Change My Job as a DNS Administrator?
------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 With this protocol extension, some of the things you were used to in DNS
 have changed. As the DNS administrator, you have new maintenance

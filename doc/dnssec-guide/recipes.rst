@@ -11,7 +11,7 @@
 .. _dnssec_recipes:
 
 Recipes
-=======
+-------
 
 This chapter provides step-by-step "recipes" for some common
 DNSSEC configurations.
@@ -19,7 +19,7 @@ DNSSEC configurations.
 .. _recipes_inline_signing:
 
 DNSSEC Signing
---------------
+~~~~~~~~~~~~~~
 
 There are two recipes here: the first shows an example using DNSSEC
 signing on the primary server, which has been covered in this
@@ -30,7 +30,7 @@ sign the zone "on the fly."
 .. _recipes_inline_signing_primary:
 
 Primary Server DNSSEC Signing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this recipe, our servers are illustrated as shown in
 :ref:`dnssec-signing-1`: we have a primary server
@@ -88,7 +88,7 @@ can run any DNS product that supports DNSSEC.
 .. _recipes_inline_signing_bump_in_the_wire:
 
 "Bump in the Wire" Signing
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this recipe, we take advantage of the power of automated signing
 by placing an additional name server (192.168.1.5) between the hidden
@@ -164,7 +164,7 @@ like this:
 .. _recipes_rollovers:
 
 Rollovers
----------
+~~~~~~~~~
 
 If you are signing your zone using a ``dnssec-policy`` statement, this
 section is not really relevant to you. In the policy statement, you set how long
@@ -182,7 +182,7 @@ through the rollover process and what you should be monitoring.
 .. _recipes_zsk_rollover:
 
 ZSK Rollover
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 This recipe covers how to perform a ZSK rollover using what is known as
 the Pre-Publication method. For other ZSK rolling methods, please see
@@ -211,7 +211,7 @@ information on key management and rollovers, please see
 :ref:`advanced_discussions_key_management`.
 
 One Month Before ZSK Rollover
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++++++++++++++++++++++++++++++
 
 On December 1, 2020, a month before the example rollover, you (as administrator)
 should change the parameters on the current key (17694). Set it to become inactive on
@@ -326,7 +326,7 @@ If you have followed the configuration examples in this guide of using
 you by BIND.
 
 Day of ZSK Rollover
-^^^^^^^^^^^^^^^^^^^
++++++++++++++++++++
 
 On the actual day of the rollover, although there is technically nothing
 for you to do, you should still keep an eye on the zone to make sure new
@@ -371,7 +371,7 @@ disappeared, replaced by a new signature generated from the new ZSK
    zone and not delete it right away.
 
 One Month After ZSK Rollover
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++
 
 Again, technically there is nothing you need to do on this day,
 but it doesn't hurt to verify that the old ZSK (17694) is now completely
@@ -407,7 +407,7 @@ point, but they do not have to be.
 .. _recipes_ksk_rollover:
 
 KSK Rollover
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 This recipe describes how to perform KSK rollover using the Double-DS
 method. For other KSK rolling methods, please see
@@ -461,7 +461,7 @@ has already been published by the parent zone:
 .. _one_month_before_ksk_rollover:
 
 One Month Before KSK Rollover
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++++++++++++++++++++++++++++++
 
 On December 1, 2020, a month before the planned rollover, you (as
 administrator) should
@@ -648,7 +648,7 @@ querying a few of the ``.com`` name servers is another appropriate
 verification.
 
 Day of KSK Rollover
-^^^^^^^^^^^^^^^^^^^
++++++++++++++++++++
 
 If you have followed the examples in this document, as described in
 :ref:`easy_start_guide_for_authoritative_servers`, there is
@@ -687,7 +687,7 @@ disappeared, replaced by a new signature generated from the new KSK
 (23550).
 
 One Month After KSK Rollover
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++
 
 While the removal of the old DNSKEY from the zone should be automated by
 ``named``, the removal of the DS record is manual. You should make sure
@@ -768,12 +768,12 @@ point, but they do not have to be.
 .. _recipes_nsec3:
 
 NSEC and NSEC3
---------------
+~~~~~~~~~~~~~~
 
 .. _recipes_nsec_to_nsec3:
 
 Migrating from NSEC to NSEC3
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This recipe describes how to transition from using NSEC to NSEC3, as described
 in :ref:`advanced_discussions_proof_of_nonexistence`. This recipe
@@ -834,7 +834,7 @@ parameters, please see :ref:`advanced_discussions_nsec3param`.
 .. _recipes_nsec3_to_nsec:
 
 Migrating from NSEC3 to NSEC
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Migrating from NSEC3 back to NSEC is easy; just remove the ``nsec3param``
 configuration option from your ``dnssec-policy`` and reconfigure the name
@@ -861,7 +861,7 @@ and you should no longer see any traces of NSEC3 records.
 .. _recipes_nsec3_salt:
 
 Changing the NSEC3 Salt
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 In :ref:`advanced_discussions_nsec3_salt`, we discuss the
 reasons why you may want to change your salt periodically for better
@@ -900,7 +900,7 @@ go back to your original length value.
 .. _recipes_nsec3_optout:
 
 NSEC3 Opt-Out
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 This recipe discusses how to enable and disable NSEC3 opt-out, and how to show
 the results of each action. As discussed in
@@ -1011,7 +1011,7 @@ To undo NSEC3 opt-out, change the configuration again:
 .. _revert_to_unsigned:
 
 Reverting to Unsigned
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 This recipe describes how to revert from a signed zone (DNSSEC) back to
 an unsigned (DNS) zone.

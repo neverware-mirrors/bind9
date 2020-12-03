@@ -11,7 +11,7 @@
 .. _dnssec_troubleshooting:
 
 Basic DNSSEC Troubleshooting
-============================
+----------------------------
 
 In this chapter, we cover some basic troubleshooting
 techniques, some common DNSSEC symptoms, and their causes and solutions. This
@@ -21,7 +21,7 @@ guide, because that could easily be an entire book by itself.
 .. _troubleshooting_query_path:
 
 Query Path
-----------
+~~~~~~~~~~
 
 The first step in troubleshooting DNS or DNSSEC should be to
 determine the query path. Whenever you are working with a DNS-related issue, it is
@@ -95,7 +95,7 @@ cached results.
 .. _troubleshooting_visible_symptoms:
 
 Visible DNSSEC Validation Symptoms
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After determining the query path, it is necessary to
 determine whether the problem is actually related to DNSSEC
@@ -145,7 +145,7 @@ DNSSEC errors.
 .. _troubleshooting_logging:
 
 Basic Logging
--------------
+~~~~~~~~~~~~~
 
 DNSSEC validation error messages show up in ``syslog`` as a
 query error by default. Here is an example of what it may look like:
@@ -164,7 +164,7 @@ failed.
 .. _troubleshooting_logging_debug:
 
 BIND DNSSEC Debug Logging
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A word of caution: before you enable debug logging, be aware that this
 may dramatically increase the load on your name servers. Enabling debug
@@ -261,12 +261,12 @@ We cover some of the most validation problems in the next section.
 .. _troubleshooting_common_problems:
 
 Common Problems
----------------
+~~~~~~~~~~~~~~~
 
 .. _troubleshooting_security_lameness:
 
 Security Lameness
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 Similar to lame delegation in traditional DNS, security lameness refers to the
 condition when the parent zone holds a set of DS records that point to
@@ -371,7 +371,7 @@ the correct key information to the parent zone.
 .. _troubleshooting_incorrect_time:
 
 Incorrect Time
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
 In DNSSEC, every record comes with at least one RRSIG, and each RRSIG
 contains two timestamps: one indicating when it becomes valid, and
@@ -400,7 +400,7 @@ domain name.
 .. _troubleshooting_unable_to_load_keys:
 
 Unable to Load Keys
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 This is a simple yet common issue. If the key files are present but
 unreadable by ``named`` for some reason, the ``syslog`` returns clear error
@@ -458,7 +458,7 @@ signed.
 .. _troubleshooting_invalid_trust_anchors:
 
 Invalid Trust Anchors
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 In most cases, you never need to explicitly configure trust
 anchors. ``named`` supplies the current root trust anchor and,
@@ -533,7 +533,7 @@ anchor.
 .. _troubleshooting_nta:
 
 Negative Trust Anchors
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 BIND 9.11 introduced Negative Trust Anchors (NTAs) as a means to
 *temporarily* disable DNSSEC validation for a zone when you know that
@@ -567,7 +567,7 @@ values have a permitted maximum value of one week.
 .. _troubleshooting_nsec3:
 
 NSEC3 Troubleshooting
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 BIND includes a tool called ``nsec3hash`` that runs through the same
 steps as a validating resolver, to generate the correct hashed name

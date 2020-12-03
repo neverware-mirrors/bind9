@@ -11,7 +11,7 @@
 .. _dnssec_commonly_asked_questions:
 
 Commonly Asked Questions
-========================
+------------------------
 
 No questions are too stupid to ask. Below are some common
 questions you may have and (hopefully) some answers that help.

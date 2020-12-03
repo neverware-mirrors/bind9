@@ -11,12 +11,12 @@
 .. _DNSSEC_validation:
 
 Validation
-==========
+----------
 
 .. _easy_start_guide_for_recursive_servers:
 
 Easy-Start Guide for Recursive Servers
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This section provides the basic information needed to set up a
 working DNSSEC-aware recursive server, also known as a validating
@@ -28,7 +28,7 @@ hashing functions.
 .. _enabling_validation:
 
 Enabling DNSSEC Validation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 So how do we turn on DNSSEC validation? It turns out that you may not need
 to reconfigure your name server at all, since the most recent versions of BIND 9 -
@@ -60,7 +60,7 @@ DNSSEC.
 .. _effect_of_enabling_validation:
 
 Effects of Enabling DNSSEC Validation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Once DNSSEC validation is enabled, any DNS response that does not pass
 the validation checks results in a failure to resolve the domain name
@@ -91,7 +91,7 @@ leaves validation enabled. A basic troubleshooting guide can be found in
 .. _how_to_test_recursive_server:
 
 So You Think You Are Validating (How To Test A Recursive Server)
-----------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that you have reconfigured your recursive server and
 restarted it, how do you know that your recursive name server is
@@ -101,7 +101,7 @@ we've listed a few of them below.
 .. _using_web_based_tests_to_verify:
 
 Using Web-Based Tools to Verify
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For most people, the simplest way to check if a recursive name server
 is indeed validating DNS queries is to use one of the many web-based
@@ -118,7 +118,7 @@ responses.
 .. _external-tools-dnssec-debugger:
 
 Verisign DNSSEC Debugger
-^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++
 
 URL: `<https://dnssec-debugger.verisignlabs.com/>`__
 
@@ -134,7 +134,7 @@ get a detailed report.
 .. _external-tools-dnsviz:
 
 DNSViz
-^^^^^^
+++++++
 
 URL: `<https://dnsviz.net/>`__
 
@@ -150,7 +150,7 @@ a domain name and its resolution path in the DNS namespace.
 .. _using_dig_to_verify:
 
 Using ``dig`` to Verify
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Web-based DNSSEC-verification tools often employ JavaScript. If you don't trust the
 JavaScript magic that the web-based tools rely on, you can take matters
@@ -272,7 +272,7 @@ file) before continuing.
 .. _verifying_protection_from_bad_domains:
 
 Verifying Protection From Bad Domain Names
-------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is also important to make sure that DNSSEC is protecting your network from
 domain names that fail to validate; such failures could be caused by
@@ -349,7 +349,7 @@ failure.
 .. _how_do_i_know_validation_problem:
 
 How Do I Know I Have a Validation Problem?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Since all DNSSEC validation failures result in a general ``SERVFAIL``
 message, how do we know if it was really a validation error?
@@ -394,7 +394,7 @@ For more information on troubleshooting, please see
 .. _validation_easy_start_explained:
 
 Validation Easy Start Explained
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In :ref:`easy_start_guide_for_recursive_servers`, we used one line
 of configuration to turn on DNSSEC validation: the act of chasing down
@@ -404,7 +404,7 @@ take a closer look at what DNSSEC validation actually does, and some other optio
 .. _dnssec_validation_explained:
 
 ``dnssec-validation``
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -446,7 +446,7 @@ please refer to :ref:`trusted_keys_and_managed_keys`.
 .. _how_does_dnssec_change_dns_lookup_revisited:
 
 How Does DNSSEC Change DNS Lookup (Revisited)?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Now you've enabled validation on your recursive name server and
 verified that it works. What exactly changed? In
@@ -506,7 +506,7 @@ look at in the next section, :ref:`how_are_answers_verified`.
 .. _how_are_answers_verified:
 
 How Are Answers Verified?
-~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
 
@@ -602,7 +602,7 @@ the client.
 .. _trust_anchors:
 
 Trust Anchors
--------------
+~~~~~~~~~~~~~
 
 A trust anchor is a key that is placed into a validating resolver, so
 that the validator can verify the results of a given request with a
@@ -613,7 +613,7 @@ validation.
 .. _how_trust_anchors_are_used:
 
 How Trust Anchors are Used
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the section :ref:`how_does_dnssec_change_dns_lookup_revisited`,
 we walked through the 12 steps of the DNSSEC lookup process. At the end
@@ -669,7 +669,7 @@ needs to continue chasing down the validation chain.
 .. _trusted_keys_and_managed_keys:
 
 Trusted Keys and Managed Keys
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Since the resolver is validating, we must have at least one key (trust
 anchor) configured. How did it get here, and how do we maintain it?
@@ -759,12 +759,12 @@ use the BIND defaults and let the software manage the root key.
 .. _whats_edns0_all_about:
 
 What's EDNS All About (And Why Should I Care)?
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _whats-edns0-all-about-overview:
 
 EDNS Overview
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 Traditional DNS responses are typically small in size (less than 512
 bytes) and fit nicely into a small UDP packet. The Extension mechanism
@@ -789,7 +789,7 @@ DNSSEC expects from the network environment.
 .. _edns_on_dns_servers:
 
 EDNS on DNS Servers
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 For many years, BIND has had EDNS enabled by default,
 and the UDP packet size is set to a maximum of 4096 bytes. The DNS
@@ -841,7 +841,7 @@ lookup failures or be unable to perform DNSSEC validation.
 .. _support_for_large_packets_network_equipment:
 
 Support for Large Packets on Network Equipment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If both your recursive name server and your ISP's name servers
 support EDNS, we are all good here, right? Not so fast. Since these large
@@ -878,7 +878,7 @@ sure TCP port 53 is also allowed for DNS traffic.
 .. _dns_uses_tcp:
 
 Wait... DNS Uses TCP?
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 Yes. DNS uses TCP port 53 as a fallback mechanism, when it cannot use
 UDP to transmit data. This has always been the case, even long before
