@@ -44,7 +44,7 @@ on them.
 
 .. _dnssec-signing-1:
 
-.. figure:: img/dnssec-inline-signing-1.png
+.. figure:: ../dnssec-guide/img/dnssec-inline-signing-1.png
    :alt: DNSSEC Signing Recipe #1
    :width: 80.0%
 
@@ -102,7 +102,7 @@ the existing hidden DNS primary and DNS secondaries.
 
 .. _dnssec-signing-2:
 
-.. figure:: img/dnssec-inline-signing-2.png
+.. figure:: ../dnssec-guide/img/dnssec-inline-signing-2.png
    :alt: DNSSEC Signing Recipe #2
    :width: 100.0%
 
@@ -566,7 +566,7 @@ GoDaddy's web-based interface, used to add a new DS record [1]_.
 
    .. _add-ds-1:
 
-   .. figure:: img/add-ds-1.png
+   .. figure:: ../dnssec-guide/img/add-ds-1.png
       :alt: Upload DS Record Step #1
       :width: 70.0%
 
@@ -576,7 +576,7 @@ GoDaddy's web-based interface, used to add a new DS record [1]_.
 
    .. _add-ds-2:
 
-   .. figure:: img/add-ds-2.png
+   .. figure:: ../dnssec-guide/img/add-ds-2.png
       :alt: Upload DS Record Step #2
       :width: 40.0%
 
@@ -587,7 +587,7 @@ GoDaddy's web-based interface, used to add a new DS record [1]_.
 
    .. _add-ds-3:
 
-   .. figure:: img/add-ds-3.png
+   .. figure:: ../dnssec-guide/img/add-ds-3.png
       :alt: Upload DS Record Step #3
       :width: 80.0%
 
@@ -598,7 +598,7 @@ GoDaddy's web-based interface, used to add a new DS record [1]_.
 
    .. _add-ds-4:
 
-   .. figure:: img/add-ds-4.png
+   .. figure:: ../dnssec-guide/img/add-ds-4.png
       :alt: Upload DS Record Step #4
       :width: 80.0%
 
@@ -608,7 +608,7 @@ GoDaddy's web-based interface, used to add a new DS record [1]_.
 
    .. _add-ds-5:
 
-   .. figure:: img/add-ds-5.png
+   .. figure:: ../dnssec-guide/img/add-ds-5.png
       :alt: Upload DS Record Step #5
       :width: 80.0%
 
@@ -618,7 +618,7 @@ GoDaddy's web-based interface, used to add a new DS record [1]_.
 
    .. _add-ds-6:
 
-   .. figure:: img/add-ds-6.png
+   .. figure:: ../dnssec-guide/img/add-ds-6.png
       :alt: Upload DS Record Step #6
       :width: 80.0%
 
@@ -728,7 +728,7 @@ to resolve any names in the zone.
 
    .. _remove-ds-1:
 
-   .. figure:: img/remove-ds-1.png
+   .. figure:: ../dnssec-guide/img/remove-ds-1.png
       :alt: Remove DS Record Step #1
       :width: 40.0%
 
@@ -739,7 +739,7 @@ to resolve any names in the zone.
 
    .. _remove-ds-2:
 
-   .. figure:: img/remove-ds-2.png
+   .. figure:: ../dnssec-guide/img/remove-ds-2.png
       :alt: Remove DS Record Step #2
       :width: 80.0%
 
@@ -750,7 +750,7 @@ to resolve any names in the zone.
 
    .. _remove-ds-3:
 
-   .. figure:: img/remove-ds-3.png
+   .. figure:: ../dnssec-guide/img/remove-ds-3.png
       :alt: Remove DS Record Step #3
       :width: 80.0%
 
@@ -1029,7 +1029,7 @@ Below is an example showing how to remove DS records using the
 
 .. _unsign-1:
 
-   .. figure:: img/unsign-1.png
+   .. figure:: ../dnssec-guide/img/unsign-1.png
       :alt: Revert to Unsigned Step #1
       :width: 60.0%
 
@@ -1039,7 +1039,7 @@ Below is an example showing how to remove DS records using the
 
 .. _unsign-2:
 
-   .. figure:: img/unsign-2.png
+   .. figure:: ../dnssec-guide/img/unsign-2.png
       :alt: Revert to Unsigned Step #2
       :width: 40.0%
 
@@ -1050,7 +1050,7 @@ Below is an example showing how to remove DS records using the
 
 .. _unsign-3:
 
-   .. figure:: img/unsign-3.png
+   .. figure:: ../dnssec-guide/img/unsign-3.png
       :alt: Revert to Unsigned Step #3
       :width: 70.0%
 
@@ -1060,7 +1060,7 @@ Below is an example showing how to remove DS records using the
 
 .. _unsign-4:
 
-   .. figure:: img/unsign-4.png
+   .. figure:: ../dnssec-guide/img/unsign-4.png
       :alt: Revert to Unsigned Step #4
       :width: 70.0%
 

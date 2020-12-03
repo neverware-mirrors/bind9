@@ -126,7 +126,7 @@ This tool shows a nice summary of checks performed on your domain name.
 You can expand it to view more details for each of the items checked, to
 get a detailed report.
 
-.. figure:: img/verisign-dnssec-debugger-example.png
+.. figure:: ../dnssec-guide/img/verisign-dnssec-debugger-example.png
    :alt: Verisign DNSSEC Debugger
 
    Verisign DNSSEC Debugger
@@ -141,7 +141,7 @@ URL: `<https://dnsviz.net/>`__
 DNSViz provides a visual analysis of the DNSSEC authentication chain for
 a domain name and its resolution path in the DNS namespace.
 
-.. figure:: img/dnsviz-example-small.png
+.. figure:: ../dnssec-guide/img/dnsviz-example-small.png
    :alt: DNSViz
    :width: 80.0%
 
@@ -523,7 +523,7 @@ generated. On the authoritative server, each DNS record (or message) is
 run through a hash function, and this hashed value is then encrypted by a
 private key. This encrypted hash value is the digital signature.
 
-.. figure:: img/signature-generation.png
+.. figure:: ../dnssec-guide/img/signature-generation.png
    :alt: Signature Generation
    :width: 80.0%
 
@@ -543,7 +543,7 @@ verified, meaning this answer came from the authoritative server
 (authenticity), and the content remained intact during transit
 (integrity).
 
-.. figure:: img/signature-verification.png
+.. figure:: ../dnssec-guide/img/signature-verification.png
    :alt: Signature Verification
    :width: 80.0%
 
