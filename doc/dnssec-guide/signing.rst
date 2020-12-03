@@ -435,7 +435,7 @@ Look for Signatures in Your Zone
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another way to see if your zone data is signed is to check for the
-presence of a signature. With DNSSEC, every record [1]_ now comes with at
+presence of a signature. With DNSSEC, every record [#]_ now comes with at
 least one corresponding signature, known as an RRSIG.
 
 ::
@@ -548,7 +548,7 @@ containing the information we uploaded in
    ;; ANSWER SECTION:
    example.com.  61179 IN  DS  10376 13 2 B92E22CAE0B41430EC38D3F7EDF1183C3A94F4D4748569250C15EE33B8312EF0
 
-.. [1]
+.. [#]
    Well, almost every record: NS records and glue records for
    delegations do not have RRSIG records. If there are
    no delegations, then every record in your zone is
@@ -836,7 +836,7 @@ Working with the Parent Zone (2)
 Once the zone is signed, the only required manual tasks are
 to monitor KSK or CSK key rolls and pass the new DS record to the
 parent zone. However, if the parent can process CDS or CDNSKEY records,
-you may not even have to do that [2]_.
+you may not even have to do that [#]_.
 
 When the time approaches for the roll of a KSK or CSK, BIND adds a
 CDS and a CDNSKEY record for the key in question to the apex of the
@@ -857,7 +857,7 @@ your zone, presumably using the same mechanism you used to upload the
 records for the first time. Again, you need to use the ``rndc`` tool
 to tell ``named`` that the DS record has been published.
 
-.. [2]
+.. [#]
    For security reasons, a parent zone that supports CDS/CDNSKEY may require
    the DS record to be manually uploaded when we first sign the zone.
    Until our zone is signed, the parent cannot be sure that a CDS or CDNSKEY
@@ -1105,7 +1105,7 @@ illustrated in the examples in the previous section.
 
 All the dates are the same, and are the date and time that
 ``dnssec-keygen`` created the key. We can use ``dnssec-settime`` to
-modify the dates [3]_. For example, to publish this key in
+modify the dates [#]_. For example, to publish this key in
 the zone on 1 July 2020, use it to sign records for a year starting on
 15 July 2020, and remove it from the zone at the end of July 2021, we
 can use the following command:
@@ -1355,7 +1355,7 @@ not read the ``named`` configuration file, it relies on the presence of
 at least one key file for a zone to tell it that the zone is
 DNSSEC-enabled. If a key file does not already exist, we first need to create
 one for each zone. We can do that either by running
-``dnssec-keygen`` to create a key file for each zone [4]_, or by
+``dnssec-keygen`` to create a key file for each zone [#]_, or by
 specifying the zones in question on the command line. Here, we do the
 latter:
 
@@ -1537,11 +1537,11 @@ data changes. You will also need to manually roll the keys by adding and
 removing DNSKEY records (and interacting with the parent) at the
 appropriate times.
 
-.. [3]
+.. [#]
    The dates can also be modified using an editor, but that is likely to
    be more error-prone than using ``dnssec-settime``.
 
-.. [4]
+.. [#]
    Only one key file - for either a KSK or ZSK - is needed to signal the
    presence of the zone. ``dnssec-keygen`` creates files of both
    types as needed.

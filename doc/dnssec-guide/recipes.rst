@@ -559,7 +559,7 @@ since this new KSK is not active yet. You can do it
 immediately after the new DS record has been generated on December 1,
 or you can wait until the next day after you have verified that the
 new DNSKEY record is added to the zone. Below are some screenshots from
-GoDaddy's web-based interface, used to add a new DS record [1]_.
+GoDaddy's web-based interface, used to add a new DS record [#]_.
 
 1. After logging in, click the green "Launch" button next to the domain
    name you want to manage.
@@ -760,7 +760,7 @@ Congratulations, the KSK rollover is complete! As for the actual key
 files (ending in ``.key`` and ``.private``), they may be deleted at this
 point, but they do not have to be.
 
-.. [1]
+.. [#]
    The screenshots were taken from GoDaddy's interface at the time the
    original version of this guide was published (2015). It may have
    changed since then.

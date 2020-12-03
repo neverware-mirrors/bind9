@@ -140,7 +140,7 @@ signed. This means that more than 90% of the time, your validating resolver
 will be doing what is described in
 :ref:`how_does_dnssec_change_dns_lookup`. However, if your users
 only care about resources in the ``.com`` domain, which, as of mid-2020,
-is under 1.5% signed [1]_, your recursive name server is unlikely
+is under 1.5% signed [#]_, your recursive name server is unlikely
 to experience a significant load increase after enabling DNSSEC
 validation.
 
@@ -183,7 +183,7 @@ per-country basis. This means that more DNS queries for your domain will
 take advantage of the additional security features, which will result in
 increased system load and possibly network traffic.
 
-.. [1]
+.. [#]
    https://rick.eng.br/dnssecstat
 
 .. _network_requirements:
