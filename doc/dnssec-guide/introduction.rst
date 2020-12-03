@@ -8,7 +8,7 @@
    See the COPYRIGHT file distributed with this work for additional
    information regarding copyright ownership.
 
-.. _introduction:
+.. _dnssec_guide_introduction:
 
 Introduction
 ------------

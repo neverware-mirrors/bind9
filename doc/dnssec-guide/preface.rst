@@ -20,9 +20,9 @@ This document provides introductory information on how DNSSEC works, how
 to configure BIND 9 to support some common DNSSEC features, and
 some basic troubleshooting tips. The chapters are organized as follows:
 
-:ref:`introduction` covers the intended audience for this document,
-assumed background knowledge, and a basic introduction to the topic of
-DNSSEC.
+:ref:`dnssec_guide_introduction` covers the intended audience for this
+document, assumed background knowledge, and a basic introduction to the
+topic of DNSSEC.
 
 :ref:`getting_started` covers various requirements
 before implementing DNSSEC, such as software versions, hardware

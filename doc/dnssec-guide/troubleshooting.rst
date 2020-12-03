@@ -466,12 +466,12 @@ with the default setting of ``dnssec-validation``, updates it on the
 infrequent occasions when it is changed.
 
 However, in some circumstances you may need to explicitly configure
-your own trust anchor. As we saw in the
-:ref:`trust_anchors` section, whenever a DNSKEY is received by the
-validating resolver, it is compared to the list of keys the
-resolver explicitly trusts to see if further action is needed. If
-the two keys match, the validating resolver stops performing further
-verification and returns the answer(s) as validated.
+your own trust anchor. As we saw in the :ref:`trust_anchors_description`
+section, whenever a DNSKEY is received by the validating resolver, it is
+compared to the list of keys the resolver explicitly trusts to see if
+further action is needed. If the two keys match, the validating resolver
+stops performing further verification and returns the answer(s) as
+validated.
 
 But what if the key file on the validating resolver is misconfigured or
 missing? Below we show some examples of log messages when things are not

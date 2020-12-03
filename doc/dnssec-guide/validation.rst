@@ -436,7 +436,7 @@ using the ``trust-anchors`` statement (with either the ``static-key`` or
 *auto* (the default, and as shown in the example), then no further
 action should be required as BIND includes a copy [#]_ of the root key.
 When set to *auto*, BIND automatically keeps the keys (also known as
-trust anchors, discussed in :ref:`trust_anchors`)
+trust anchors, discussed in :ref:`trust_anchors_description`)
 up-to-date without intervention from the DNS administrator.
 
 We recommend using the default *auto* unless there is a good reason to
@@ -496,7 +496,7 @@ domain name ``www.isc.org`` (see :ref:`dnssec_12_steps`):
 After step #12, the validating resolver takes the DNSKEY received and
 compares it to the key or keys it has configured, to decide whether
 the received key can be trusted. We talk about these locally
-configured keys, or trust anchors, in :ref:`trust_anchors`.
+configured keys, or trust anchors, in :ref:`trust_anchors_description`.
 
 With DNSSEC, every response includes not just the
 answer, but a digital signature (RRSIG) as well, so the
@@ -599,7 +599,7 @@ the client.
    ``bind.keys`` as a ``trust-anchors`` statement. The two copies of the
    key are identical.
 
-.. _trust_anchors:
+.. _trust_anchors_description:
 
 Trust Anchors
 ~~~~~~~~~~~~~
