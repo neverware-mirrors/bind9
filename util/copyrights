@@ -1138,6 +1138,7 @@
 ./doc/arm/conf.py				PYTHON	2020
 ./doc/arm/configuration.rst			RST	2020
 ./doc/arm/dlz.rst				RST	2020
+./doc/arm/dnssec-guide.rst			RST	2020
 ./doc/arm/dnssec.rst				RST	2020
 ./doc/arm/dyndb.rst				RST	2020
 ./doc/arm/general.rst				RST	2020
