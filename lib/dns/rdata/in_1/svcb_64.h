@@ -13,7 +13,7 @@
 #define IN_1_SVCB_64_H 1
 
 /*!
- *  \brief Per draft-ietf-dnsop-svcb-https-01
+ *  \brief Per draft-ietf-dnsop-svcb-https-02
  */
 
 typedef struct dns_rdata_in_svcb {

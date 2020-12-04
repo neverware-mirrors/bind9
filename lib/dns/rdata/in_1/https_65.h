@@ -13,9 +13,12 @@
 #define IN_1_HTTPS_65_H 1
 
 /*!
- *  \brief Per draft-ietf-dnsop-svcb-https-01
+ *  \brief Per draft-ietf-dnsop-svcb-https-02
  */
 
+/*
+ * Wire and presentation formats for HTTPS are identical to SVCB.
+ */
 typedef struct dns_rdata_in_svcb dns_rdata_in_https_t;
 
 isc_result_t

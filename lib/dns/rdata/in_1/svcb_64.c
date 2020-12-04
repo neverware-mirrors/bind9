@@ -9,7 +9,7 @@
  * information regarding copyright ownership.
  */
 
-/* draft-ietf-dnsop-svcb-https-01 */
+/* draft-ietf-dnsop-svcb-https-02 */
 
 #ifndef RDATA_IN_1_SVCB_64_C
 #define RDATA_IN_1_SVCB_64_C
@@ -162,7 +162,7 @@ svcb_validate(uint16_t key, isc_region_t *region) {
 static isc_result_t
 svc_keyfromregion(isc_textregion_t *region, char sep, uint16_t *value,
 		  isc_buffer_t *target) {
-	char *e;
+	char *e = NULL;
 	size_t i;
 	unsigned long ul;
 
@@ -206,7 +206,7 @@ finish:
 	if (sep == ',' && region->length == 1) {
 		return (DNS_R_SYNTAX);
 	}
-	/* Consume seperator. */
+	/* Consume separator. */
 	if (region->length != 0) {
 		isc_textregion_consume(region, 1);
 	}
@@ -219,7 +219,7 @@ finish:
 
 static isc_result_t
 svc_fromtext(isc_textregion_t *region, isc_buffer_t *target) {
-	char *e;
+	char *e = NULL;
 	char abuf[16];
 	char tbuf[sizeof("aaaa:aaaa:aaaa:aaaa:aaaa:aaaa:255.255.255.255,")];
 	isc_buffer_t sb;
@@ -1044,7 +1044,7 @@ static inline isc_result_t
 generic_additionaldata_in_svcb(ARGS_ADDLDATA) {
 	bool alias, done = false;
 	dns_fixedname_t fixed;
-	dns_name_t name, *fname;
+	dns_name_t name, *fname = NULL;
 	dns_offsets_t offsets;
 	dns_rdataset_t rdataset;
 	isc_region_t region;

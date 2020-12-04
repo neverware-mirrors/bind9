@@ -1485,9 +1485,9 @@ commatxt_totext(isc_region_t *source, bool quote, bool comma,
 		}
 		/*
 		 * Escape double quote and backslash.  If we are not
-		 * enclosing the string in double quotes also escape
-		 * at sign and semicolon unless comma is set.  If
-		 * comma is set then escape commas.
+		 * enclosing the string in double quotes, also escape
+		 * at sign (@) and semicolon (;) unless comma is set.
+		 * If comma is set, then only escape commas (,).
 		 */
 		if (*sp == 0x22 || *sp == 0x5c || (comma && *sp == 0x2c) ||
 		    (!comma && !quote && (*sp == 0x40 || *sp == 0x3b)))

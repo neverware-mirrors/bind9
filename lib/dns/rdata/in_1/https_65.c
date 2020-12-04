@@ -9,12 +9,17 @@
  * information regarding copyright ownership.
  */
 
-/* draft-ietf-dnsop-svcb-https-01 */
+/* draft-ietf-dnsop-svcb-https-02 */
 
 #ifndef RDATA_IN_1_HTTPS_65_C
 #define RDATA_IN_1_HTTPS_65_C
 
 #define RRTYPE_HTTPS_ATTRIBUTES (DNS_RDATATYPEATTR_FOLLOWADDITIONAL)
+
+/*
+ * Most of these functions refer to equivalent functions for SVCB,
+ * since wire and presentation formats are identical.
+ */
 
 static inline isc_result_t
 fromtext_in_https(ARGS_FROMTEXT) {
